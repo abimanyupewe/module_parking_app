@@ -27,10 +27,26 @@ Dokumentasi ini mengatur pembuatan komponen UI yang bisa digunakan di banyak hal
 - **Tampilan**: Garis vertikal di samping (timeline style), teks aktivitas & waktu.
 - **Parameter**: `activity`, `time`, `category`.
 
+## Widget 6: `AppNavigation` (Strategy Role-Based)
+
+Dokumentasi ini mengatur sistem navigasi yang berbeda untuk setiap role demi kenyamanan penggunaan (UX).
+
+### **A. Role Petugas (Bottom Navigation Bar)**
+Petugas membutuhkan akses cepat dengan satu tangan saat di lapangan.
+- **Menu**: `Check-in` (Masuk), `Check-out` (Keluar), `Riwayat` (History).
+- **Style**: Latar putih, ikon aktif warna `#343858`, ikon tidak aktif warna `#737686`.
+
+### **B. Role Admin & Owner (Navigation Drawer)**
+Admin dan Owner mengelola banyak data master dan laporan, sehingga membutuhkan menu daftar yang panjang.
+- **Menu**: `Dashboard`, `Master Jenis`, `Master Area`, `User Management`, `Audit Log`, `Settings`, `Logout`.
+- **Style**: Header Drawer berisi nama & role user, item list dengan ikon di kiri.
+
 ## Checklist Implementasi
 - [ ] Buat `lib/widgets/custom_textfield.dart`.
 - [ ] Buat `lib/widgets/primary_button.dart`.
 - [ ] Buat `lib/widgets/summary_card.dart`.
 - [ ] Buat `lib/widgets/status_badge.dart`.
 - [ ] Buat `lib/widgets/log_timeline_tile.dart`.
+- [ ] Implementasi `BottomNavigationBar` khusus untuk Role Petugas.
+- [ ] Implementasi `Drawer` khusus untuk Role Admin dan Owner.
 - [ ] Pastikan widget menerima parameter dinamis (Constructor).
