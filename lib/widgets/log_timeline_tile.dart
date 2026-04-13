@@ -49,7 +49,7 @@ class LogTimelineTile extends StatelessWidget {
                   border: Border.all(color: AppColors.white, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: (iconColor ?? AppColors.primary).withOpacity(0.3),
+                      color: (iconColor ?? AppColors.primary).withValues(alpha: 0.3),
                       blurRadius: 4,
                     ),
                   ],
@@ -71,7 +71,7 @@ class LogTimelineTile extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: backgroundColor ?? AppColors.secondary.withOpacity(0.3),
+                color: backgroundColor ?? AppColors.secondary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: AppColors.tertiary, width: 1),
               ),
@@ -105,7 +105,7 @@ class LogTimelineTile extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: (iconColor ?? AppColors.primary)
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(

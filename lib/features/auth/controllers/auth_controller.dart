@@ -91,39 +91,29 @@ class AuthController {
     required String password,
   }) async {
     try {
-      print('DEBUG: Starting registration for username: $username');
-
       // Validasi input
       if (namaLengkap.isEmpty || username.isEmpty || password.isEmpty) {
-        print('DEBUG: Empty fields detected');
         return {'success': false, 'message': 'Semua field harus diisi'};
       }
 
       // Validasi username panjang
       if (username.length < 3) {
-        print('DEBUG: Username too short');
         return {'success': false, 'message': 'Username minimal 3 karakter'};
       }
 
       // Validasi password panjang
       if (password.length < 6) {
-        print('DEBUG: Password too short');
         return {'success': false, 'message': 'Password minimal 6 karakter'};
       }
 
       // Check if username already exists
-      print('DEBUG: Checking if username exists...');
       final existingUser = await _dbHelper.getUserByUsername(username);
       if (existingUser != null) {
-        print('DEBUG: Username already exists: $username');
         return {'success': false, 'message': 'Username sudah terdaftar'};
       }
 
-      print('DEBUG: Username is available');
-
       // Hash password
       final hashedPassword = PasswordService.hashPassword(password);
-      print('DEBUG: Password hashed');
 
       // Create new Owner user
       final newUser = UserModel(
@@ -134,29 +124,21 @@ class AuthController {
         status: AppConstants.statusAktif,
       );
 
-      print('DEBUG: UserModel created: ${newUser.toString()}');
-
       // Insert ke database
-      print('DEBUG: Inserting user to database...');
       final result = await _dbHelper.insertUser(newUser);
-      print('DEBUG: Insert result: $result');
 
       if (result > 0) {
-        print('DEBUG: User inserted successfully with ID: $result');
         return {
           'success': true,
           'message': 'Registrasi berhasil! Silakan login dengan akun Anda.',
         };
       } else {
-        print('DEBUG: Insert failed, result was: $result');
         return {
           'success': false,
           'message': 'Registrasi gagal, silakan coba lagi',
         };
       }
     } catch (e) {
-      print('DEBUG: Exception during registration: ${e.toString()}');
-      print('DEBUG: Stack trace: $e');
       return {'success': false, 'message': 'Error: ${e.toString()}'};
     }
   }

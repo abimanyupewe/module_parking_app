@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../core/preferences/app_preferences.dart';
+import '../widgets/petugas_check_in_section.dart';
+import '../widgets/petugas_check_out_section.dart';
+import '../widgets/petugas_history_section.dart';
+import '../widgets/petugas_area_info_section.dart';
 
-/// Petugas Dashboard Page (Dummy - akan replace dengan real data nanti)
+/// Petugas Dashboard Page - Kasir operasional harian
 class PetugasDashboardPage extends StatefulWidget {
   const PetugasDashboardPage({Key? key}) : super(key: key);
 
@@ -11,12 +15,9 @@ class PetugasDashboardPage extends StatefulWidget {
 }
 
 class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
-  String? _username;
-
   @override
   void initState() {
     super.initState();
-    _username = AppPreferences.getUsername();
   }
 
   void _handleLogout() {
@@ -46,66 +47,70 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Petugas Dashboard'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                _handleLogout();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'profile',
-                child: Text('Profile'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'password',
-                child: Text('Change Password'),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem<String>(
-                value: 'logout',
-                child: Text('Logout'),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Petugas Operasional'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          elevation: 0,
+          actions: [
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'logout') {
+                  _handleLogout();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem<String>(
+                  value: 'profile',
+                  child: Text('Profile'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'password',
+                  child: Text('Ubah Password'),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Text('Logout'),
+                ),
+              ],
+            ),
+          ],
+        ),
+        body: Column(
           children: [
-            Icon(Icons.person_outline, size: 80, color: AppColors.primary),
-            const SizedBox(height: 24),
-            Text(
-              'Petugas Dashboard',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Selamat datang, $_username!',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 32),
+            // Area Info Section
+            const PetugasAreaInfoSection(),
+            // Tab Bar
             Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.secondary,
-                borderRadius: BorderRadius.circular(8),
+              color: AppColors.white,
+              child: TabBar(
+                indicator: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.primary, width: 3),
+                  ),
+                ),
+                indicatorColor: AppColors.primary,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.inactive,
+                tabs: const [
+                  Tab(icon: Icon(Icons.login), text: 'Masuk'),
+                  Tab(icon: Icon(Icons.logout), text: 'Keluar'),
+                  Tab(icon: Icon(Icons.history), text: 'Riwayat'),
+                ],
               ),
-              child: Text(
-                'Data akan dimuat dari database',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.primary),
+            ),
+            // Tab Content
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  PetugasCheckInSection(),
+                  PetugasCheckOutSection(),
+                  PetugasHistorySection(),
+                ],
               ),
             ),
           ],

@@ -40,7 +40,7 @@ class SummaryCard extends StatelessWidget {
           boxShadow: showShadow
               ? [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.08),
+                    color: AppColors.black.withValues(alpha: 0.08),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -66,7 +66,7 @@ class SummaryCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: (iconColor ?? AppColors.primary).withOpacity(0.1),
+                    color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -147,7 +147,7 @@ class HorizontalSummaryCard extends StatelessWidget {
           boxShadow: showShadow
               ? [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.08),
+                    color: AppColors.black.withValues(alpha: 0.08),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -161,7 +161,7 @@ class HorizontalSummaryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (iconColor ?? AppColors.primary).withOpacity(0.1),
+                color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

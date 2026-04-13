@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../core/preferences/app_preferences.dart';
 import '../widgets/owner_home_section.dart';
-import '../widgets/owner_profile_section.dart';
+import '../widgets/owner_audit_section.dart';
+import '../widgets/owner_history_section.dart';
+import '../widgets/owner_sdm_section.dart';
 
-/// Owner Dashboard Page
+/// Owner Dashboard Page - Pemegang kendali penuh
 class OwnerDashboardPage extends StatefulWidget {
   const OwnerDashboardPage({Key? key}) : super(key: key);
 
@@ -13,12 +15,9 @@ class OwnerDashboardPage extends StatefulWidget {
 }
 
 class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
-  int _selectedIndex = 0;
-
-  void _onNavItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  @override
+  void initState() {
+    super.initState();
   }
 
   void _handleLogout() {
@@ -48,43 +47,71 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Owner Dashboard'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _handleLogout,
-            tooltip: 'Logout',
-          ),
-        ],
-      ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: const [OwnerHomeSection(), OwnerProfileSection()],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onNavItemTapped,
-        backgroundColor: AppColors.background,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.inactive,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Owner Dashboard'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          elevation: 0,
+          actions: [
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'logout') {
+                  _handleLogout();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem<String>(
+                  value: 'profile',
+                  child: Text('Profile'),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Text('Logout'),
+                ),
+              ],
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // Tab Bar
+            Container(
+              color: AppColors.white,
+              child: TabBar(
+                isScrollable: true,
+                indicator: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.primary, width: 3),
+                  ),
+                ),
+                indicatorColor: AppColors.primary,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.inactive,
+                tabs: const [
+                  Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
+                  Tab(icon: Icon(Icons.receipt), text: 'Audit Log'),
+                  Tab(icon: Icon(Icons.history), text: 'History'),
+                  Tab(icon: Icon(Icons.people), text: 'SDM'),
+                ],
+              ),
+            ),
+            // Tab Content
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  OwnerHomeSection(),
+                  OwnerAuditSection(),
+                  OwnerHistorySection(),
+                  OwnerSdmSection(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

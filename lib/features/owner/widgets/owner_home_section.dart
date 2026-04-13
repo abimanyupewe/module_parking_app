@@ -73,7 +73,7 @@ class _OwnerHomeSectionState extends State<OwnerHomeSection> {
             'Berikut ringkasan performa parkir hari ini',
             style: TextStyle(
               fontSize: 13,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -177,7 +177,7 @@ class _OwnerHomeSectionState extends State<OwnerHomeSection> {
           ),
           Text(
             subtitle,
-            style: TextStyle(fontSize: 11, color: titleColor.withOpacity(0.7)),
+            style: TextStyle(fontSize: 11, color: titleColor.withValues(alpha: 0.7)),
           ),
         ],
       ),
@@ -267,7 +267,7 @@ class _OwnerHomeSectionState extends State<OwnerHomeSection> {
             child: LinearProgressIndicator(
               value: occupied / total,
               minHeight: 6,
-              backgroundColor: color.withOpacity(0.2),
+              backgroundColor: color.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),

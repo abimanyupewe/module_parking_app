@@ -25,19 +25,13 @@ class _SplashPageState extends State<SplashPage> {
   /// Initialize application (preferences + database)
   Future<void> _initializeApp() async {
     try {
-      print('DEBUG SPLASH: Starting app initialization...');
 
       // 1. Initialize SharedPreferences
-      print('DEBUG SPLASH: Initializing SharedPreferences...');
       await AppPreferences.init();
-      print('DEBUG SPLASH: SharedPreferences initialized');
 
       // 2. Initialize Database (akan auto-create dengan default data jika first run)
-      print('DEBUG SPLASH: Initializing Database...');
       final dbHelper = DatabaseHelper();
       final database = await dbHelper.database;
-      print('DEBUG SPLASH: Database initialized');
-      print('DEBUG SPLASH: Database path: ${database.path}');
 
       // 3. Print database location untuk user dapat menemukan file
       dbHelper.printDatabaseLocation();
@@ -45,25 +39,18 @@ class _SplashPageState extends State<SplashPage> {
       // 4. Try create symlink/shortcut ke database (optional, best effort)
       final shortcutCreated = await dbHelper.createDatabaseShortcut();
       if (shortcutCreated) {
-        print('DEBUG SPLASH: Database shortcut berhasil dibuat');
       }
 
       // 5. Verify default data was inserted
-      print('DEBUG SPLASH: Verifying default users...');
       final users = await dbHelper.getAllUsers();
-      print('DEBUG SPLASH: Found ${users.length} users in database');
       for (var user in users) {
-        print('  - ${user.username} (${user.role})');
       }
 
       // 6. Continue with splash flow
       if (mounted) {
-        print('DEBUG SPLASH: Proceeding with splash flow...');
         _controller.handleSplashFlow();
       }
     } catch (e) {
-      print('ERROR SPLASH: Failed to initialize app: ${e.toString()}');
-      print('ERROR SPLASH: Stack trace: $e');
 
       // Fallback: continue anyway
       if (mounted) {

@@ -30,7 +30,7 @@ class StatusBadge extends StatelessWidget {
         color: backgroundColor ?? colors['bg'],
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: (textColor ?? colors['text']!).withOpacity(0.3),
+          color: (textColor ?? colors['text']!).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -59,20 +59,20 @@ class StatusBadge extends StatelessWidget {
 
     if (lowerStatus.contains('aktif') || lowerStatus.contains('selesai')) {
       return {
-        'bg': AppColors.success.withOpacity(0.1),
+        'bg': AppColors.success.withValues(alpha: 0.1),
         'text': AppColors.success,
       };
     } else if (lowerStatus.contains('nonaktif') ||
         lowerStatus.contains('parkir')) {
       return {
-        'bg': AppColors.warning.withOpacity(0.1),
+        'bg': AppColors.warning.withValues(alpha: 0.1),
         'text': AppColors.warning,
       };
     } else if (lowerStatus.contains('pending')) {
-      return {'bg': AppColors.info.withOpacity(0.1), 'text': AppColors.info};
+      return {'bg': AppColors.info.withValues(alpha: 0.1), 'text': AppColors.info};
     } else {
       return {
-        'bg': AppColors.inactive.withOpacity(0.1),
+        'bg': AppColors.inactive.withValues(alpha: 0.1),
         'text': AppColors.inactive,
       };
     }
@@ -108,7 +108,7 @@ class StatusIndicator extends StatelessWidget {
         color: backgroundColor ?? colors['bg'],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: (textColor ?? colors['text']!).withOpacity(0.2),
+          color: (textColor ?? colors['text']!).withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -131,7 +131,7 @@ class StatusIndicator extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: (textColor ?? colors['text']!).withOpacity(0.7),
+              color: (textColor ?? colors['text']!).withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -145,22 +145,22 @@ class StatusIndicator extends StatelessWidget {
 
     if (lowerStatus.contains('aktif') || lowerStatus.contains('online')) {
       return {
-        'bg': AppColors.success.withOpacity(0.1),
+        'bg': AppColors.success.withValues(alpha: 0.1),
         'text': AppColors.success,
       };
     } else if (lowerStatus.contains('nonaktif') ||
         lowerStatus.contains('offline')) {
       return {
-        'bg': AppColors.danger.withOpacity(0.1),
+        'bg': AppColors.danger.withValues(alpha: 0.1),
         'text': AppColors.danger,
       };
     } else if (lowerStatus.contains('pending')) {
       return {
-        'bg': AppColors.warning.withOpacity(0.1),
+        'bg': AppColors.warning.withValues(alpha: 0.1),
         'text': AppColors.warning,
       };
     } else {
-      return {'bg': AppColors.info.withOpacity(0.1), 'text': AppColors.info};
+      return {'bg': AppColors.info.withValues(alpha: 0.1), 'text': AppColors.info};
     }
   }
 }
