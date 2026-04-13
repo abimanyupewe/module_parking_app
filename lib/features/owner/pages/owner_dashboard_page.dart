@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../core/preferences/app_preferences.dart';
+import '../widgets/owner_home_section.dart';
+import '../widgets/owner_report_section.dart';
+import '../widgets/owner_profile_section.dart';
 
-/// Owner Dashboard Page (Dummy - akan replace dengan real data nanti)
+/// Owner Dashboard Page
 class OwnerDashboardPage extends StatefulWidget {
   const OwnerDashboardPage({Key? key}) : super(key: key);
 
@@ -11,12 +14,12 @@ class OwnerDashboardPage extends StatefulWidget {
 }
 
 class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
-  String? _username;
+  int _selectedIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _username = AppPreferences.getUsername();
+  void _onNavItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   void _handleLogout() {
@@ -51,69 +54,47 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
         title: const Text('Owner Dashboard'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.background,
+        elevation: 0,
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                _handleLogout();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'profile',
-                child: Text('Profile'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'password',
-                child: Text('Change Password'),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem<String>(
-                value: 'logout',
-                child: Text('Logout'),
-              ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _handleLogout,
+            tooltip: 'Logout',
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.admin_panel_settings,
-              size: 80,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Owner Dashboard',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Selamat datang, $_username!',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.secondary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Data akan dimuat dari database',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.primary),
-              ),
-            ),
-          ],
-        ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: const [
+          OwnerHomeSection(),
+          OwnerReportSection(),
+          OwnerProfileSection(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onNavItemTapped,
+        backgroundColor: AppColors.background,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.inactive,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assessment_outlined),
+            activeIcon: Icon(Icons.assessment),
+            label: 'Laporan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
