@@ -26,6 +26,9 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, AppConstants.databaseName);
 
+    print('DEBUG: Database Path: $dbPath');
+    print('DEBUG: Full Database File: $path');
+
     return await openDatabase(
       path,
       version: AppConstants.databaseVersion,
@@ -36,6 +39,7 @@ class DatabaseHelper {
 
   /// Membuat semua tabel
   Future<void> _createTables(Database db, int version) async {
+    print('DEBUG: _createTables called - creating tables for database...');
     // Tabel User
     await db.execute('''
       CREATE TABLE ${AppConstants.tableUser} (
@@ -183,11 +187,21 @@ class DatabaseHelper {
   /// Insert user baru
   Future<int> insertUser(UserModel user) async {
     final db = await database;
-    return await db.insert(
-      AppConstants.tableUser,
-      user.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    print('DEBUG INSERT: About to insert user: ${user.toString()}');
+    print('DEBUG INSERT: User map: ${user.toMap()}');
+    try {
+      final result = await db.insert(
+        AppConstants.tableUser,
+        user.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      print('DEBUG INSERT: Insert completed with result: $result');
+      return result;
+    } catch (e) {
+      print('DEBUG INSERT: Exception occurred: ${e.toString()}');
+      print('DEBUG INSERT: Stack: $e');
+      rethrow;
+    }
   }
 
   /// Get user berdasarkan username
