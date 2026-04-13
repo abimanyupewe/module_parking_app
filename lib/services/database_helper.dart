@@ -29,36 +29,79 @@ class DatabaseHelper {
 
     String dbPath;
 
-    // Approach 1: Try getDatabasesPath() first (standard SQLite location)
+    // Strategy 1: Coba getDatabasesPath dulu (untuk mobile)
+    // Strategy 2: Fallback ke getApplicationDocumentsDirectory (untuk desktop)
+
+    print('DEBUG: Starting database initialization...');
+
     try {
+      // Try getDatabasesPath first - this works on Android/iOS
+      print('DEBUG: Trying getDatabasesPath()...');
       final systemDbPath = await getDatabasesPath();
+      print('DEBUG: Got system path: $systemDbPath');
 
       // Buat subfolder 'parking_app' di dalam system databases path
       final appDbDir = Directory(join(systemDbPath, 'parking_app'));
 
       if (!await appDbDir.exists()) {
+        print('DEBUG: Creating directory: ${appDbDir.path}');
         await appDbDir.create(recursive: true);
         print('DEBUG: Created database directory at: ${appDbDir.path}');
+      } else {
+        print('DEBUG: Directory already exists: ${appDbDir.path}');
       }
 
       dbPath = join(appDbDir.path, AppConstants.databaseName);
       print('DEBUG: Using standard database path: $dbPath');
     } catch (e) {
-      // Fallback: Use application documents directory
-      print('DEBUG: Standard path failed, using fallback: $e');
+      // Fallback: Use application documents directory (for desktop)
+      print('DEBUG: getDatabasesPath failed: $e');
+      print('DEBUG: Falling back to getApplicationDocumentsDirectory()...');
 
-      final appDocDir = await getApplicationDocumentsDirectory();
-      final dbDir = Directory(join(appDocDir.path, 'databases'));
+      try {
+        final appDocDir = await getApplicationDocumentsDirectory();
+        print('DEBUG: Got app doc dir: ${appDocDir.path}');
 
-      if (!await dbDir.exists()) {
-        await dbDir.create(recursive: true);
+        final dbDir = Directory(join(appDocDir.path, 'parking_app_db'));
+
+        if (!await dbDir.exists()) {
+          print('DEBUG: Creating fallback directory: ${dbDir.path}');
+          await dbDir.create(recursive: true);
+          print('DEBUG: Created fallback directory');
+        } else {
+          print('DEBUG: Fallback directory already exists');
+        }
+
+        dbPath = join(dbDir.path, AppConstants.databaseName);
+        print('DEBUG: Using fallback database path: $dbPath');
+      } catch (e2) {
+        print('DEBUG: getApplicationDocumentsDirectory also failed: $e2');
+        throw Exception(
+          'Failed to initialize database path: Primary error: $e, Fallback error: $e2',
+        );
       }
-
-      dbPath = join(dbDir.path, AppConstants.databaseName);
-      print('DEBUG: Using fallback database path: $dbPath');
     }
 
     print('DEBUG: Full Database File: $dbPath');
+
+    // Double-check directory exists before opening database
+    final dbFile = File(dbPath);
+    final dbDirectory = dbFile.parent;
+
+    if (!await dbDirectory.exists()) {
+      print(
+        'DEBUG: Parent directory still does not exist, creating it: ${dbDirectory.path}',
+      );
+      try {
+        await dbDirectory.create(recursive: true);
+        print('DEBUG: Successfully created parent directory');
+      } catch (e) {
+        print('DEBUG: Failed to create parent directory: $e');
+        throw Exception('Cannot create database directory: $e');
+      }
+    }
+
+    print('DEBUG: Opening database at: $dbPath');
 
     return await openDatabase(
       dbPath,
