@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../core/preferences/app_preferences.dart';
-import '../../../models/user_selection_model.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_header_widget.dart';
 import '../widgets/login_form_widget.dart';
@@ -18,33 +17,12 @@ class _LoginPageState extends State<LoginPage> {
   late AuthController _authController;
   bool _isLoading = false;
   String? _errorMessage;
-  UserSelectionModel? _selectedUser;
-
-  // List of test users
-  late final List<UserSelectionModel> _testUsers = [
-    UserSelectionModel(
-      displayName: 'Owner',
-      username: 'owner',
-      password: '123456',
-    ),
-    UserSelectionModel(
-      displayName: 'Admin',
-      username: 'admin1',
-      password: '123456',
-    ),
-    UserSelectionModel(
-      displayName: 'Petugas',
-      username: 'petugas1',
-      password: '123456',
-    ),
-  ];
 
   @override
   void initState() {
     super.initState();
     _authController = AuthController();
     _initializePreferences();
-    _selectedUser = _testUsers.first; // Set default ke Owner
   }
 
   /// Inisialisasi preferences
@@ -74,13 +52,13 @@ class _LoginPageState extends State<LoginPage> {
 
       if (mounted) {
         switch (role) {
-          case 'owner':
+          case 'Owner':
             Navigator.of(context).pushReplacementNamed('/owner_dashboard');
             break;
-          case 'admin':
+          case 'Admin':
             Navigator.of(context).pushReplacementNamed('/admin_dashboard');
             break;
-          case 'petugas':
+          case 'Petugas':
             Navigator.of(context).pushReplacementNamed('/petugas_dashboard');
             break;
           default:
@@ -109,89 +87,11 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 40),
               const AuthHeaderWidget(
                 title: 'Login',
-                subtitle: 'Pilih user atau masukkan username dan password',
+                subtitle: 'Masukkan username dan password Anda',
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 48),
 
-              // User Selection Dropdown
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.border),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DropdownButton<UserSelectionModel>(
-                  isExpanded: true,
-                  underline: const SizedBox.shrink(),
-                  value: _selectedUser,
-                  items: _testUsers.map((user) {
-                    return DropdownMenuItem(
-                      value: user,
-                      child: Text(user.displayName),
-                    );
-                  }).toList(),
-                  onChanged: (user) {
-                    if (user != null) {
-                      setState(() {
-                        _selectedUser = user;
-                      });
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Auto-login with selected user button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () => _selectedUser != null
-                            ? _handleLogin(
-                                _selectedUser!.username,
-                                _selectedUser!.password,
-                              )
-                            : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: Text(
-                    _isLoading ? 'Logging in...' : 'Login Dengan User Terpilih',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Divider
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(height: 1, color: AppColors.border),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'atau',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(height: 1, color: AppColors.border),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-
-              // Form untuk manual input
+              // Form
               LoginFormWidget(
                 onSubmit: _handleLogin,
                 isLoading: _isLoading,
