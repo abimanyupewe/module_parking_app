@@ -6,6 +6,7 @@ import 'features/splash/pages/splash_page.dart';
 import 'features/onboarding/pages/onboarding_page.dart';
 import 'features/auth/pages/login_page.dart';
 import 'features/auth/pages/register_page.dart';
+import 'features/auth/pages/debug_page.dart';
 import 'features/owner/pages/owner_dashboard_page.dart';
 import 'features/admin/pages/admin_dashboard_page.dart';
 import 'features/petugas/pages/petugas_dashboard_page.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         '/onboarding': (context) => const OnboardingPage(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
+        '/debug': (context) => const DebugPage(),
         '/owner_dashboard': (context) => const OwnerDashboardPage(),
         '/admin_dashboard': (context) => const AdminDashboardPage(),
         '/petugas_dashboard': (context) => const PetugasDashboardPage(),
