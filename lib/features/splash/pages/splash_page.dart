@@ -25,33 +25,25 @@ class _SplashPageState extends State<SplashPage> {
   /// Initialize application (preferences + database)
   Future<void> _initializeApp() async {
     try {
-
       // 1. Initialize SharedPreferences
       await AppPreferences.init();
 
       // 2. Initialize Database (akan auto-create dengan default data jika first run)
       final dbHelper = DatabaseHelper();
       final database = await dbHelper.database;
+      final dbPath = await dbHelper.getDatabasePath();
 
-      // 3. Print database location untuk user dapat menemukan file
-      dbHelper.printDatabaseLocation();
+      // 3. Get database location untuk user dapat menemukan file
+      // Contoh: /home/user/.local/share/parking_app/parking_app.db
 
-      // 4. Try create symlink/shortcut ke database (optional, best effort)
-      final shortcutCreated = await dbHelper.createDatabaseShortcut();
-      if (shortcutCreated) {
-      }
-
-      // 5. Verify default data was inserted
+      // 4. Verify default data
       final users = await dbHelper.getAllUsers();
-      for (var user in users) {
-      }
 
-      // 6. Continue with splash flow
+      // 5. Continue with splash flow
       if (mounted) {
         _controller.handleSplashFlow();
       }
     } catch (e) {
-
       // Fallback: continue anyway
       if (mounted) {
         _controller.handleSplashFlow();

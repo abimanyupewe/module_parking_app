@@ -18,10 +18,14 @@ import 'features/petugas/pages/petugas_dashboard_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi package sqflite untuk platform desktop (Windows, Linux, macOS)
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+  // Inisialisasi sqflite untuk semua platform non-mobile
+  // - Desktop (Windows, Linux, macOS)
+  // - Platform apa pun yang bukan Android/iOS
+  if (!kIsWeb) {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
   }
 
   await AppPreferences.init();
