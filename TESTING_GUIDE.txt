@@ -1,6 +1,45 @@
 TESTING GUIDE - Registration & Login Fix
 ==========================================
 
+QUICK DEBUG USING DEBUG PAGE:
+============================
+
+CARA TERCEPAT UNTUK IDENTIFY MASALAH:
+
+1. Run aplikasi
+2. Di login page, klik tombol "Debug" (bawah, ada bug icon)
+3. Kamu akan lihat DebugPage dengan 4 buttons:
+   - "Test Insert User": Buat user random dan insert ke database
+   - "Get All Users": Fetch semua users dari database
+   - "Get User: owner": Query user 'owner' dari database
+   - "Clear Log": Reset output
+
+4. Output real-time di layar menunjukkan:
+   SUCCESS: Jika Test Insert berhasil → "SUCCESS: User inserted with ID X"
+   DATA: Jika get all users berhasil → lihat list semua users dengan role
+   ERROR: Jika ada masalah → lihat ERROR message dengan full details
+
+CONTOH OUTPUT:
+
+Success Insert:
+```
+Test Insert User
+User object created: UserModel(idUser: null, namaLengkap: Debug User, username: debuguser_1712970000, role: Owner, status: aktif)
+User map: {nama_lengkap: Debug User, username: debuguser_1712970000, password: ..., role: Owner, status: aktif, ...}
+Insert result: 4
+SUCCESS: User inserted with ID 4
+```
+
+Get All Users:
+```
+Get All Users
+Found 4 users:
+  - owner (Owner)
+  - admin1 (Admin)
+  - petugas1 (Petugas)
+  - debuguser_1712970000 (Owner)
+```
+
 ISSUE YANG DITEMUKAN:
 ===================
 
