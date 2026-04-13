@@ -103,14 +103,19 @@ class _LoginPageState extends State<LoginPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Text(
+                    'Belum punya akun? ',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).pushNamed('/forgot_password');
+                      Navigator.of(context).pushNamed('/register');
                     },
                     child: Text(
-                      'Lupa Password?',
+                      'Daftar',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.inactive,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,
                       ),
                     ),

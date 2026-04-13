@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import '../../../core/preferences/app_preferences.dart';
+import '../../../models/user_model.dart';
 import '../../../services/database_helper.dart';
 import '../../../services/password_service.dart';
 
@@ -81,5 +81,57 @@ class AuthController {
   /// Validate password format
   bool validatePassword(String password) {
     return PasswordService.validatePasswordStrength(password);
+  }
+
+  /// Register new Owner user (hanya Owner yang bisa register sendiri)
+  Future<Map<String, dynamic>> registerOwner({
+    required String namaLengkap,
+    required String username,
+    required String password,
+  }) async {
+    try {
+      // Validasi input
+      if (namaLengkap.isEmpty || username.isEmpty || password.isEmpty) {
+        return {'success': false, 'message': 'Semua field harus diisi'};
+      }
+
+      // Validasi username panjang
+      if (username.length < 3) {
+        return {'success': false, 'message': 'Username minimal 3 karakter'};
+      }
+
+      // Validasi password panjang
+      if (password.length < 6) {
+        return {'success': false, 'message': 'Password minimal 6 karakter'};
+      }
+
+      // Check if username already exists
+      final existingUser = await _dbHelper.getUserByUsername(username);
+      if (existingUser != null) {
+        return {'success': false, 'message': 'Username sudah terdaftar'};
+      }
+
+      // Hash password
+      final hashedPassword = PasswordService.hashPassword(password);
+
+      // Create new Owner user
+      final newUser = UserModel(
+        namaLengkap: namaLengkap,
+        username: username,
+        password: hashedPassword,
+        role: 'owner',
+        status: 'aktif',
+      );
+
+      // Insert ke database
+      await _dbHelper.insertUser(newUser);
+
+      return {
+        'success': true,
+        'message': 'Registrasi berhasil! Silakan login dengan akun Anda.',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Error: ${e.toString()}'};
+    }
   }
 }
