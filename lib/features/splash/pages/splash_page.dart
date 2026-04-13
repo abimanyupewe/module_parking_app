@@ -39,7 +39,16 @@ class _SplashPageState extends State<SplashPage> {
       print('DEBUG SPLASH: Database initialized');
       print('DEBUG SPLASH: Database path: ${database.path}');
 
-      // 3. Verify default data was inserted
+      // 3. Print database location untuk user dapat menemukan file
+      dbHelper.printDatabaseLocation();
+
+      // 4. Try create symlink/shortcut ke database (optional, best effort)
+      final shortcutCreated = await dbHelper.createDatabaseShortcut();
+      if (shortcutCreated) {
+        print('DEBUG SPLASH: Database shortcut berhasil dibuat');
+      }
+
+      // 5. Verify default data was inserted
       print('DEBUG SPLASH: Verifying default users...');
       final users = await dbHelper.getAllUsers();
       print('DEBUG SPLASH: Found ${users.length} users in database');
@@ -47,7 +56,7 @@ class _SplashPageState extends State<SplashPage> {
         print('  - ${user.username} (${user.role})');
       }
 
-      // 4. Continue with splash flow
+      // 6. Continue with splash flow
       if (mounted) {
         print('DEBUG SPLASH: Proceeding with splash flow...');
         _controller.handleSplashFlow();

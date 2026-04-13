@@ -12,6 +12,7 @@ import 'password_service.dart';
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
+  static String? _dbPath;
 
   factory DatabaseHelper() {
     return _instance;
@@ -23,6 +24,19 @@ class DatabaseHelper {
   Future<Database> get database async {
     _database ??= await _initDatabase();
     return _database!;
+  }
+
+  /// Getter untuk database path - untuk user lihat di mana file .db tersimpan
+  String? get databasePath => _dbPath;
+
+  /// Get full database path - sinkron getter
+  Future<String> getDatabasePath() async {
+    if (_dbPath != null) {
+      return _dbPath!;
+    }
+    // Jika belum ada, trigger initialization
+    await database;
+    return _dbPath ?? 'Unknown path';
   }
 
   /// Inisialisasi database dengan custom path di project folder
@@ -132,22 +146,28 @@ class DatabaseHelper {
 
     print('DEBUG: Opening database at: $dbPath');
 
+    // Simpan path untuk reference di kemudian hari
+    _dbPath = dbPath;
+    print('DEBUG: Database path saved for reference: $_dbPath');
+
     // Gunakan global openDatabase - sudah di-handle di main.dart dengan databaseFactory
     try {
       print(
         'DEBUG: Menggunakan openDatabase global (factory sudah di-set di main.dart)',
       );
-      return await openDatabase(
+      final db = await openDatabase(
         dbPath,
         version: AppConstants.databaseVersion,
         onCreate: _createTables,
         onUpgrade: _onUpgrade,
       );
+      print('DEBUG: Database berhasil dibuka di: $dbPath');
+      return db;
     } catch (e) {
       print('DEBUG ERROR: openDatabase failed: $e');
       print('DEBUG: Mencoba fallback dengan databaseFactoryFfi...');
       try {
-        return await databaseFactoryFfi.openDatabase(
+        final db = await databaseFactoryFfi.openDatabase(
           dbPath,
           options: OpenDatabaseOptions(
             version: AppConstants.databaseVersion,
@@ -155,6 +175,10 @@ class DatabaseHelper {
             onUpgrade: _onUpgrade,
           ),
         );
+        print(
+          'DEBUG: Database berhasil dibuka via databaseFactoryFfi di: $dbPath',
+        );
+        return db;
       } catch (e2) {
         print('DEBUG ERROR: databaseFactoryFfi juga gagal: $e2');
         throw Exception('Failed to open database: $e, Fallback error: $e2');
@@ -811,5 +835,129 @@ class DatabaseHelper {
     ).then((db) => db.close());
     await databaseFactory.deleteDatabase(path);
     _database = null;
+  }
+
+  /// Create shortcut/symlink ke database file di home directory agar mudah diakses
+  /// Return true jika berhasil, false jika gagal atau tidak didukung
+  Future<bool> createDatabaseShortcut() async {
+    try {
+      if (_dbPath == null) {
+        print('ERROR: Database path not initialized yet');
+        return false;
+      }
+
+      final homeDir = Directory(
+        Platform.environment['HOME'] ??
+            Platform.environment['USERPROFILE'] ??
+            '.',
+      );
+
+      // Tentukan nama shortcut berdasarkan platform
+      final shortcutName = Platform.isWindows
+          ? 'parking_app.lnk'
+          : '.parking_app_db';
+      final shortcutPath = join(homeDir.path, shortcutName);
+
+      // Coba buat symlink (Linux/macOS) atau copy path ke file (Windows)
+      if (Platform.isLinux || Platform.isMacOS) {
+        try {
+          // Create symlink
+          await Process.run('ln', ['-sf', _dbPath!, shortcutPath]);
+          print('DEBUG: Symlink berhasil dibuat: $shortcutPath -> $_dbPath');
+          return true;
+        } catch (e) {
+          print('DEBUG: Symlink gagal: $e');
+          // Fallback: buat file teks dengan path
+          await File(shortcutPath).writeAsString('$_dbPath');
+          print('DEBUG: File path teks dibuat di: $shortcutPath');
+          return true;
+        }
+      } else if (Platform.isWindows) {
+        // Windows: Create shortcut atau copy path ke file
+        try {
+          await File(shortcutPath + '.txt').writeAsString('$_dbPath');
+          print('DEBUG: File path teks dibuat di: $shortcutPath.txt');
+          return true;
+        } catch (e) {
+          print('DEBUG: Gagal membuat shortcut di Windows: $e');
+          return false;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      print('ERROR: createDatabaseShortcut failed: $e');
+      return false;
+    }
+  }
+
+  /// Copy database file ke lokasi mudah diakses (Desktop atau Downloads folder)
+  /// Berguna untuk backup atau import ke tools GUI
+  Future<bool> copyDatabaseToAccessibleLocation(String destinationPath) async {
+    try {
+      if (_dbPath == null) {
+        print('ERROR: Database path not initialized yet');
+        return false;
+      }
+
+      final sourceFile = File(_dbPath!);
+      if (!await sourceFile.exists()) {
+        print('ERROR: Source database file tidak ada: $_dbPath');
+        return false;
+      }
+
+      final destFile = File(destinationPath);
+      final destDir = destFile.parent;
+
+      // Buat direktori tujuan jika belum ada
+      if (!await destDir.exists()) {
+        await destDir.create(recursive: true);
+      }
+
+      // Copy file
+      await sourceFile.copy(destinationPath);
+      print('DEBUG: Database file berhasil dicopy ke: $destinationPath');
+      return true;
+    } catch (e) {
+      print('ERROR: copyDatabaseToAccessibleLocation failed: $e');
+      return false;
+    }
+  }
+
+  /// Print database location ke console dan return path
+  /// Memudahkan user menemukan file database
+  void printDatabaseLocation() {
+    if (_dbPath != null) {
+      print('================== DATABASE LOCATION ==================');
+      print('📁 Database Path: $_dbPath');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      // Informasi platform-specific
+      if (Platform.isLinux) {
+        print('Platform: Linux');
+        print('Untuk membuka dengan GUI tools:');
+        print('  1. VS Code SQLite Extension:');
+        print('     a. Install SQLite extension dari marketplace');
+        print('     b. Klik file .db atau folder dari explorer');
+        print('  2. DB Browser for SQLite:');
+        print('     a. Download dari https://sqlitebrowser.org/');
+        print('     b. Open database -> navigate ke $_dbPath');
+      } else if (Platform.isMacOS) {
+        print('Platform: macOS');
+        print('Untuk membuka dengan GUI tools:');
+        print('  1. VS Code SQLite Extension');
+        print('  2. DB Browser for SQLite');
+        print('  3. Finder: Cmd+Shift+G -> paste path');
+      } else if (Platform.isWindows) {
+        print('Platform: Windows');
+        print('Untuk membuka dengan GUI tools:');
+        print('  1. VS Code SQLite Extension');
+        print('  2. DB Browser for SQLite');
+        print('  3. Explorer: copy path -> address bar');
+      }
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    } else {
+      print('ERROR: Database path belum diinisialisasi');
+    }
   }
 }
