@@ -1,0 +1,296 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                        DATABASE QUICK REFERENCE                                ║
+║                    Sistem Manajemen Parkir - Learning Card                     ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════════════
+1. TABEL QUICK REFERENCE
+═══════════════════════════════════════════════════════════════════════════════════
+
+┌─ TB_USER ─────────────────────────────────────────────────────────────────────┐
+│ Fungsi: Data pengguna sistem (Owner, Admin, Petugas)                          │
+│ Tabel: tb_user                                                                 │
+│ PK: id_user (INTEGER, auto increment)                                        │
+│ Constraint: username UNIQUE, password NOT NULL                               │
+│ Relasi: 1:Many → TB_TRANSAKSI, TB_LOG_AKTIVITAS                             │
+│ Contoh Query: SELECT * FROM tb_user WHERE username='owner'                   │
+│ Catatan: Password selalu di-hash bcrypt, JANGAN plain text!                  │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TB_JENIS_KENDARAAN ──────────────────────────────────────────────────────────┐
+│ Fungsi: Master tipe kendaraan (Motor, Mobil, dll)                             │
+│ Tabel: tb_jenis_kendaraan                                                     │
+│ PK: jenis_id (INTEGER, auto increment)                                       │
+│ Constraint: nama_jenis UNIQUE, tarif_per_jam NOT NULL                        │
+│ Relasi: 1:Many → TB_AREA_PARKIR, TB_KENDARAAN                               │
+│ Contoh Query: SELECT * FROM tb_jenis_kendaraan                               │
+│ Catatan: Tipe dasar Motor (2000/jam), Mobil (5000/jam)                       │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TB_AREA_PARKIR ──────────────────────────────────────────────────────────────┐
+│ Fungsi: Lokasi parkir fisik (Lantai 1, Basement, dll)                        │
+│ Tabel: tb_area_parkir                                                         │
+│ PK: area_id (INTEGER, auto increment)                                        │
+│ FK: jenis_id → TB_JENIS_KENDARAAN                                            │
+│ Relasi: 1:Many → TB_TRANSAKSI                                                │
+│ Contoh Query: SELECT nama_area, kapasitas, terisi FROM tb_area_parkir       │
+│ Catatan: terisi = kapasitas - kosong (auto update saat masuk/keluar)        │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TB_KENDARAAN ────────────────────────────────────────────────────────────────┐
+│ Fungsi: Registry kendaraan (H 1234 ABC = Honda Merah)                        │
+│ Tabel: tb_kendaraan                                                           │
+│ PK: kendaraan_id (INTEGER, auto increment)                                   │
+│ FK: jenis_id → TB_JENIS_KENDARAAN                                            │
+│ Relasi: 1:Many → TB_TRANSAKSI (satu kendaraan bisa parkir berkali-kali)    │
+│ Contoh Query: SELECT * FROM tb_kendaraan WHERE plat_nomor='H 1234 ABC'      │
+│ Catatan: plat_nomor UNIQUE (identitas unik kendaraan)                        │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TB_TRANSAKSI ★★★ PALING PENTING ★★★ ─────────────────────────────────────────┐
+│ Fungsi: Catatan parkir masuk-keluar (CORE BUSINESS)                          │
+│ Tabel: tb_transaksi                                                           │
+│ PK: transaksi_id (INTEGER, auto increment)                                   │
+│ FK: kendaraan_id → TB_KENDARAAN, area_id → TB_AREA_PARKIR, user_id → TB_USER
+│ Relasi: Referensi ke 3 tabel master                                          │
+│ Status: 'parkir' (masih di lapangan) atau 'keluar' (sudah pergi)            │
+│ Biaya: NULL saat parkir, dihitung saat keluar = durasi × tarif_per_jam     │
+│ Contoh Query: SELECT * FROM tb_transaksi WHERE status='parkir'              │
+│ Catatan: Tabel ini TRACK SEMUA transaksi, sangat penting untuk laporan!     │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TB_LOG_AKTIVITAS ────────────────────────────────────────────────────────────┐
+│ Fungsi: Audit trail - siapa berbuat apa dan kapan                            │
+│ Tabel: tb_log_aktivitas                                                       │
+│ PK: log_id (INTEGER, auto increment)                                         │
+│ FK: user_id → TB_USER                                                         │
+│ Kategori: Otorisasi, Input Data, Ubah Data, Laporan, dll                    │
+│ Contoh Query: SELECT * FROM tb_log_aktivitas WHERE DATE(waktu)='2024-01-15' │
+│ Catatan: PENTING untuk keamanan dan monitoring sistem                        │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+2. PRIMARY KEY & FOREIGN KEY QUICK MAP
+═══════════════════════════════════════════════════════════════════════════════════
+
+PRIMARY KEY (PK):
+  TB_USER               → id_user
+  TB_JENIS_KENDARAAN    → jenis_id
+  TB_AREA_PARKIR        → area_id
+  TB_KENDARAAN          → kendaraan_id
+  TB_TRANSAKSI          → transaksi_id
+  TB_LOG_AKTIVITAS      → log_id
+
+FOREIGN KEY (FK):
+  TB_AREA_PARKIR        → jenis_id (referensi TB_JENIS_KENDARAAN)
+  TB_KENDARAAN          → jenis_id (referensi TB_JENIS_KENDARAAN)
+  TB_TRANSAKSI          → kendaraan_id (referensi TB_KENDARAAN)
+  TB_TRANSAKSI          → area_id (referensi TB_AREA_PARKIR)
+  TB_TRANSAKSI          → user_id (referensi TB_USER)
+  TB_LOG_AKTIVITAS      → user_id (referensi TB_USER)
+
+UNIQUE CONSTRAINT:
+  TB_USER               → username
+  TB_JENIS_KENDARAAN    → nama_jenis
+  TB_AREA_PARKIR        → nama_area
+  TB_KENDARAAN          → plat_nomor
+
+═══════════════════════════════════════════════════════════════════════════════════
+3. RELASI DIAGRAM (SIMPLE VERSION)
+═══════════════════════════════════════════════════════════════════════════════════
+
+         TB_JENIS_KENDARAAN (Master)
+                  ↑    ↑
+                  │    │
+        ┌─────────┘    └──────────┐
+        │                         │
+   (1:Many)                  (1:Many)
+        │                         │
+        ↓                         ↓
+    TB_AREA_PARKIR         TB_KENDARAAN
+        │                         │
+        └──────┬──────────────────┘
+               │
+           (1:Many) FK
+               │
+               ↓
+        TB_TRANSAKSI ← TB_USER (1:Many FK)
+                        ↑
+                        │
+                   (1:Many) FK
+                        │
+                TB_LOG_AKTIVITAS
+
+═══════════════════════════════════════════════════════════════════════════════════
+4. TIPE DATA DAN CONSTRAINT SUMMARY
+═══════════════════════════════════════════════════════════════════════════════════
+
+TIPE DATA:
+  INTEGER         = Angka bulat (id, tarif, kapasitas)
+  VARCHAR(n)      = Text dengan panjang max (nama, username, merk)
+  TEXT            = Text tanpa batas (password hash, deskripsi)
+  DATETIME        = Tanggal dan waktu (2024-01-15 08:30:00)
+  BOOLEAN         = True/False (1/0)
+
+CONSTRAINT:
+  PRIMARY KEY     = Identitas unik, tidak boleh NULL
+  FOREIGN KEY     = Referensi ke tabel lain, maintain relasi
+  UNIQUE          = Nilai harus unik (tidak ada duplikat)
+  NOT NULL        = Field harus diisi (tidak boleh kosong)
+  DEFAULT         = Nilai default jika tidak diisi
+  AUTOINCREMENT   = Auto increment (1, 2, 3, ...)
+
+═══════════════════════════════════════════════════════════════════════════════════
+5. PERHITUNGAN BIAYA PARKIR
+═══════════════════════════════════════════════════════════════════════════════════
+
+RUMUS:
+  Total Biaya = (Waktu Keluar - Waktu Masuk) × Tarif Per Jam
+
+CONTOH 1: Motor 2 Jam
+  Masuk:  08:00
+  Keluar: 10:00
+  Durasi: 2 jam
+  Tarif:  Rp2.000/jam (Motor)
+  Biaya:  2 × 2.000 = Rp4.000
+
+CONTOH 2: Mobil 2.5 Jam
+  Masuk:  14:00
+  Keluar: 16:30
+  Durasi: 2.5 jam → Rounding ke 3 jam (minimum per jam)
+  Tarif:  Rp5.000/jam (Mobil)
+  Biaya:  3 × 5.000 = Rp15.000
+
+CONTOH 3: Motor 30 Menit
+  Masuk:  17:00
+  Keluar: 17:30
+  Durasi: 0.5 jam → Rounding ke 1 jam (minimum)
+  Tarif:  Rp2.000/jam
+  Biaya:  1 × 2.000 = Rp2.000
+
+═══════════════════════════════════════════════════════════════════════════════════
+6. QUERY TEMPLATE CEPAT
+═══════════════════════════════════════════════════════════════════════════════════
+
+LOGIN (Cek username & status aktif):
+  SELECT * FROM tb_user WHERE username='owner' AND status='aktif'
+
+TRANSAKSI AKTIF (Kendaraan masih parkir):
+  SELECT t.*, k.plat_nomor, a.nama_area 
+  FROM tb_transaksi t
+  JOIN tb_kendaraan k ON t.kendaraan_id = k.kendaraan_id
+  JOIN tb_area_parkir a ON t.area_id = a.area_id
+  WHERE t.status = 'parkir'
+
+PENDAPATAN HARI INI:
+  SELECT SUM(total_biaya) FROM tb_transaksi 
+  WHERE DATE(waktu_keluar) = DATE('now') AND status='keluar'
+
+INSERT TRANSAKSI MASUK:
+  INSERT INTO tb_transaksi (kendaraan_id, area_id, waktu_masuk, status, user_id)
+  VALUES (1, 1, '2024-01-15 08:00:00', 'parkir', 3)
+
+UPDATE TRANSAKSI KELUAR:
+  UPDATE tb_transaksi SET waktu_keluar='2024-01-15 10:30:00', 
+                           status='keluar', total_biaya=5000
+  WHERE transaksi_id=1
+
+KAPASITAS AREA SEKARANG:
+  SELECT nama_area, kapasitas, terisi, (kapasitas-terisi) as kosong
+  FROM tb_area_parkir
+
+LOG AKTIVITAS:
+  SELECT u.nama_lengkap, l.kategori_log, l.aktivitas, l.waktu
+  FROM tb_log_aktivitas l
+  JOIN tb_user u ON l.user_id = u.id_user
+  WHERE DATE(l.waktu) = '2024-01-15'
+
+═══════════════════════════════════════════════════════════════════════════════════
+7. ROLE & PERMISSION QUICK GUIDE
+═══════════════════════════════════════════════════════════════════════════════════
+
+OWNER (Pemilik Sistem):
+  ✓ Lihat semua transaksi
+  ✓ Lihat laporan pendapatan
+  ✓ Kelola user (add/edit/delete)
+  ✓ Ubah tarif
+  ✓ Lihat audit trail
+  ✓ Export laporan
+
+ADMIN (Administrator):
+  ✓ Kelola user (add/edit/delete)
+  ✓ Ubah tarif dan area
+  ✓ Lihat laporan
+  ✓ Lihat aktivitas user
+  ✗ TIDAK bisa lihat financial details
+
+PETUGAS (Operator):
+  ✓ Input kendaraan masuk
+  ✓ Input kendaraan keluar
+  ✓ Lihat kendaraan parkir sekarang
+  ✗ TIDAK bisa ubah data
+  ✗ TIDAK bisa lihat laporan
+
+═══════════════════════════════════════════════════════════════════════════════════
+8. COMMON MISTAKES & TIPS
+═══════════════════════════════════════════════════════════════════════════════════
+
+❌ JANGAN:
+  • Simpan password plain text (selalu hash dengan bcrypt)
+  • Insert data tanpa Foreign Key validation
+  • Lupa update terisi saat kendaraan keluar
+  • Hapus transaksi yang sudah selesai (keep history!)
+  • Lupa log aktivitas penting ke TB_LOG_AKTIVITAS
+  • Query SEMUA transaksi tanpa WHERE clause (lambat!)
+
+✓ LAKUKAN:
+  • Validate semua input sebelum INSERT
+  • Gunakan Foreign Key untuk maintain relasi
+  • Update area.terisi secara real-time
+  • Hitung biaya dengan akurat (perhatikan rounding)
+  • Log setiap aktivitas penting
+  • Gunakan WHERE & LIMIT untuk query efisien
+  • Backup database secara berkala
+
+═══════════════════════════════════════════════════════════════════════════════════
+9. TESTING DATA SETUP
+═══════════════════════════════════════════════════════════════════════════════════
+
+Default Data yang sudah ada:
+
+JENIS KENDARAAN:
+  jenis_id=1, nama='Motor', tarif=2000
+  jenis_id=2, nama='Mobil', tarif=5000
+
+USER:
+  id_user=1, username='owner', password=(hashed 'owner123'), role='Owner'
+
+UNTUK TESTING, BISA ADD:
+  Insert 2-3 area (Motor, Mobil)
+  Insert 5-10 kendaraan dengan plat berbeda
+  Insert 20+ transaksi dengan waktu berbeda
+  Jalankan query untuk test setiap scenario
+
+═══════════════════════════════════════════════════════════════════════════════════
+10. MIGRATION & BACKUP
+═══════════════════════════════════════════════════════════════════════════════════
+
+BACKUP DATABASE:
+  adb pull /data/data/com.example.module_parking_app/databases/parking_app.db
+
+RESTORE DATABASE:
+  adb push parking_app.db /data/data/com.example.module_parking_app/databases/
+
+EXPORT KE SQL:
+  sqlite3 parking_app.db .dump > backup.sql
+
+IMPORT DARI SQL:
+  sqlite3 parking_app.db < schema.sql
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+Total Database: 6 Tabel | 30+ Kolom | Relasi 1:Many
+Designed for: SMK Learning | Architecture: 3NF Normalization
+Last Updated: 13 April 2024 | Status: Production Ready
+
+═════════════════════════════════════════════════════════════════════════════════════
