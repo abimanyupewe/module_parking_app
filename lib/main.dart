@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'config/themes.dart';
 import 'config/constants.dart';
 import 'core/preferences/app_preferences.dart';
@@ -13,6 +14,10 @@ import 'features/petugas/pages/petugas_dashboard_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize sqflite_common_ffi for desktop/web platforms
+  sqfliteFfiInit();
+
   await AppPreferences.init();
   runApp(const MyApp());
 }
