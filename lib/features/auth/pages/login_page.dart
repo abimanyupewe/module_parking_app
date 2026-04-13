@@ -87,9 +87,56 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 40),
               const AuthHeaderWidget(
                 title: 'Login',
-                subtitle: 'Masukkan username dan password Anda',
+                subtitle: 'Pilih user atau masukkan username dan password',
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 32),
+
+              // Quick Select User Buttons (untuk testing)
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.border),
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.surface,
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quick Select User (Testing)',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Owner Button
+                    _buildQuickSelectButton(
+                      context,
+                      label: 'Owner',
+                      username: 'owner',
+                      onPressed: () => _handleLogin('owner', '123456'),
+                    ),
+                    const SizedBox(height: 8),
+                    // Admin Button
+                    _buildQuickSelectButton(
+                      context,
+                      label: 'Admin',
+                      username: 'admin1',
+                      onPressed: () => _handleLogin('admin1', '123456'),
+                    ),
+                    const SizedBox(height: 8),
+                    // Petugas Button
+                    _buildQuickSelectButton(
+                      context,
+                      label: 'Petugas',
+                      username: 'petugas1',
+                      onPressed: () => _handleLogin('petugas1', '123456'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
 
               // Form
               LoginFormWidget(
@@ -119,6 +166,31 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Build quick select button
+  Widget _buildQuickSelectButton(
+    BuildContext context, {
+    required String label,
+    required String username,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary.withOpacity(0.1),
+          foregroundColor: AppColors.primary,
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          side: BorderSide(color: AppColors.primary),
+        ),
+        child: Text(
+          '$label ($username)',
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
         ),
       ),
     );

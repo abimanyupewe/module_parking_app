@@ -237,9 +237,11 @@ VALUES ('Motor', 2000);
 INSERT INTO tb_jenis_kendaraan (nama_jenis, tarif_per_jam) 
 VALUES ('Mobil', 5000);
 
--- Insert: User Default (Owner)
--- Username: owner | Password: owner123 (ter-hash dengan bcrypt)
+-- Insert: Default Users untuk Testing
+-- Username: owner, admin1, petugas1 | Password: semua 123456 (ter-hash dengan bcrypt)
 -- Note: Password yang ditampilkan di sini adalah HASHED, bukan plain text
+
+-- User 1: Owner
 INSERT INTO tb_user (
   nama_lengkap, 
   username, 
@@ -251,14 +253,58 @@ INSERT INTO tb_user (
   is_default_password
 ) 
 VALUES (
-  'Owner',
+  'Owner Parkir',
   'owner',
-  '$2a$12$abcdefghijklmnopqrstuvwxyz1234567890abcdefghij', -- Hashed password
+  '$2a$12$abcdefghijklmnopqrstuvwxyz1234567890abcdefghij',
   'Owner',
   'aktif',
   'Apa nama perusahaan Anda?',
-  '$2a$12$abcdefghijklmnopqrstuvwxyz0987654321fedcbahij', -- Hashed answer
-  0  -- Password sudah diganti
+  '$2a$12$abcdefghijklmnopqrstuvwxyz0987654321fedcbahij',
+  0
+);
+
+-- User 2: Admin
+INSERT INTO tb_user (
+  nama_lengkap, 
+  username, 
+  password, 
+  role, 
+  status,
+  security_question,
+  security_answer,
+  is_default_password
+) 
+VALUES (
+  'Admin Sistem',
+  'admin1',
+  '$2a$12$abcdefghijklmnopqrstuvwxyz1234567890abcdefghij',
+  'Admin',
+  'aktif',
+  'Siapa nama manajer?',
+  '$2a$12$abcdefghijklmnopqrstuvwxyz0987654321fedcbahij',
+  0
+);
+
+-- User 3: Petugas
+INSERT INTO tb_user (
+  nama_lengkap, 
+  username, 
+  password, 
+  role, 
+  status,
+  security_question,
+  security_answer,
+  is_default_password
+) 
+VALUES (
+  'Petugas Parkir',
+  'petugas1',
+  '$2a$12$abcdefghijklmnopqrstuvwxyz1234567890abcdefghij',
+  'Petugas',
+  'aktif',
+  'Nomor identitas?',
+  '$2a$12$abcdefghijklmnopqrstuvwxyz0987654321fedcbahij',
+  0
 );
 
 -- =============================================================================

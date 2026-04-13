@@ -12,6 +12,9 @@ class AppColors {
   static const Color black = Color(0xFF000000);
   static const Color inactive = Color(0xFF737686);
   static const Color background = Color(0xFFFFFFFF);
+  static const Color border = Color(0xFFE0E0E0);
+  static const Color surface = Color(0xFFFAFAFA);
+  static const Color textSecondary = Color(0xFF666666);
 
   // Status Colors
   static const Color success = Color(0xFF4CAF50);

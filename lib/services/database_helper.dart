@@ -137,17 +137,44 @@ class DatabaseHelper {
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
 
-    // Insert default owner user dengan password ter-hash
-    final hashedPassword = PasswordService.hashPassword('owner123');
+    // Insert default users untuk testing (semua password: 123456)
+    final hashedPassword = PasswordService.hashPassword('123456');
+    final hashedAnswer = PasswordService.hashPassword('jawaban');
+
+    // User 1: Owner
     await db.insert(AppConstants.tableUser, {
-      AppConstants.colNamaLengkap: 'Owner',
+      AppConstants.colNamaLengkap: 'Owner Parkir',
       AppConstants.colUsername: 'owner',
       AppConstants.colPassword: hashedPassword,
       AppConstants.colRole: AppConstants.roleOwner,
       AppConstants.colStatus: AppConstants.statusAktif,
       'security_question': 'Apa nama perusahaan Anda?',
-      'security_answer': PasswordService.hashPassword('parkir app'),
-      'is_default_password': 1,
+      'security_answer': hashedAnswer,
+      'is_default_password': 0,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+    // User 2: Admin
+    await db.insert(AppConstants.tableUser, {
+      AppConstants.colNamaLengkap: 'Admin Sistem',
+      AppConstants.colUsername: 'admin1',
+      AppConstants.colPassword: hashedPassword,
+      AppConstants.colRole: AppConstants.roleAdmin,
+      AppConstants.colStatus: AppConstants.statusAktif,
+      'security_question': 'Siapa nama manajer?',
+      'security_answer': hashedAnswer,
+      'is_default_password': 0,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+    // User 3: Petugas
+    await db.insert(AppConstants.tableUser, {
+      AppConstants.colNamaLengkap: 'Petugas Parkir',
+      AppConstants.colUsername: 'petugas1',
+      AppConstants.colPassword: hashedPassword,
+      AppConstants.colRole: AppConstants.rolePetugas,
+      AppConstants.colStatus: AppConstants.statusAktif,
+      'security_question': 'Nomor identitas?',
+      'security_answer': hashedAnswer,
+      'is_default_password': 0,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
