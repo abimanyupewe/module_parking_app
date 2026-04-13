@@ -1,0 +1,173 @@
+TESTING GUIDE - Registration & Login Fix
+==========================================
+
+ISSUE YANG DITEMUKAN:
+===================
+
+1. Database Name Mismatch:
+   - File: parking_app.db (benar)
+   - Code: parkir_app.db (salah) - SUDAH DIPERBAIKI
+
+2. Role Case Mismatch:
+   - Database: 'Owner', 'Admin', 'Petugas' (capitalized)
+   - Code: 'owner', 'admin', 'petugas' (lowercase) - SUDAH DIPERBAIKI
+
+3. Registration Data Tidak Tersimpan:
+   - Mungkin masalah dengan database permissions
+   - Atau exception saat insert - SUDAH DITAMBAH DEBUGGING
+
+FIXES YANG DILAKUKAN:
+====================
+
+1. Constants.dart:
+   - roleOwner = 'Owner' (was 'owner')
+   - roleAdmin = 'Admin' (was 'admin')
+   - rolePetugas = 'Petugas' (was 'petugas')
+   - databaseName = 'parking_app.db' (was 'parkir_app.db')
+
+2. SplashController:
+   - Updated switch case untuk role: 'Owner', 'Admin', 'Petugas'
+
+3. AuthController:
+   - registerOwner() sekarang set role: 'Owner'
+
+4. LoginPage:
+   - Added debug prints untuk role comparison
+   - Error message sekarang menampilkan actual role received
+
+5. DatabaseHelper:
+   - Added debug prints di getUserByUsername()
+   - Print database query results
+
+HOW TO TEST:
+============
+
+Step 1: Test Login dengan Existing Users
+- Run aplikasi
+- Login: owner / 123456
+- Lihat console output:
+  * DEBUG LOGIN: User: UserModel(...)
+  * DEBUG LOGIN: Role: Owner
+  * DEBUG LOGIN: Role == "Owner": true
+- Jika berhasil login → Owner Dashboard muncul
+
+Step 2: Test Registration
+- Logout
+- Klik "Daftar"
+- Isi form:
+  * Nama: John Parkir
+  * Username: johnparkir
+  * Password: password123
+  * Confirm: password123
+- Klik "Daftar"
+- Lihat console output untuk:
+  * DEBUG: Starting registration for username: johnparkir
+  * DEBUG: Username is available
+  * DEBUG: Password hashed
+  * DEBUG: Inserting user to database...
+  * DEBUG: Insert result: [some number > 0]
+  * DEBUG: User inserted successfully with ID: [number]
+
+Step 3: Verify Data in Database
+- Buka terminal/command prompt
+- cd ke project folder
+- Run: sqlite3 parking_app.db
+- Query: SELECT username, role FROM tb_user WHERE username = 'johnparkir';
+- Expected output: johnparkir|Owner
+
+Step 4: Test Login dengan Registered User
+- Close app sepenuhnya
+- Run ulang app
+- Login: johnparkir / password123
+- Lihat console output untuk role check
+- Jika role adalah 'Owner' → harus navigate ke Owner Dashboard
+
+EXPECTED CONSOLE OUTPUT:
+========================
+
+1. Successful Login:
+```
+DEBUG LOGIN: User: UserModel(idUser: 4, namaLengkap: John Parkir, username: johnparkir, role: Owner, status: aktif)
+DEBUG LOGIN: Role: Owner
+DEBUG LOGIN: Role == "Owner": true
+DEBUG LOGIN: Role == "Admin": false
+DEBUG LOGIN: Role == "Petugas": false
+DEBUG DB: Query username=johnparkir, found 1 record(s)
+DEBUG DB: First record: {id_user: 4, nama_lengkap: John Parkir, username: johnparkir, ...}
+DEBUG DB: UserModel created: UserModel(idUser: 4, namaLengkap: John Parkir, username: johnparkir, role: Owner, status: aktif)
+```
+
+2. Failed Login - Unknown Role:
+```
+DEBUG LOGIN: User: UserModel(idUser: X, namaLengkap: ..., username: ..., role: unknown, status: aktif)
+DEBUG LOGIN: Role: unknown
+DEBUG LOGIN: Role == "Owner": false
+DEBUG LOGIN: Role == "Admin": false
+DEBUG LOGIN: Role == "Petugas": false
+[Error message shows: "Role user tidak dikenali: unknown"]
+```
+
+3. Registration Success:
+```
+DEBUG: Starting registration for username: johnparkir
+DEBUG: Checking if username exists...
+DEBUG: Username is available
+DEBUG: Password hashed
+DEBUG: UserModel created: UserModel(idUser: null, namaLengkap: John Parkir, username: johnparkir, role: Owner, status: aktif)
+DEBUG: Inserting user to database...
+DEBUG: Insert result: 4
+DEBUG: User inserted successfully with ID: 4
+DEBUG: Register result = {success: true, message: Registrasi berhasil! Silakan login dengan akun Anda.}
+```
+
+TROUBLESHOOTING:
+================
+
+Issue: "Role user tidak dikenali"
+→ Check debug output untuk lihat actual role value
+→ Biasanya null atau lowercase role
+
+Issue: "Username sudah terdaftar" saat register
+→ Ada username duplicate
+→ Coba dengan username berbeda
+
+Issue: Data tidak bertambah di database
+→ Check debug output "Insert result: [number]"
+→ Jika 0 atau -1, insert gagal
+→ Lihat exception di console
+
+Issue: Login fails dengan "Username tidak ditemukan"
+→ Username tidak ada di database
+→ Coba registrasi dulu, atau gunakan existing user (owner)
+
+DATABASE DEBUGGING:
+===================
+
+Check all users:
+sqlite3 parking_app.db "SELECT id_user, username, role FROM tb_user;"
+
+Check specific user:
+sqlite3 parking_app.db "SELECT * FROM tb_user WHERE username = 'johnparkir';"
+
+Check table schema:
+sqlite3 parking_app.db ".schema tb_user"
+
+Delete test user:
+sqlite3 parking_app.db "DELETE FROM tb_user WHERE username = 'johnparkir';"
+
+DEFAULT TEST USERS:
+===================
+owner / 123456 → Owner role
+admin1 / 123456 → Admin role  
+petugas1 / 123456 → Petugas role
+
+NEXT STEPS:
+===========
+
+1. Run aplikasi dengan fixes di atas
+2. Test login dengan existing user (owner/123456)
+3. Jika berhasil → test registration dengan new user
+4. Check console output untuk debug messages
+5. Verify data di database dengan sqlite3
+6. Report hasil testing (success atau error details)
+
