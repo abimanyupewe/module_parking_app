@@ -1,5 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../config/constants.dart';
 import '../models/models.dart';
 import 'password_service.dart';
@@ -21,16 +23,45 @@ class DatabaseHelper {
     return _database!;
   }
 
-  /// Inisialisasi database
+  /// Inisialisasi database dengan custom path di project folder
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, AppConstants.databaseName);
+    // Try multiple approaches untuk mendapatkan correct path
 
-    print('DEBUG: Database Path: $dbPath');
-    print('DEBUG: Full Database File: $path');
+    String dbPath;
+
+    // Approach 1: Try getDatabasesPath() first (standard SQLite location)
+    try {
+      final systemDbPath = await getDatabasesPath();
+
+      // Buat subfolder 'parking_app' di dalam system databases path
+      final appDbDir = Directory(join(systemDbPath, 'parking_app'));
+
+      if (!await appDbDir.exists()) {
+        await appDbDir.create(recursive: true);
+        print('DEBUG: Created database directory at: ${appDbDir.path}');
+      }
+
+      dbPath = join(appDbDir.path, AppConstants.databaseName);
+      print('DEBUG: Using standard database path: $dbPath');
+    } catch (e) {
+      // Fallback: Use application documents directory
+      print('DEBUG: Standard path failed, using fallback: $e');
+
+      final appDocDir = await getApplicationDocumentsDirectory();
+      final dbDir = Directory(join(appDocDir.path, 'databases'));
+
+      if (!await dbDir.exists()) {
+        await dbDir.create(recursive: true);
+      }
+
+      dbPath = join(dbDir.path, AppConstants.databaseName);
+      print('DEBUG: Using fallback database path: $dbPath');
+    }
+
+    print('DEBUG: Full Database File: $dbPath');
 
     return await openDatabase(
-      path,
+      dbPath,
       version: AppConstants.databaseVersion,
       onCreate: _createTables,
       onUpgrade: _onUpgrade,

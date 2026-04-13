@@ -1,3 +1,4 @@
+import '../../../config/constants.dart';
 import '../../../core/preferences/app_preferences.dart';
 import '../../../models/user_model.dart';
 import '../../../services/database_helper.dart';
@@ -129,8 +130,8 @@ class AuthController {
         namaLengkap: namaLengkap,
         username: username,
         password: hashedPassword,
-        role: 'Owner',
-        status: 'aktif',
+        role: AppConstants.roleOwner,
+        status: AppConstants.statusAktif,
       );
 
       print('DEBUG: UserModel created: ${newUser.toString()}');

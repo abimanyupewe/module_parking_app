@@ -55,9 +55,9 @@ class AppConstants {
   static const String colWaktu = 'waktu';
 
   // Role Types
-  static const String roleOwner = 'Owner';
-  static const String roleAdmin = 'Admin';
-  static const String rolePetugas = 'Petugas';
+  static const String roleOwner = 'owner';
+  static const String roleAdmin = 'admin';
+  static const String rolePetugas = 'petugas';
 
   // Status Types
   static const String statusAktif = 'aktif';

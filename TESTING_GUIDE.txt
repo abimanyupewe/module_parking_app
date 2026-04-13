@@ -48,31 +48,32 @@ ISSUE YANG DITEMUKAN:
    - Code: parkir_app.db (salah) - SUDAH DIPERBAIKI
 
 2. Role Case Mismatch:
-   - Database: 'Owner', 'Admin', 'Petugas' (capitalized)
-   - Code: 'owner', 'admin', 'petugas' (lowercase) - SUDAH DIPERBAIKI
+    - Database: 'owner', 'admin', 'petugas' (lowercase)
+    - Code: was capitalized 'Owner', 'Admin', 'Petugas' - SUDAH DIPERBAIKI ke LOWERCASE
 
 3. Registration Data Tidak Tersimpan:
-   - Mungkin masalah dengan database permissions
-   - Atau exception saat insert - SUDAH DITAMBAH DEBUGGING
+    - Mungkin masalah dengan database permissions
+    - Atau exception saat insert - SUDAH DITAMBAH DEBUGGING
 
 FIXES YANG DILAKUKAN:
 ====================
 
 1. Constants.dart:
-   - roleOwner = 'Owner' (was 'owner')
-   - roleAdmin = 'Admin' (was 'admin')
-   - rolePetugas = 'Petugas' (was 'petugas')
-   - databaseName = 'parking_app.db' (was 'parkir_app.db')
+    - roleOwner = 'owner' (was 'Owner')
+    - roleAdmin = 'admin' (was 'Admin')
+    - rolePetugas = 'petugas' (was 'Petugas')
+    - databaseName = 'parking_app.db' (sudah benar)
 
 2. SplashController:
-   - Updated switch case untuk role: 'Owner', 'Admin', 'Petugas'
+    - Updated switch case untuk role: 'owner', 'admin', 'petugas' (lowercase)
 
 3. AuthController:
-   - registerOwner() sekarang set role: 'Owner'
+    - registerOwner() sekarang set role: 'owner' (lowercase)
 
 4. LoginPage:
-   - Added debug prints untuk role comparison
-   - Error message sekarang menampilkan actual role received
+    - Updated switch cases untuk role: 'owner', 'admin', 'petugas' (lowercase)
+    - Added debug prints untuk role comparison
+    - Error message sekarang menampilkan actual role received
 
 5. DatabaseHelper:
    - Added debug prints di getUserByUsername()
@@ -86,8 +87,8 @@ Step 1: Test Login dengan Existing Users
 - Login: owner / 123456
 - Lihat console output:
   * DEBUG LOGIN: User: UserModel(...)
-  * DEBUG LOGIN: Role: Owner
-  * DEBUG LOGIN: Role == "Owner": true
+  * DEBUG LOGIN: Role: owner
+  * DEBUG LOGIN: Role == "owner": true
 - Jika berhasil login → Owner Dashboard muncul
 
 Step 2: Test Registration
@@ -112,37 +113,37 @@ Step 3: Verify Data in Database
 - cd ke project folder
 - Run: sqlite3 parking_app.db
 - Query: SELECT username, role FROM tb_user WHERE username = 'johnparkir';
-- Expected output: johnparkir|Owner
+- Expected output: johnparkir|owner
 
 Step 4: Test Login dengan Registered User
 - Close app sepenuhnya
 - Run ulang app
 - Login: johnparkir / password123
 - Lihat console output untuk role check
-- Jika role adalah 'Owner' → harus navigate ke Owner Dashboard
+- Jika role adalah 'owner' → harus navigate ke Owner Dashboard
 
 EXPECTED CONSOLE OUTPUT:
 ========================
 
 1. Successful Login:
 ```
-DEBUG LOGIN: User: UserModel(idUser: 4, namaLengkap: John Parkir, username: johnparkir, role: Owner, status: aktif)
-DEBUG LOGIN: Role: Owner
-DEBUG LOGIN: Role == "Owner": true
-DEBUG LOGIN: Role == "Admin": false
-DEBUG LOGIN: Role == "Petugas": false
+DEBUG LOGIN: User: UserModel(idUser: 4, namaLengkap: John Parkir, username: johnparkir, role: owner, status: aktif)
+DEBUG LOGIN: Role: owner
+DEBUG LOGIN: Role == "owner": true
+DEBUG LOGIN: Role == "admin": false
+DEBUG LOGIN: Role == "petugas": false
 DEBUG DB: Query username=johnparkir, found 1 record(s)
 DEBUG DB: First record: {id_user: 4, nama_lengkap: John Parkir, username: johnparkir, ...}
-DEBUG DB: UserModel created: UserModel(idUser: 4, namaLengkap: John Parkir, username: johnparkir, role: Owner, status: aktif)
+DEBUG DB: UserModel created: UserModel(idUser: 4, namaLengkap: John Parkir, username: johnparkir, role: owner, status: aktif)
 ```
 
 2. Failed Login - Unknown Role:
 ```
 DEBUG LOGIN: User: UserModel(idUser: X, namaLengkap: ..., username: ..., role: unknown, status: aktif)
 DEBUG LOGIN: Role: unknown
-DEBUG LOGIN: Role == "Owner": false
-DEBUG LOGIN: Role == "Admin": false
-DEBUG LOGIN: Role == "Petugas": false
+DEBUG LOGIN: Role == "owner": false
+DEBUG LOGIN: Role == "admin": false
+DEBUG LOGIN: Role == "petugas": false
 [Error message shows: "Role user tidak dikenali: unknown"]
 ```
 
@@ -152,7 +153,7 @@ DEBUG: Starting registration for username: johnparkir
 DEBUG: Checking if username exists...
 DEBUG: Username is available
 DEBUG: Password hashed
-DEBUG: UserModel created: UserModel(idUser: null, namaLengkap: John Parkir, username: johnparkir, role: Owner, status: aktif)
+DEBUG: UserModel created: UserModel(idUser: null, namaLengkap: John Parkir, username: johnparkir, role: owner, status: aktif)
 DEBUG: Inserting user to database...
 DEBUG: Insert result: 4
 DEBUG: User inserted successfully with ID: 4
@@ -196,9 +197,9 @@ sqlite3 parking_app.db "DELETE FROM tb_user WHERE username = 'johnparkir';"
 
 DEFAULT TEST USERS:
 ===================
-owner / 123456 → Owner role
-admin1 / 123456 → Admin role  
-petugas1 / 123456 → Petugas role
+owner / 123456 → owner role
+admin1 / 123456 → admin role  
+petugas1 / 123456 → petugas role
 
 NEXT STEPS:
 ===========

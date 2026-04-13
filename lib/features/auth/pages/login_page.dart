@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../config/constants.dart';
 import '../../../core/preferences/app_preferences.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_header_widget.dart';
@@ -52,19 +53,25 @@ class _LoginPageState extends State<LoginPage> {
 
       print('DEBUG LOGIN: User: ${user.toString()}');
       print('DEBUG LOGIN: Role: $role');
-      print('DEBUG LOGIN: Role == "Owner": ${role == 'Owner'}');
-      print('DEBUG LOGIN: Role == "Admin": ${role == 'Admin'}');
-      print('DEBUG LOGIN: Role == "Petugas": ${role == 'Petugas'}');
+      print(
+        'DEBUG LOGIN: Role == "${AppConstants.roleOwner}": ${role == AppConstants.roleOwner}',
+      );
+      print(
+        'DEBUG LOGIN: Role == "${AppConstants.roleAdmin}": ${role == AppConstants.roleAdmin}',
+      );
+      print(
+        'DEBUG LOGIN: Role == "${AppConstants.rolePetugas}": ${role == AppConstants.rolePetugas}',
+      );
 
       if (mounted) {
         switch (role) {
-          case 'Owner':
+          case AppConstants.roleOwner:
             Navigator.of(context).pushReplacementNamed('/owner_dashboard');
             break;
-          case 'Admin':
+          case AppConstants.roleAdmin:
             Navigator.of(context).pushReplacementNamed('/admin_dashboard');
             break;
-          case 'Petugas':
+          case AppConstants.rolePetugas:
             Navigator.of(context).pushReplacementNamed('/petugas_dashboard');
             break;
           default:
@@ -127,6 +134,16 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+
+              // Debug Button
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/debug');
+                },
+                icon: const Icon(Icons.bug_report, size: 16),
+                label: const Text('Debug', style: TextStyle(fontSize: 12)),
               ),
             ],
           ),

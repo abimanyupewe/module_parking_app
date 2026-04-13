@@ -2,11 +2,11 @@
 
 **Project**: module_parking_app  
 **Last Update**: April 13, 2026  
-**Current Phase**: Phase 1-5 (UI Foundation - COMPLETED)
+**Current Phase**: Phase 1-7 (UI Foundation + Authentication - COMPLETED)
 
 ---
 
-##  COMPLETED PHASES (Phase 1-5)
+##  COMPLETED PHASES (Phase 1-7)
 
 ### Phase 1: Setup Proyek & Dependencies
 **Status**:  COMPLETED  
@@ -155,49 +155,97 @@
 
 ---
 
-##  PENDING PHASES (Phase 6-10)
-
 ### Phase 6: Splash & Onboarding UI
-**Status**: 🔲 PENDING
+**Status**: ✅ COMPLETED
+**Commit**: (Phase 6-7 auth implementation)
 
-**Planning**:
-- SplashPage with logo & loading
-- OnboardingPage with PageView (3 slides)
+**Deliverables**:
+- SplashPage with logo & loading indicator
+- OnboardingPage dengan 1 slide intro
 - SharedPreferences integration (is_first_run flag)
 - Conditional routing based on:
   - First run → Onboarding
-  - Already logged in → Respective dashboard
+  - Already logged in → Respective dashboard (role-based)
   - Not logged in → Login page
 
-**Estimated Lines**: 300-400 lines of code
+**Files Created**:
+- lib/features/splash/pages/splash_page.dart
+- lib/features/splash/pages/onboarding_page.dart
+- lib/features/splash/controllers/splash_controller.dart
 
 ---
 
 ### Phase 7: Authentication Module
-**Status**: 🔲 PENDING
+**Status**: ✅ COMPLETED
+**Key Fix**: Role case alignment (lowercase 'owner', 'admin', 'petugas')
 
-**Features**:
-- LoginPage with username/password validation
-- ForgotPasswordPage with security question
-- ChangePasswordPage (forced on first login)
-- AuthController with business logic
+**Deliverables**:
+- **LoginPage** - Username/password with role-based navigation
+- **RegisterPage** - Owner-only self-registration (Admin/Petugas created by system)
+- **DebugPage** - Database testing utilities
+- **AuthController** - Business logic for login/registration
+- **PasswordService** - bcrypt password hashing & verification
+- **Session Management** - SharedPreferences persistent login
 
-**Estimated Lines**: 500-600 lines of code
+**Features Implemented**:
+- Owner-only registration system
+- Admin/Petugas accounts created manually (cannot self-register)
+- Bcrypt password hashing for security
+- Persistent login with SharedPreferences
+- Session management with automatic logout
+- Role-based dashboard routing (Owner/Admin/Petugas)
+- Debug utilities for testing
+
+**Database Integration**:
+- 3 default test users:
+  - owner / 123456 → owner role
+  - admin1 / 123456 → admin role
+  - petugas1 / 123456 → petugas role
+
+**Files Created**:
+- lib/features/auth/pages/login_page.dart
+- lib/features/auth/pages/register_page.dart
+- lib/features/auth/pages/debug_page.dart
+- lib/features/auth/controllers/auth_controller.dart
+- lib/features/auth/widgets/login_form_widget.dart
+- lib/features/auth/widgets/auth_header_widget.dart
+- lib/services/password_service.dart
+- lib/core/preferences/app_preferences.dart
+
+**Critical Fix Applied**:
+- Changed role constants to lowercase to match database:
+  - `roleOwner = 'owner'` (was 'Owner')
+  - `roleAdmin = 'admin'` (was 'Admin')
+  - `rolePetugas = 'petugas'` (was 'Petugas')
+- Updated SplashController switch cases for role routing
+- Updated LoginPage role navigation logic
+- Updated AuthController registration role assignment
+- All files now consistently use lowercase roles
 
 ---
 
-### Phase 8: Petugas Dashboard
-**Status**: 🔲 PENDING
+## PENDING PHASES (Phase 9-10)
 
-**Features**:
-- Dashboard beranda dengan summary cards
-- Check-in tab (vehicle entry form)
-- Check-out tab (vehicle search & checkout)
-- Shift history (timeline view)
-- Profile page
-- PDF karcis & struk generation
+### Phase 8: Owner Dashboard
+**Status**: ✅ COMPLETED (Basic Version)
 
-**Estimated Lines**: 1000-1200 lines of code
+**Deliverables**:
+- Owner Dashboard with Bottom Navigation (2 tabs)
+- **Home Section**:
+  - Welcome header with user greeting
+  - Summary cards (Total Kendaraan, Total Transaksi, Pendapatan Hari Ini, Okupansi)
+  - Area status display with capacity indicators
+  - Recent transactions list
+- **Profile Section**:
+  - User information display
+  - Account settings
+  - Change password functionality
+  - Logout button
+
+**Files Created**:
+- lib/features/owner/pages/owner_dashboard_page.dart
+- lib/features/owner/widgets/owner_home_section.dart
+- lib/features/owner/widgets/owner_profile_section.dart
 
 ---
 
@@ -215,18 +263,18 @@
 
 ---
 
-### Phase 10: Owner Dashboard
+### Phase 10: Petugas Dashboard
 **Status**: 🔲 PENDING
 
 **Features**:
-- Analytics dashboard (4 summary cards)
-- Quick access filter (Hari/Minggu/Bulan)
-- Real-time transaction table
-- Audit transparency (2 tabs)
-- History global (full transaction table)
-- SDM management (user CRUD)
+- Dashboard beranda dengan summary cards
+- Check-in tab (vehicle entry form)
+- Check-out tab (vehicle search & checkout)
+- Shift history (timeline view)
+- Profile page
+- PDF karcis & struk generation
 
-**Estimated Lines**: 900-1100 lines of code
+**Estimated Lines**: 1000-1200 lines of code
 
 ---
 
@@ -235,33 +283,36 @@
 ### By Completion Status
 | Status | Count | Percentage |
 |--------|-------|-----------|
-|  Completed | 5 | 50% |
-| 🔲 Pending | 5 | 50% |
+|  Completed | 8 | 80% |
+| 🔲 Pending | 2 | 20% |
 | 🚧 In Progress | 0 | 0% |
 
 ### By Lines of Code
 | Phase | Status | Lines | Notes |
 |-------|--------|-------|-------|
 | 1-5 (Foundation) |  | 3,472 | Core infrastructure |
-| 6 (Splash/Onboarding) | 🔲 | ~350 | Est. pending |
-| 7 (Auth) | 🔲 | ~550 | Est. pending |
-| 8 (Petugas) | 🔲 | ~1,100 | Est. pending |
+| 6 (Splash/Onboarding) |  | ~350 | Completed |
+| 7 (Auth) |  | ~1,200 | Completed + Critical role fix |
+| 8 (Owner Dashboard) |  | ~600 | Completed (Basic version) |
 | 9 (Admin) | 🔲 | ~900 | Est. pending |
-| 10 (Owner) | 🔲 | ~1,000 | Est. pending |
-| **Total Project** | - | ~7,372 | Estimated final |
+| 10 (Petugas) | 🔲 | ~1,100 | Est. pending |
+| **Total Project** | - | ~7,622 | ~5,622 implemented, ~2,000 pending |
 
 ---
 
 ## 📁 FILE STRUCTURE SUMMARY
 
-### Total Files Created: 25 Dart Files
+### Total Files Created: 40+ Dart Files
 
 ```
 lib/
 ├── config/
 │   ├── colors.dart                    # 88 lines
 │   ├── themes.dart                    # 149 lines
-│   └── constants.dart                 # 74 lines
+│   └── constants.dart                 # 87 lines (updated with lowercase roles)
+├── core/
+│   └── preferences/
+│       └── app_preferences.dart       # Session & preferences management
 ├── models/
 │   ├── user_model.dart                # 42 lines
 │   ├── jenis_kendaraan_model.dart     # 34 lines
@@ -273,6 +324,7 @@ lib/
 ├── services/
 │   ├── database_helper.dart           # 652 lines
 │   ├── format_helper.dart             # 56 lines
+│   ├── password_service.dart          # Bcrypt hashing/verification
 │   └── services.dart                  # 2 lines (barrel export)
 ├── widgets/
 │   ├── custom_textfield.dart          # 73 lines
@@ -281,7 +333,30 @@ lib/
 │   ├── status_badge.dart              # 167 lines
 │   ├── log_timeline_tile.dart         # 180 lines
 │   └── widgets.dart                   # 5 lines (barrel export)
-├── main.dart                          # 50 lines
+├── features/
+│   ├── splash/
+│   │   ├── pages/
+│   │   │   ├── splash_page.dart
+│   │   │   └── onboarding_page.dart
+│   │   └── controllers/
+│   │       └── splash_controller.dart # Fixed: lowercase role routing
+│   ├── auth/
+│   │   ├── pages/
+│   │   │   ├── login_page.dart        # Fixed: lowercase role comparison
+│   │   │   ├── register_page.dart     # Owner-only registration
+│   │   │   └── debug_page.dart
+│   │   ├── controllers/
+│   │   │   └── auth_controller.dart   # Fixed: lowercase role assignment
+│   │   └── widgets/
+│   │       ├── login_form_widget.dart
+│   │       └── auth_header_widget.dart
+│   └── owner/
+│       ├── pages/
+│       │   └── owner_dashboard_page.dart
+│       └── widgets/
+│           ├── owner_home_section.dart
+│           └── owner_profile_section.dart
+├── main.dart                          # 50 lines (with role-based routing)
 └── assets/
     ├── images/
     └── icons/
@@ -307,22 +382,31 @@ f33daf4 feat: implement UI foundation layers (phase 1-5)
 
 **To Continue Development**:
 
-1. **Phase 6: Splash & Onboarding**
+1. **Phase 9: Admin Dashboard** (Next)
    ```bash
-   git checkout -b feat/splash-onboarding
-   # Create splash_page.dart and onboarding_page.dart
+   git checkout -b feat/admin-dashboard
+   # Create admin dashboard with master CRUD, monitoring, and user management
    ```
 
-2. **Phase 7: Auth Module**
+2. **Phase 10: Petugas Dashboard** (After Admin)
    ```bash
-   git checkout -b feat/auth-module
-   # Create login_page.dart, forgot_password_page.dart, change_password_page.dart
+   git checkout -b feat/petugas-dashboard
+   # Create petugas dashboard with check-in/out, shift history, and PDF generation
    ```
 
-3. **Continue with Phases 8-10**
-   - Petugas Dashboard
-   - Admin Dashboard
-   - Owner Dashboard
+3. **Phase 11: Advanced Features** (Optional)
+   - Forgot password recovery with security questions
+   - Force password change on first login
+   - Advanced audit logging
+   - PDF ticket & invoice generation
+   - Real-time monitoring dashboard
+
+**Recently Completed**:
+- ✅ Phases 1-5: Core infrastructure (database, models, widgets, themes)
+- ✅ Phase 6: Splash & Onboarding UI
+- ✅ Phase 7: Authentication (Login, Registration, Session Management)
+- ✅ Phase 8: Owner Dashboard (Home & Profile sections)
+- ✅ **Critical Fix**: Role case alignment (lowercase 'owner', 'admin', 'petugas')
 
 ---
 
@@ -342,24 +426,21 @@ f33daf4 feat: implement UI foundation layers (phase 1-5)
 - [x] 5 reusable widgets
 - [x] Color palette system
 - [x] Custom textfields with validation
-- [x] Custom buttons with states
-- [x] Summary cards (2 variants)
-- [x] Status badges (dynamic colors)
-- [x] Timeline tiles for logs
+### Authentication & Session
+- [x] User login with role-based routing
+- [x] Owner-only registration system
+- [x] Bcrypt password hashing
+- [x] Session persistence with SharedPreferences
+- [x] Automatic logout on session expiry
+- [x] Debug utilities for testing
 
-### Data Layer 
-- [x] 6 complete models
-- [x] fromMap/toMap conversions
-- [x] copyWith methods
-- [x] Computed properties
-- [x] Type safety
-
-### Utilities 
-- [x] Format helper (currency, date, time)
-- [x] Duration calculations
-- [x] Plat nomor validation
-- [x] Indonesian localization
-- [x] Parking cost calculations
+### UI/UX Features
+- [x] Splash screen with loading indicator
+- [x] Onboarding screen for first-time users
+- [x] Material 3 design system
+- [x] Responsive layouts
+- [x] Error handling & validation
+- [x] User-friendly forms and navigation
 
 ---
 
@@ -370,10 +451,23 @@ f33daf4 feat: implement UI foundation layers (phase 1-5)
 - Singleton pattern used for database efficiency
 - Models are immutable with copyWith support
 - Widgets are 100% reusable and customizable
-- Ready for integration with controllers/business logic
+- Session management with SharedPreferences
+- Password security with bcrypt hashing
 - Database schema validated with constraints and foreign keys
+- **Critical Fix Applied**: Role case aligned to lowercase ('owner', 'admin', 'petugas') to match database
+
+**Known Issues Fixed**:
+- ✅ Database name mismatch (parkir_app.db → parking_app.db)
+- ✅ Role case mismatch (capitalized roles → lowercase roles)
+- ✅ Role comparison in login/routing logic
+
+**Testing Utilities**:
+- DebugPage for database testing and inspection
+- Comprehensive console logging for troubleshooting
+- Test credentials included in LOGIN_CREDENTIALS.txt
+- TESTING_GUIDE.txt with detailed testing procedures
 
 ---
 
-**Status**: Ready for Phase 6 (Splash & Onboarding)   
-**Estimated Time to Complete All Phases**: 2-3 weeks with current pace
+**Status**: Ready for Phase 9 (Admin Dashboard)   
+**Estimated Time to Complete All Phases**: 1-2 weeks for remaining features
