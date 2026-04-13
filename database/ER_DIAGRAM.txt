@@ -163,22 +163,22 @@ Relasi 6: TB_USER ─[1:Many]─→ TB_LOG_AKTIVITAS
 4. NORMALISASI DATABASE
 ═════════════════════════════════════════════════════════════════════════════════
 
-✓ SUDAH MEMENUHI 3NF (Third Normal Form)
+ SUDAH MEMENUHI 3NF (Third Normal Form)
 
 1NF (First Normal Form):
-✓ Setiap kolom berisi atomic value (tidak ada repeating groups)
-✓ Contoh: role adalah TEXT tunggal, bukan array
-✓ Setiap tabel punya Primary Key
+ Setiap kolom berisi atomic value (tidak ada repeating groups)
+ Contoh: role adalah TEXT tunggal, bukan array
+ Setiap tabel punya Primary Key
 
 2NF (Second Normal Form):
-✓ Semua non-key attributes depend pada PRIMARY KEY penuh
-✓ Tidak ada partial dependencies
-✓ Contoh: nama_area di TB_AREA_PARKIR bergantung pada area_id (bukan jenis_id)
+ Semua non-key attributes depend pada PRIMARY KEY penuh
+ Tidak ada partial dependencies
+ Contoh: nama_area di TB_AREA_PARKIR bergantung pada area_id (bukan jenis_id)
 
 3NF (Third Normal Form):
-✓ Tidak ada transitive dependencies
-✓ Setiap non-key attribute independent dari attribute lain
-✓ Contoh: tarif_per_jam disimpan di TB_JENIS_KENDARAAN, bukan di TB_AREA_PARKIR
+ Tidak ada transitive dependencies
+ Setiap non-key attribute independent dari attribute lain
+ Contoh: tarif_per_jam disimpan di TB_JENIS_KENDARAAN, bukan di TB_AREA_PARKIR
 
 
 5. DATA FLOW - SIKLUS HIDUP TRANSAKSI PARKIR
@@ -255,7 +255,7 @@ Relasi 6: TB_USER ─[1:Many]─→ TB_LOG_AKTIVITAS
     └──────────────────────────────┘
                 │
                 ↓
-        KENDARAAN PERGI ✓
+        KENDARAAN PERGI 
 
 
 6. CONTOH DATA LENGKAP (Scenario)

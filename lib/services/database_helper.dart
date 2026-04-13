@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../config/constants.dart';
 import '../models/models.dart';
+import 'password_service.dart';
 
 /// DatabaseHelper untuk mengelola semua operasi database SQLite
 class DatabaseHelper {
@@ -43,7 +44,10 @@ class DatabaseHelper {
         ${AppConstants.colUsername} VARCHAR(50) NOT NULL UNIQUE,
         ${AppConstants.colPassword} VARCHAR(100) NOT NULL,
         ${AppConstants.colRole} TEXT NOT NULL DEFAULT '${AppConstants.roleAdmin}',
-        ${AppConstants.colStatus} TEXT NOT NULL DEFAULT '${AppConstants.statusAktif}'
+        ${AppConstants.colStatus} TEXT NOT NULL DEFAULT '${AppConstants.statusAktif}',
+        security_question TEXT,
+        security_answer TEXT,
+        is_default_password BOOLEAN DEFAULT 1
       )
     ''');
 
@@ -133,13 +137,17 @@ class DatabaseHelper {
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
 
-    // Insert default owner user
+    // Insert default owner user dengan password ter-hash
+    final hashedPassword = PasswordService.hashPassword('owner123');
     await db.insert(AppConstants.tableUser, {
       AppConstants.colNamaLengkap: 'Owner',
       AppConstants.colUsername: 'owner',
-      AppConstants.colPassword: 'owner123',
+      AppConstants.colPassword: hashedPassword,
       AppConstants.colRole: AppConstants.roleOwner,
       AppConstants.colStatus: AppConstants.statusAktif,
+      'security_question': 'Apa nama perusahaan Anda?',
+      'security_answer': PasswordService.hashPassword('parkir app'),
+      'is_default_password': 1,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
@@ -563,6 +571,52 @@ class DatabaseHelper {
     return List.generate(
       maps.length,
       (i) => LogAktivitasModel.fromMap(maps[i]),
+    );
+  }
+
+  /// Update password user
+  Future<int> updateUserPassword(int userId, String newPassword) async {
+    final db = await database;
+    return await db.update(
+      AppConstants.tableUser,
+      {AppConstants.colPassword: newPassword, 'is_default_password': 0},
+      where: '${AppConstants.colUserId} = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  /// Update default password flag
+  Future<int> updateDefaultPasswordFlag(int userId, bool value) async {
+    final db = await database;
+    return await db.update(
+      AppConstants.tableUser,
+      {'is_default_password': value ? 1 : 0},
+      where: '${AppConstants.colUserId} = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  /// Record activity untuk audit trail
+  Future<int> recordActivity(
+    int userId,
+    String kategori,
+    String aktivitas, {
+    Map<String, dynamic>? metadata,
+  }) async {
+    final db = await database;
+    final now = DateTime.now();
+
+    final logData = {
+      AppConstants.colUserId: userId,
+      AppConstants.colKategoriLog: kategori,
+      AppConstants.colAktivitas: aktivitas,
+      AppConstants.colWaktu: now.toIso8601String(),
+    };
+
+    return await db.insert(
+      AppConstants.tableLogAktivitas,
+      logData,
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 

@@ -1,4 +1,4 @@
-# 📊 Dokumentasi Database - Sistem Manajemen Parkir
+#  Dokumentasi Database - Sistem Manajemen Parkir
 
 ## Pendahuluan
 
@@ -9,7 +9,7 @@ Database ini dirancang untuk aplikasi **Manajemen Parkir Multi-Role** yang digun
 
 ---
 
-## 📋 Daftar Tabel dan Fungsinya
+##  Daftar Tabel dan Fungsinya
 
 | No | Nama Tabel | Fungsi | Tipe |
 |:--:|:-----------|:-------|:----:|
@@ -22,7 +22,7 @@ Database ini dirancang untuk aplikasi **Manajemen Parkir Multi-Role** yang digun
 
 ---
 
-## 1️⃣ TABEL TB_USER
+##  TABEL TB_USER
 
 ### Fungsi
 Menyimpan data semua pengguna yang bisa login ke sistem
@@ -55,14 +55,14 @@ id_user  | nama_lengkap | username | role   | status
 - **Admin**: Kelola user, tarif, area parkir, laporan
 - **Petugas**: Input masuk/keluar, lihat transaksi saat ini
 
-### Catatan Keamanan ⚠️
+### Catatan Keamanan 
 - Password SELALU di-hash dengan bcrypt, TIDAK pernah disimpan plain text
 - security_answer juga di-hash untuk keamanan
 - is_default_password = 1 berarti user harus ganti password saat first login
 
 ---
 
-## 2️⃣ TABEL TB_JENIS_KENDARAAN
+##  TABEL TB_JENIS_KENDARAAN
 
 ### Fungsi
 Master data untuk tipe-tipe kendaraan yang bisa parkir
@@ -95,7 +95,7 @@ jenis_id | nama_jenis | tarif_per_jam
 
 ---
 
-## 3️⃣ TABEL TB_AREA_PARKIR
+##  TABEL TB_AREA_PARKIR
 
 ### Fungsi
 Menyimpan lokasi/area parkir fisik di lapangan
@@ -135,7 +135,7 @@ Contoh: Area "Lantai 1 Motor" hanya untuk jenis_id=1 (Motor)
 
 ---
 
-## 4️⃣ TABEL TB_KENDARAAN
+##  TABEL TB_KENDARAAN
 
 ### Fungsi
 Master data kendaraan yang pernah parkir di sistem
@@ -172,7 +172,7 @@ TB_KENDARAAN.jenis_id → TB_JENIS_KENDARAAN.jenis_id
 
 ---
 
-## 5️⃣ TABEL TB_TRANSAKSI ⭐ (PALING PENTING)
+##  TABEL TB_TRANSAKSI  (PALING PENTING)
 
 ### Fungsi
 Mencatat SETIAP transaksi parkir (masuk dan keluar)
@@ -253,7 +253,7 @@ Contoh:
 
 ---
 
-## 6️⃣ TABEL TB_LOG_AKTIVITAS
+##  TABEL TB_LOG_AKTIVITAS
 
 ### Fungsi
 Mencatat semua aktivitas user untuk audit trail dan monitoring keamanan
@@ -301,7 +301,7 @@ TB_LOG_AKTIVITAS.user_id → TB_USER.id_user
 
 ---
 
-## 🔗 DIAGRAM RELASI ANTAR TABEL
+##  DIAGRAM RELASI ANTAR TABEL
 
 ```
                     TB_USER (Pusat)
@@ -342,7 +342,7 @@ TB_LOG_AKTIVITAS.user_id → TB_USER.id_user
 
 ---
 
-## 📊 QUERY CONTOH UNTUK PEMBELAJARAN
+##  QUERY CONTOH UNTUK PEMBELAJARAN
 
 ### 1. Query Autentikasi (Login)
 ```sql
@@ -439,7 +439,7 @@ ORDER BY role, nama_lengkap;
 
 ---
 
-## 🔒 Catatan Keamanan & Best Practice
+##  Catatan Keamanan & Best Practice
 
 ### Password Hashing
 - **JANGAN PERNAH** menyimpan password plain text
@@ -483,7 +483,7 @@ String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
 
 ---
 
-## 📚 Referensi File
+##  Referensi File
 
 - **schema.sql**: File SQL lengkap dengan struktur dan contoh data
 - **database_helper.dart**: Implementasi database di Flutter (CRUD operations)

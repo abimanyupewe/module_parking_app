@@ -2,7 +2,7 @@
 
 Aplikasi Flutter modern untuk manajemen parkir dengan sistem multi-role (Owner, Admin, Petugas) yang lengkap dengan audit trail otomatis, master data management, dan operasional real-time.
 
-## 📋 Daftar Isi
+##  Daftar Isi
 1. [Panduan Desain UI/UX](#panduan-desain-uiux-color-palette)
 2. [Arsitektur Folder](#arsitektur-folder-modular--granular)
 3. [Dependencies & Libraries](#daftar-library-dan-dependencies)
@@ -464,9 +464,9 @@ dart format lib/
 
 ---
 
-## 📊 Status Implementasi
+##  Status Implementasi
 
-### ✅ SELESAI (Fase 1-5)
+###  SELESAI (Fase 1-5)
 - [x] Setup proyek & pubspec.yaml configuration
 - [x] Color palette & Material theme
 - [x] Reusable widgets (5 widgets global)
@@ -475,7 +475,7 @@ dart format lib/
 - [x] Format helper utilities
 - [x] Folder structure & assets setup
 
-### 🚀 AKAN DATANG (Fase 6-10)
+###  AKAN DATANG (Fase 6-10)
 - [ ] Splash Screen & Onboarding UI
 - [ ] Authentication Module (Login, Forgot Password, Change Password)
 - [ ] Petugas Dashboard & Check-in/out
@@ -484,7 +484,7 @@ dart format lib/
 
 ---
 
-## 📝 Catatan Penting
+##  Catatan Penting
 
 - Aplikasi menggunakan **offline-first** architecture dengan SQLite
 - Semua model memiliki konversi `.fromMap()` dan `.toMap()` otomatis
@@ -496,7 +496,7 @@ dart format lib/
 
 ---
 
-## 📞 Support & Dokumentasi
+##  Support & Dokumentasi
 
 Untuk informasi lebih detail tentang arsitektur dan alur pengembangan, lihat folder `lib/doc/` yang berisi dokumentasi lengkap terbagi menjadi 11 sub-folder:
 - `00-setup-project/` - Setup proyek
