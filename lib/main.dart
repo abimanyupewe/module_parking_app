@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'config/themes.dart';
 import 'config/constants.dart';
 import 'core/preferences/app_preferences.dart';
+import 'services/database_manager.dart';
 import 'features/splash/pages/splash_page.dart';
 import 'features/onboarding/pages/onboarding_page.dart';
 import 'features/auth/pages/login_page.dart';
@@ -18,15 +18,15 @@ import 'features/petugas/pages/petugas_dashboard_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi sqflite untuk semua platform non-mobile
-  // - Desktop (Windows, Linux, macOS)
-  // - Platform apa pun yang bukan Android/iOS
-  if (!kIsWeb) {
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
-    }
+  // Inisialisasi sqflite untuk platform desktop (Windows, Linux, macOS)
+  // Web tidak support SQLite, akan menggunakan SharedPreferences via WebDatabaseHelper
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
   }
+
+  // Initialize database manager
+  await DatabaseManager().initialize();
 
   await AppPreferences.init();
   runApp(const MyApp());

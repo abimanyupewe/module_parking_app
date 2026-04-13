@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controllers/splash_controller.dart';
 import '../../../config/colors.dart';
-import '../../../services/database_helper.dart';
+import '../../../services/database_manager.dart';
 import '../../../core/preferences/app_preferences.dart';
 
 /// Splash Screen Page
@@ -29,17 +29,16 @@ class _SplashPageState extends State<SplashPage> {
       await AppPreferences.init();
 
       // 2. Initialize Database (akan auto-create dengan default data jika first run)
-      final dbHelper = DatabaseHelper();
-      final database = await dbHelper.database;
-      final dbPath = await dbHelper.getDatabasePath();
+      // DatabaseManager akan menggunakan SQLite untuk desktop/mobile
+      // dan SharedPreferences untuk web
+      final dbManager = DatabaseManager();
+      await dbManager.initialize();
+      final dbPath = await dbManager.getDatabasePath();
 
-      // 3. Get database location untuk user dapat menemukan file
-      // Contoh: /home/user/.local/share/parking_app/parking_app.db
+      // 3. Verify default data
+      final users = await dbManager.getAllUsers();
 
-      // 4. Verify default data
-      final users = await dbHelper.getAllUsers();
-
-      // 5. Continue with splash flow
+      // 4. Continue with splash flow
       if (mounted) {
         _controller.handleSplashFlow();
       }

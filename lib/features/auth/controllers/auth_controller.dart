@@ -1,12 +1,12 @@
 import '../../../config/constants.dart';
 import '../../../core/preferences/app_preferences.dart';
 import '../../../models/user_model.dart';
-import '../../../services/database_helper.dart';
+import '../../../services/database_manager.dart';
 import '../../../services/password_service.dart';
 
 /// Controller untuk Authentication
 class AuthController {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final DatabaseManager _dbManager = DatabaseManager();
 
   /// Login user dengan username dan password
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -20,7 +20,7 @@ class AuthController {
       }
 
       // Query user dari database
-      final user = await _dbHelper.getUserByUsername(username);
+      final user = await _dbManager.getUserByUsername(username);
 
       if (user == null) {
         return {'success': false, 'message': 'Username tidak ditemukan'};
@@ -54,7 +54,7 @@ class AuthController {
       );
 
       // Record activity
-      await _dbHelper.recordActivity(
+      await _dbManager.recordActivity(
         user.idUser!,
         'Otorisasi',
         'Login ke sistem',
@@ -107,7 +107,7 @@ class AuthController {
       }
 
       // Check if username already exists
-      final existingUser = await _dbHelper.getUserByUsername(username);
+      final existingUser = await _dbManager.getUserByUsername(username);
       if (existingUser != null) {
         return {'success': false, 'message': 'Username sudah terdaftar'};
       }
@@ -125,7 +125,7 @@ class AuthController {
       );
 
       // Insert ke database
-      final result = await _dbHelper.insertUser(newUser);
+      final result = await _dbManager.insertUser(newUser);
 
       if (result > 0) {
         return {
