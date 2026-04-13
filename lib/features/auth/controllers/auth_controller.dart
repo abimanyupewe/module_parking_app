@@ -129,7 +129,7 @@ class AuthController {
         namaLengkap: namaLengkap,
         username: username,
         password: hashedPassword,
-        role: 'owner',
+        role: 'Owner',
         status: 'aktif',
       );
 

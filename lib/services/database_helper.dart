@@ -198,8 +198,12 @@ class DatabaseHelper {
       where: '${AppConstants.colUsername} = ?',
       whereArgs: [username],
     );
+    print('DEBUG DB: Query username=$username, found ${maps.length} record(s)');
     if (maps.isNotEmpty) {
-      return UserModel.fromMap(maps.first);
+      print('DEBUG DB: First record: ${maps.first}');
+      final user = UserModel.fromMap(maps.first);
+      print('DEBUG DB: UserModel created: $user');
+      return user;
     }
     return null;
   }

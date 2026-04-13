@@ -50,6 +50,12 @@ class _LoginPageState extends State<LoginPage> {
       final user = result['user'];
       final role = user.role;
 
+      print('DEBUG LOGIN: User: ${user.toString()}');
+      print('DEBUG LOGIN: Role: $role');
+      print('DEBUG LOGIN: Role == "Owner": ${role == 'Owner'}');
+      print('DEBUG LOGIN: Role == "Admin": ${role == 'Admin'}');
+      print('DEBUG LOGIN: Role == "Petugas": ${role == 'Petugas'}');
+
       if (mounted) {
         switch (role) {
           case 'Owner':
@@ -63,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
             break;
           default:
             setState(() {
-              _errorMessage = 'Role user tidak dikenali';
+              _errorMessage = 'Role user tidak dikenali: $role';
             });
         }
       }

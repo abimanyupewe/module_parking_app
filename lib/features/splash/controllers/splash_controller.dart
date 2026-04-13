@@ -31,13 +31,13 @@ class SplashController {
         // Navigate ke dashboard sesuai role
         if (context.mounted) {
           switch (userRole) {
-            case 'owner':
+            case 'Owner':
               Navigator.of(context).pushReplacementNamed('/owner_dashboard');
               break;
-            case 'admin':
+            case 'Admin':
               Navigator.of(context).pushReplacementNamed('/admin_dashboard');
               break;
-            case 'petugas':
+            case 'Petugas':
               Navigator.of(context).pushReplacementNamed('/petugas_dashboard');
               break;
             default:
