@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../core/preferences/app_preferences.dart';
 import '../widgets/owner_home_section.dart';
-import '../widgets/owner_report_section.dart';
 import '../widgets/owner_profile_section.dart';
 
 /// Owner Dashboard Page
@@ -65,11 +64,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: const [
-          OwnerHomeSection(),
-          OwnerReportSection(),
-          OwnerProfileSection(),
-        ],
+        children: const [OwnerHomeSection(), OwnerProfileSection()],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -83,11 +78,6 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assessment_outlined),
-            activeIcon: Icon(Icons.assessment),
-            label: 'Laporan',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
