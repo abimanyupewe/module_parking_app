@@ -17,15 +17,30 @@ import 'features/petugas/pages/petugas_dashboard_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize sqflite_common_ffi for desktop/web platforms
-  sqfliteFfiInit();
+  // Inisialisasi sqflite_common_ffi untuk platform desktop/web
+  try {
+    sqfliteFfiInit();
+    print('DEBUG MAIN: sqfliteFfiInit() berhasil dipanggil');
+  } catch (e) {
+    print('DEBUG MAIN: sqfliteFfiInit() error: $e');
+  }
 
-  // Set the databaseFactory for desktop platforms BEFORE using global openDatabase
+  // Set databaseFactory untuk platform desktop/web SEBELUM menggunakan global openDatabase
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    databaseFactory = databaseFactoryFfi;
+    try {
+      databaseFactory = databaseFactoryFfi;
+      print(
+        'DEBUG MAIN: databaseFactory set ke databaseFactoryFfi untuk platform desktop',
+      );
+    } catch (e) {
+      print('DEBUG MAIN: Error set databaseFactory: $e');
+    }
+  } else if (Platform.isAndroid || Platform.isIOS) {
     print(
-      'DEBUG MAIN: Set databaseFactory to databaseFactoryFfi for desktop platform',
+      'DEBUG MAIN: Platform mobile (Android/iOS) - gunakan sqflite default',
     );
+  } else {
+    print('DEBUG MAIN: Platform lainnya (web/unknown)');
   }
 
   await AppPreferences.init();

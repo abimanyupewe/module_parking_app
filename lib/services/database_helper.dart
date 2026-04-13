@@ -132,25 +132,33 @@ class DatabaseHelper {
 
     print('DEBUG: Opening database at: $dbPath');
 
-    // Determine which openDatabase function to use based on platform
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      print('DEBUG: Using sqflite_ffi for desktop platform');
-      return await databaseFactoryFfi.openDatabase(
-        dbPath,
-        options: OpenDatabaseOptions(
-          version: AppConstants.databaseVersion,
-          onCreate: _createTables,
-          onUpgrade: _onUpgrade,
-        ),
+    // Gunakan global openDatabase - sudah di-handle di main.dart dengan databaseFactory
+    try {
+      print(
+        'DEBUG: Menggunakan openDatabase global (factory sudah di-set di main.dart)',
       );
-    } else {
-      print('DEBUG: Using default sqflite for mobile platform');
       return await openDatabase(
         dbPath,
         version: AppConstants.databaseVersion,
         onCreate: _createTables,
         onUpgrade: _onUpgrade,
       );
+    } catch (e) {
+      print('DEBUG ERROR: openDatabase failed: $e');
+      print('DEBUG: Mencoba fallback dengan databaseFactoryFfi...');
+      try {
+        return await databaseFactoryFfi.openDatabase(
+          dbPath,
+          options: OpenDatabaseOptions(
+            version: AppConstants.databaseVersion,
+            onCreate: _createTables,
+            onUpgrade: _onUpgrade,
+          ),
+        );
+      } catch (e2) {
+        print('DEBUG ERROR: databaseFactoryFfi juga gagal: $e2');
+        throw Exception('Failed to open database: $e, Fallback error: $e2');
+      }
     }
   }
 
