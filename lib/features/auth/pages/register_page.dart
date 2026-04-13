@@ -66,6 +66,8 @@ class _RegisterPageState extends State<RegisterPage> {
       password: _passwordController.text,
     );
 
+    print('DEBUG: Register result = $result');
+
     if (!mounted) return;
 
     setState(() {

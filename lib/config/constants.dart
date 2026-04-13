@@ -5,7 +5,7 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // Database
-  static const String databaseName = 'parkir_app.db';
+  static const String databaseName = 'parking_app.db';
   static const int databaseVersion = 1;
 
   // Table Names
