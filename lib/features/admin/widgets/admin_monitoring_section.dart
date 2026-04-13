@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../widgets/widgets.dart';
+import '../../../services/pdf_service.dart';
 
 /// Admin Monitoring Section - List kendaraan yang sedang parkir
 class AdminMonitoringSection extends StatefulWidget {
@@ -52,15 +53,40 @@ class _AdminMonitoringSectionState extends State<AdminMonitoringSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Text(
-            'Monitoring Parkir Real-Time',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Kendaraan yang sedang parkir saat ini',
-            style: Theme.of(context).textTheme.bodySmall,
+          // Header dengan print button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Monitoring Parkir Real-Time',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Kendaraan yang sedang parkir saat ini',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: _printParkedVehicles,
+                icon: const Icon(Icons.print, size: 18),
+                label: const Text('Print'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
 
@@ -294,5 +320,18 @@ class _AdminMonitoringSectionState extends State<AdminMonitoringSection> {
         ),
       ],
     );
+  }
+
+  Future<void> _printParkedVehicles() async {
+    try {
+      await PdfService.generateParkedVehiclesReport(vehicles: _parkingData);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error cetak laporan: $e'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
   }
 }

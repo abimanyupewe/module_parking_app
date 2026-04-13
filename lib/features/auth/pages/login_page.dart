@@ -51,18 +51,6 @@ class _LoginPageState extends State<LoginPage> {
       final user = result['user'];
       final role = user.role;
 
-      print('DEBUG LOGIN: User: ${user.toString()}');
-      print('DEBUG LOGIN: Role: $role');
-      print(
-        'DEBUG LOGIN: Role == "${AppConstants.roleOwner}": ${role == AppConstants.roleOwner}',
-      );
-      print(
-        'DEBUG LOGIN: Role == "${AppConstants.roleAdmin}": ${role == AppConstants.roleAdmin}',
-      );
-      print(
-        'DEBUG LOGIN: Role == "${AppConstants.rolePetugas}": ${role == AppConstants.rolePetugas}',
-      );
-
       if (mounted) {
         switch (role) {
           case AppConstants.roleOwner:

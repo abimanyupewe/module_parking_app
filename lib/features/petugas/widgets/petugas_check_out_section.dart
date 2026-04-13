@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../widgets/widgets.dart';
 import '../../../services/format_helper.dart';
+import '../../../services/pdf_service.dart';
 
 /// Petugas Check-Out Section - Pencarian dan checkout kendaraan
 class PetugasCheckOutSection extends StatefulWidget {
@@ -169,6 +170,36 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
   }
 
   void _handleCheckout(Map<String, dynamic> transaction) {
+    // Show dialog untuk konfirmasi print struk
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Checkout Berhasil'),
+        content: Text(
+          'Kendaraan ${transaction['platNomor']} telah checkout.\n\nApakah Anda ingin mencetak struk?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _finishCheckout(transaction);
+            },
+            child: const Text('Tidak'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _printReceipt(transaction);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Print Struk'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _finishCheckout(Map<String, dynamic> transaction) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Checkout berhasil untuk ${transaction['platNomor']}'),
@@ -181,6 +212,39 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
       _filteredTransactions.removeWhere((tx) => tx['id'] == transaction['id']);
       _allTransactions.removeWhere((tx) => tx['id'] == transaction['id']);
     });
+  }
+
+  void _printReceipt(Map<String, dynamic> transaction) async {
+    try {
+      // Format data untuk PDF
+      final waktuMasuk = DateTime.now().subtract(
+        const Duration(hours: 2),
+      ); // Mock waktu masuk 2 jam lalu
+      final waktuKeluar = DateTime.now();
+
+      await PdfService.generateParkingReceipt(
+        platNomor: transaction['platNomor'],
+        jenis: transaction['jenis'],
+        merk: transaction['merk'],
+        warna: transaction['warna'] ?? 'Tidak ada',
+        area: transaction['area'],
+        waktuMasuk: waktuMasuk,
+        waktuKeluar: waktuKeluar,
+        totalBiaya: transaction['biaya'],
+        petugas: 'Petugas Parkir',
+      );
+
+      if (mounted) {
+        _finishCheckout(transaction);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error cetak struk: $e'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
   }
 
   @override
@@ -339,7 +403,9 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(

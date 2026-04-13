@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../widgets/widgets.dart';
+import '../../../services/pdf_service.dart';
 
 /// Owner Audit Section - Log Transaksi & Otorisasi
 class OwnerAuditSection extends StatefulWidget {
@@ -52,12 +53,50 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
     super.dispose();
   }
 
+  Future<void> _printActivityLog() async {
+    try {
+      final logs = _tabController.index == 0 ? _logTransaksi : _logOtorisasi;
+      await PdfService.generateActivityLogReport(logs: logs);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error cetak laporan: $e'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          // Header dengan print button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Audit Log',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              ElevatedButton.icon(
+                onPressed: _printActivityLog,
+                icon: const Icon(Icons.print, size: 18),
+                label: const Text('Print'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           // Tab
           TabBar(
             controller: _tabController,

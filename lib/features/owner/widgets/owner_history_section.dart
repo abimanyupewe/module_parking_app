@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../widgets/widgets.dart';
 import '../../../services/format_helper.dart';
+import '../../../services/pdf_service.dart';
 
 /// Owner History Section - Global history dengan data table
 class OwnerHistorySection extends StatefulWidget {
@@ -60,6 +61,22 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
     });
   }
 
+  Future<void> _printHistory() async {
+    try {
+      await PdfService.generateTransactionReport(
+        transactions: _filteredHistory,
+        reportTitle: 'LAPORAN TRANSAKSI PARKIR',
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error cetak laporan: $e'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalBiaya = _filteredHistory.fold<int>(
@@ -72,11 +89,31 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search
-          CustomSearchBar(
-            hintText: 'Cari plat nomor...',
-            onChanged: _filterHistory,
-            prefixIcon: Icons.search,
+          // Header dengan search dan print
+          Row(
+            children: [
+              Expanded(
+                child: CustomSearchBar(
+                  hintText: 'Cari plat nomor...',
+                  onChanged: _filterHistory,
+                  prefixIcon: Icons.search,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: _printHistory,
+                icon: const Icon(Icons.print, size: 18),
+                label: const Text('Print'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
 
