@@ -32,7 +32,8 @@ class DatabaseHelper {
     String dbPath;
 
     // Strategy 1: Coba getDatabasesPath dulu (untuk mobile)
-    // Strategy 2: Fallback ke getApplicationDocumentsDirectory (untuk desktop)
+    // Strategy 2: Fallback ke getApplicationDocumentsDirectory (untuk mobile/desktop)
+    // Strategy 3: Manual path untuk desktop (Linux/Windows/macOS)
 
     print('DEBUG: Starting database initialization...');
 
@@ -56,7 +57,7 @@ class DatabaseHelper {
       dbPath = join(appDbDir.path, AppConstants.databaseName);
       print('DEBUG: Using standard database path: $dbPath');
     } catch (e) {
-      // Fallback: Use application documents directory (for desktop)
+      // Fallback 1: Try getApplicationDocumentsDirectory (for mobile/desktop with path_provider)
       print('DEBUG: getDatabasesPath failed: $e');
       print('DEBUG: Falling back to getApplicationDocumentsDirectory()...');
 
@@ -77,10 +78,36 @@ class DatabaseHelper {
         dbPath = join(dbDir.path, AppConstants.databaseName);
         print('DEBUG: Using fallback database path: $dbPath');
       } catch (e2) {
+        // Fallback 2: Use home directory for desktop platforms (when path_provider fails)
         print('DEBUG: getApplicationDocumentsDirectory also failed: $e2');
-        throw Exception(
-          'Failed to initialize database path: Primary error: $e, Fallback error: $e2',
-        );
+        print('DEBUG: Falling back to home directory...');
+
+        try {
+          final homeDir = Directory(
+            Platform.environment['HOME'] ??
+                Platform.environment['USERPROFILE'] ??
+                '.',
+          );
+          print('DEBUG: Got home dir: ${homeDir.path}');
+
+          final dbDir = Directory(join(homeDir.path, '.parking_app'));
+
+          if (!await dbDir.exists()) {
+            print('DEBUG: Creating home directory fallback: ${dbDir.path}');
+            await dbDir.create(recursive: true);
+            print('DEBUG: Created home directory fallback');
+          } else {
+            print('DEBUG: Home directory fallback already exists');
+          }
+
+          dbPath = join(dbDir.path, AppConstants.databaseName);
+          print('DEBUG: Using home directory database path: $dbPath');
+        } catch (e3) {
+          print('DEBUG: Home directory fallback also failed: $e3');
+          throw Exception(
+            'Failed to initialize database path: Primary error: $e, Fallback 1 error: $e2, Fallback 2 error: $e3',
+          );
+        }
       }
     }
 
