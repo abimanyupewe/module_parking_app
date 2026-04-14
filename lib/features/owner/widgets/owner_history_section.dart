@@ -6,7 +6,7 @@ import '../../../services/pdf_service.dart';
 
 /// Owner History Section - Global history dengan data table
 class OwnerHistorySection extends StatefulWidget {
-  const OwnerHistorySection({Key? key}) : super(key: key);
+  const OwnerHistorySection({super.key});
 
   @override
   State<OwnerHistorySection> createState() => _OwnerHistorySectionState();
@@ -208,12 +208,14 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
         reportTitle: 'LAPORAN TRANSAKSI PARKIR',
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error cetak laporan: $e'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error cetak laporan: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
     }
   }
 
@@ -257,65 +259,57 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
           ),
           const SizedBox(height: 16),
 
-          // Filter Row (Date Picker)
+          // Filter Row (Date Picker) - Icon Based
           Row(
             children: [
-              // Filter Date Picker
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Pilih Tanggal',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextFormField(
-                      readOnly: true,
-                      onTap: _selectDate,
-                      decoration: InputDecoration(
-                        hintText: 'Pilih tanggal...',
-                        suffixIcon: const Icon(Icons.calendar_today),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                      ),
-                      controller: TextEditingController(
-                        text: _selectedDate == null
-                            ? ''
-                            : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                      ),
-                    ),
-                  ],
+              // Date Picker Icon Button
+              IconButton.filled(
+                onPressed: _selectDate,
+                icon: const Icon(Icons.calendar_today),
+                style: IconButton.styleFrom(
+                  backgroundColor: _selectedDate != null
+                      ? AppColors.primary
+                      : Colors.grey[300],
+                  foregroundColor: _selectedDate != null
+                      ? Colors.white
+                      : Colors.grey[600],
                 ),
+                tooltip: _selectedDate != null
+                    ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                    : 'Pilih Tanggal',
               ),
-              const SizedBox(width: 12),
-
-              // Clear Button
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: SizedBox(
-                  height: 40,
-                  child: ElevatedButton.icon(
-                    onPressed: _clearFilters,
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: const Text('Bersihkan'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.tertiary,
-                      foregroundColor: AppColors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+              const SizedBox(width: 8),
+              // Date Display Badge
+              if (_selectedDate != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.primary, width: 1),
+                  ),
+                  child: Text(
+                    '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
-              ),
+              const Spacer(),
+              // Clear Button
+              if (_selectedDate != null)
+                IconButton(
+                  onPressed: _clearFilters,
+                  icon: const Icon(Icons.close),
+                  iconSize: 20,
+                  style: IconButton.styleFrom(foregroundColor: Colors.red),
+                  tooltip: 'Bersihkan Filter',
+                ),
             ],
           ),
           const SizedBox(height: 16),

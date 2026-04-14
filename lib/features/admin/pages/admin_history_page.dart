@@ -404,70 +404,101 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                   // Date Range Filter
                   Row(
                     children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _selectStartDate,
-                          icon: const Icon(Icons.calendar_today),
-                          label: Text(
-                            _startDate != null
-                                ? DateFormat('dd/MM/yyyy').format(_startDate!)
-                                : 'Tanggal Mulai',
+                      // Start Date Filter
+                      IconButton.filled(
+                        onPressed: _selectStartDate,
+                        icon: const Icon(Icons.calendar_today),
+                        style: IconButton.styleFrom(
+                          backgroundColor: _startDate != null
+                              ? AppColors.primary
+                              : Colors.grey[300],
+                          foregroundColor: _startDate != null
+                              ? Colors.white
+                              : Colors.grey[600],
+                        ),
+                        tooltip: _startDate != null
+                            ? DateFormat('dd/MM/yyyy').format(_startDate!)
+                            : 'Tanggal Mulai',
+                      ),
+                      const SizedBox(width: 8),
+                      // Start Date Display
+                      if (_startDate != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _startDate != null
-                                ? AppColors.primary
-                                : Colors.grey[300],
-                            foregroundColor: _startDate != null
-                                ? Colors.white
-                                : Colors.black87,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: AppColors.primary,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            DateFormat('dd/MM/yy').format(_startDate!),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
+                      const SizedBox(width: 8),
+                      // End Date Filter
+                      IconButton.filled(
+                        onPressed: _selectEndDate,
+                        icon: const Icon(Icons.calendar_today),
+                        style: IconButton.styleFrom(
+                          backgroundColor: _endDate != null
+                              ? AppColors.primary
+                              : Colors.grey[300],
+                          foregroundColor: _endDate != null
+                              ? Colors.white
+                              : Colors.grey[600],
+                        ),
+                        tooltip: _endDate != null
+                            ? DateFormat('dd/MM/yyyy').format(_endDate!)
+                            : 'Tanggal Akhir',
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _selectEndDate,
-                          icon: const Icon(Icons.calendar_today),
-                          label: Text(
-                            _endDate != null
-                                ? DateFormat('dd/MM/yyyy').format(_endDate!)
-                                : 'Tanggal Akhir',
+                      const SizedBox(width: 8),
+                      // End Date Display
+                      if (_endDate != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _endDate != null
-                                ? AppColors.primary
-                                : Colors.grey[300],
-                            foregroundColor: _endDate != null
-                                ? Colors.white
-                                : Colors.black87,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: AppColors.primary,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            DateFormat('dd/MM/yy').format(_endDate!),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                        height: 48,
-                        child: OutlinedButton.icon(
-                          onPressed: (_startDate != null || _endDate != null)
-                              ? _resetDateFilter
-                              : null,
+                      const Spacer(),
+                      // Reset Button
+                      if (_startDate != null || _endDate != null)
+                        IconButton(
+                          onPressed: _resetDateFilter,
                           icon: const Icon(Icons.close),
-                          label: const Text('Bersihkan'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                          iconSize: 20,
+                          style: IconButton.styleFrom(
+                            foregroundColor: Colors.red,
                           ),
+                          tooltip: 'Bersihkan Filter',
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
