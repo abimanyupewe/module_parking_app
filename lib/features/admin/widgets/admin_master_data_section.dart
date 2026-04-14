@@ -12,17 +12,18 @@ class AdminMasterDataSection extends StatefulWidget {
 
 class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
   int _selectedTabIndex = 0;
+  String? _selectedKategoriId;
 
   final List<Map<String, dynamic>> _kategori = [
-    {'id': 1, 'nama': 'Motor Roda 2', 'tarif': 2000},
-    {'id': 2, 'nama': 'Mobil', 'tarif': 5000},
-    {'id': 3, 'nama': 'Truk', 'tarif': 10000},
+    {'id': '1', 'nama': 'Motor Roda 2', 'tarif': 2000},
+    {'id': '2', 'nama': 'Mobil', 'tarif': 5000},
+    {'id': '3', 'nama': 'Truk', 'tarif': 10000},
   ];
 
   final List<Map<String, dynamic>> _area = [
-    {'id': 1, 'nama': 'Blok A', 'kategori': 'Motor Roda 2', 'kapasitas': 50},
-    {'id': 2, 'nama': 'Blok B', 'kategori': 'Mobil', 'kapasitas': 30},
-    {'id': 3, 'nama': 'Blok C', 'kategori': 'Truk', 'kapasitas': 10},
+    {'id': 1, 'nama': 'Blok A', 'kategoriId': '1', 'kapasitas': 50},
+    {'id': 2, 'nama': 'Blok B', 'kategoriId': '2', 'kapasitas': 30},
+    {'id': 3, 'nama': 'Blok C', 'kategoriId': '3', 'kapasitas': 10},
   ];
 
   @override
@@ -219,7 +220,7 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${ar['kategori']} • Kapasitas: ${ar['kapasitas']}',
+                            '${_getKategoriNama(ar['kategoriId'])} • Kapasitas: ${ar['kapasitas']}',
                             style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.inactive,
@@ -292,49 +293,90 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
   }
 
   void _showAreaDialog(Map<String, dynamic>? data) {
+    _selectedKategoriId = data?['kategoriId'];
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(data == null ? 'Tambah Area' : 'Edit Area'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomTextField(
-              label: 'Nama Area',
-              hint: 'Misal: Blok A',
-              initialValue: data?['nama'],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(data == null ? 'Tambah Area' : 'Edit Area'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomTextField(
+                label: 'Nama Area',
+                hint: 'Misal: Blok A',
+                initialValue: data?['nama'],
+              ),
+              const SizedBox(height: 12),
+              // Kategori Dropdown
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Kategori',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.border),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButton<String?>(
+                      value: _selectedKategoriId,
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      hint: const Text('Pilih Kategori'),
+                      items: _kategori.map((kat) {
+                        return DropdownMenuItem<String?>(
+                          value: kat['id'] as String,
+                          child: Text(kat['nama'] as String),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          _selectedKategoriId = value;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              CustomTextField(
+                label: 'Kapasitas',
+                hint: '50',
+                inputType: TextInputType.number,
+                initialValue: data?['kapasitas'].toString(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
             ),
-            const SizedBox(height: 12),
-            CustomTextField(
-              label: 'Kategori',
-              hint: 'Pilih kategori',
-              initialValue: data?['kategori'],
-              readOnly: true,
-            ),
-            const SizedBox(height: 12),
-            CustomTextField(
-              label: 'Kapasitas',
-              hint: '50',
-              inputType: TextInputType.number,
-              initialValue: data?['kapasitas'].toString(),
+            ElevatedButton(
+              onPressed: () {
+                if (_selectedKategoriId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Pilih kategori terlebih dahulu'),
+                    ),
+                  );
+                  return;
+                }
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Data area disimpan')),
+                );
+              },
+              child: const Text('Simpan'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Data area disimpan')),
-              );
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
       ),
     );
   }
@@ -355,5 +397,15 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Area dihapus')));
+  }
+
+  /// Get kategori nama by kategori id
+  String _getKategoriNama(String kategoriId) {
+    try {
+      return _kategori.firstWhere((kat) => kat['id'] == kategoriId)['nama'] ??
+          'Unknown';
+    } catch (e) {
+      return 'Unknown';
+    }
   }
 }
