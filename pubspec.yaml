@@ -57,6 +57,9 @@ dependencies:
   # Password Hashing
   bcrypt: ^1.2.0
 
+  # SVG Support
+  flutter_svg: ^2.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
