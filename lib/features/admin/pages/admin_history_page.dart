@@ -166,38 +166,7 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
           vehicle.platNomor.toLowerCase().contains(query) ||
           vehicle.merk.toLowerCase().contains(query);
 
-      // Filter by date range
-      bool dateMatch = true;
-      if (_startDate != null) {
-        final startOfDay = DateTime(
-          _startDate!.year,
-          _startDate!.month,
-          _startDate!.day,
-        );
-        dateMatch =
-            transaksi.waktuMasuk.isAfter(startOfDay) ||
-            transaksi.waktuMasuk.day == startOfDay.day &&
-                transaksi.waktuMasuk.month == startOfDay.month &&
-                transaksi.waktuMasuk.year == startOfDay.year;
-      }
-
-      if (_endDate != null && dateMatch) {
-        final endOfDay = DateTime(
-          _endDate!.year,
-          _endDate!.month,
-          _endDate!.day,
-          23,
-          59,
-          59,
-        );
-        dateMatch =
-            transaksi.waktuMasuk.isBefore(endOfDay) ||
-            transaksi.waktuMasuk.day == endOfDay.day &&
-                transaksi.waktuMasuk.month == endOfDay.month &&
-                transaksi.waktuMasuk.year == endOfDay.year;
-      }
-
-      return categoryMatch && searchMatch && dateMatch;
+      return categoryMatch && searchMatch;
     }).toList();
   }
 
@@ -220,49 +189,6 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
     setState(() {
       _filteredData = _combinedData();
     });
-  }
-
-  /// Show date picker untuk start date
-  Future<void> _selectStartDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      locale: const Locale('id', 'ID'),
-    );
-    if (picked != null) {
-      setState(() {
-        _startDate = picked;
-      });
-      _applyFiltersAndSearch();
-    }
-  }
-
-  /// Show date picker untuk end date
-  Future<void> _selectEndDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _endDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      locale: const Locale('id', 'ID'),
-    );
-    if (picked != null) {
-      setState(() {
-        _endDate = picked;
-      });
-      _applyFiltersAndSearch();
-    }
-  }
-
-  /// Reset date filter
-  void _resetDateFilter() {
-    setState(() {
-      _startDate = null;
-      _endDate = null;
-    });
-    _applyFiltersAndSearch();
   }
 
   /// Export to PDF
@@ -399,108 +325,7 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                       }).toList(),
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Date Range Filter
-                  Row(
-                    children: [
-                      // Start Date Filter
-                      IconButton.filled(
-                        onPressed: _selectStartDate,
-                        icon: const Icon(Icons.calendar_today),
-                        style: IconButton.styleFrom(
-                          backgroundColor: _startDate != null
-                              ? AppColors.primary
-                              : Colors.grey[300],
-                          foregroundColor: _startDate != null
-                              ? Colors.white
-                              : Colors.grey[600],
-                        ),
-                        tooltip: _startDate != null
-                            ? DateFormat('dd/MM/yyyy').format(_startDate!)
-                            : 'Tanggal Mulai',
-                      ),
-                      const SizedBox(width: 8),
-                      // Start Date Display
-                      if (_startDate != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: AppColors.primary,
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            DateFormat('dd/MM/yy').format(_startDate!),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(width: 8),
-                      // End Date Filter
-                      IconButton.filled(
-                        onPressed: _selectEndDate,
-                        icon: const Icon(Icons.calendar_today),
-                        style: IconButton.styleFrom(
-                          backgroundColor: _endDate != null
-                              ? AppColors.primary
-                              : Colors.grey[300],
-                          foregroundColor: _endDate != null
-                              ? Colors.white
-                              : Colors.grey[600],
-                        ),
-                        tooltip: _endDate != null
-                            ? DateFormat('dd/MM/yyyy').format(_endDate!)
-                            : 'Tanggal Akhir',
-                      ),
-                      const SizedBox(width: 8),
-                      // End Date Display
-                      if (_endDate != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: AppColors.primary,
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            DateFormat('dd/MM/yy').format(_endDate!),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      const Spacer(),
-                      // Reset Button
-                      if (_startDate != null || _endDate != null)
-                        IconButton(
-                          onPressed: _resetDateFilter,
-                          icon: const Icon(Icons.close),
-                          iconSize: 20,
-                          style: IconButton.styleFrom(
-                            foregroundColor: Colors.red,
-                          ),
-                          tooltip: 'Bersihkan Filter',
-                        ),
-                    ],
-                  ),
+                
                   const SizedBox(height: 16),
 
                   // Data Table

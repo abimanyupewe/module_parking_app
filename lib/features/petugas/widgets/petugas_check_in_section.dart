@@ -4,7 +4,7 @@ import '../../../widgets/widgets.dart';
 
 /// Petugas Check-In Section - Form input kendaraan masuk
 class PetugasCheckInSection extends StatefulWidget {
-  const PetugasCheckInSection({Key? key}) : super(key: key);
+  const PetugasCheckInSection({super.key});
 
   @override
   State<PetugasCheckInSection> createState() => _PetugasCheckInSectionState();
@@ -20,8 +20,34 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
   String? _selectedArea;
   bool _isLoading = false;
 
-  final List<String> _jenisKendaraan = ['Motor Roda 2', 'Mobil', 'Truk'];
-  final List<String> _areas = ['Blok A', 'Blok B', 'Blok C'];
+  // Mapping of jenis kendaraan ke category
+  final Map<String, String> _jenisKendaraanMap = {
+    'Motor Roda 2': 'Motor',
+    'Mobil': 'Mobil',
+    'Bus': 'Bus',
+  };
+
+  // Area data dengan kategori
+  final List<Map<String, dynamic>> _allAreas = [
+    {'name': 'Blok A', 'category': 'Motor'},
+    {'name': 'Blok B', 'category': 'Mobil'},
+    {'name': 'Blok C', 'category': 'Bus'},
+  ];
+
+  final List<String> _jenisKendaraan = ['Motor Roda 2', 'Mobil', 'Bus'];
+
+  /// Get filtered areas based on selected vehicle type
+  List<String> get _filteredAreas {
+    if (_selectedJenisKendaraan == null) {
+      return [];
+    }
+
+    final category = _jenisKendaraanMap[_selectedJenisKendaraan];
+    return _allAreas
+        .where((area) => area['category'] == category)
+        .map((area) => area['name'] as String)
+        .toList();
+  }
 
   @override
   void dispose() {
@@ -104,18 +130,6 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            Text(
-              'Formulir Kendaraan Masuk',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Isi data kendaraan yang masuk ke area parkir',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 24),
-
             // Plat Nomor
             CustomTextField(
               label: 'Plat Nomor',
@@ -159,6 +173,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                   onChanged: (value) {
                     setState(() {
                       _selectedJenisKendaraan = value;
+                      _selectedArea = null; // Reset area ketika jenis berubah
                     });
                   },
                   validator: (value) {
@@ -230,17 +245,19 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   value: _selectedArea,
-                  items: _areas
+                  items: _filteredAreas
                       .map(
                         (area) =>
                             DropdownMenuItem(value: area, child: Text(area)),
                       )
                       .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedArea = value;
-                    });
-                  },
+                  onChanged: _selectedJenisKendaraan == null
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _selectedArea = value;
+                          });
+                        },
                   validator: (value) {
                     if (value == null) {
                       return 'Pilih area parkir';
@@ -248,7 +265,11 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                     return null;
                   },
                   decoration: InputDecoration(
-                    hintText: 'Pilih area parkir',
+                    hintText: _selectedJenisKendaraan == null
+                        ? 'Pilih jenis kendaraan terlebih dahulu'
+                        : _filteredAreas.isEmpty
+                        ? 'Tidak ada area tersedia'
+                        : 'Pilih area parkir',
                     filled: true,
                     fillColor: AppColors.tertiary,
                     border: OutlineInputBorder(
