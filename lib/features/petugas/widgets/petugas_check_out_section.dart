@@ -255,18 +255,6 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            Text(
-              'Kendaraan Keluar',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Cari plat nomor kendaraan yang akan keluar',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 24),
-
             // Search Bar
             CustomSearchBar(
               hintText: 'Cari plat nomor... (3+ karakter)',

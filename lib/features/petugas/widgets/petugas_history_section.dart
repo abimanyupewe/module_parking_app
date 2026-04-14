@@ -116,148 +116,45 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection> {
             ),
             const SizedBox(height: 24),
 
-            // List
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _historyData.length,
-              itemBuilder: (context, index) {
-                final history = _historyData[index];
-                return Container(
-                  margin: EdgeInsets.only(
-                    bottom: index != _historyData.length - 1 ? 12 : 0,
-                  ),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.tertiary),
-                  ),
-                  child: GestureDetector(
-                    onTap: () => _showDetailDialog(history),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  history['platNomor'],
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  history['jenis'],
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.inactive,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            StatusBadge(
-                              status: history['status'],
-                              fontSize: 11,
-                              icon: Icons.check_circle,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        // Time info
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
+            // Table
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 16,
+                dataRowHeight: 56,
+                headingRowHeight: 48,
+                columns: const [
+                  DataColumn(label: Text('Plat Nomor')),
+                  DataColumn(label: Text('Jenis')),
+                  DataColumn(label: Text('Masuk')),
+                  DataColumn(label: Text('Keluar')),
+                  DataColumn(label: Text('Durasi')),
+                  DataColumn(label: Text('Biaya'), numeric: true),
+                ],
+                rows: _historyData
+                    .map(
+                      (history) => DataRow(
+                        onSelectChanged: (value) => _showDetailDialog(history),
+                        cells: [
+                          DataCell(Text(history['platNomor'])),
+                          DataCell(Text(history['jenis'])),
+                          DataCell(Text(history['waktuMasuk'])),
+                          DataCell(Text(history['waktuKeluar'])),
+                          DataCell(Text(history['durasi'])),
+                          DataCell(
                             Text(
-                              'Masuk: ${history['waktuMasuk']}',
+                              FormatHelper.formatRupiah(history['biaya']),
                               style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.inactive,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
                               ),
                             ),
-                            Text(
-                              'Keluar: ${history['waktuKeluar']}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.inactive,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        // Duration & Fee
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Durasi',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.inactive,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    history['durasi'],
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  const Text(
-                                    'Total Biaya',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.inactive,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    FormatHelper.formatRupiah(history['biaya']),
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+                          ),
+                        ],
+                      ),
+                    )
+                    .toList(),
+              ),
             ),
             const SizedBox(height: 16),
           ],
