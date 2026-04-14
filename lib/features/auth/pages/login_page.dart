@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../config/colors.dart';
 import '../../../config/constants.dart';
 import '../../../config/image_assets.dart';
@@ -46,18 +45,18 @@ class _LoginPageState extends State<LoginPage> {
     await AppPreferences.init();
   }
 
-  /// Ambil SVG character image berdasarkan role
+  /// Ambil image character berdasarkan role
   Widget _getCharacterImage() {
     final imagePath =
         _roleImageMap[_selectedRole] ?? ImageAssets.characterPortrait;
     return SizedBox(
       width: 200,
       height: 200,
-      child: SvgPicture.asset(
+      child: Image.asset(
         imagePath,
         fit: BoxFit.contain,
-        placeholderBuilder: (BuildContext context) {
-          return const Center(child: CircularProgressIndicator());
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(child: Icon(Icons.broken_image, size: 50));
         },
       ),
     );
@@ -149,11 +148,11 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 children: [
                   // Spacing dari top
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                  // Character Image SVG - dinamis berdasarkan role
+                  // Character Image - dinamis berdasarkan role
                   _getCharacterImage(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
 
                   // Auth Card Container dengan form
                   AuthCardContainer(
@@ -163,10 +162,13 @@ class _LoginPageState extends State<LoginPage> {
                         // Username Field
                         Text(
                           'Username',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         TextField(
                           controller: _usernameController,
                           enabled: !_isLoading,
@@ -174,10 +176,10 @@ class _LoginPageState extends State<LoginPage> {
                             hintText: 'Enter your username',
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
-                              vertical: 12,
+                              vertical: 14,
                             ),
                             prefixIcon: const Icon(
-                              Icons.person,
+                              Icons.person_outline,
                               color: AppColors.inactive,
                               size: 20,
                             ),
@@ -195,7 +197,7 @@ class _LoginPageState extends State<LoginPage> {
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
                                 color: AppColors.primary,
-                                width: 2,
+                                width: 1.5,
                               ),
                             ),
                             hintStyle: const TextStyle(
@@ -205,7 +207,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           style: const TextStyle(fontSize: 14),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 24),
 
                         // Password Field dengan link Forgot Password
                         Row(
@@ -213,8 +215,11 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             Text(
                               'Password',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
                             ),
                             TextButton(
                               onPressed: () {
@@ -231,12 +236,13 @@ class _LoginPageState extends State<LoginPage> {
                                     ?.copyWith(
                                       color: AppColors.primary,
                                       fontWeight: FontWeight.w600,
+                                      fontSize: 13,
                                     ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         TextField(
                           controller: _passwordController,
                           enabled: !_isLoading,
@@ -245,10 +251,10 @@ class _LoginPageState extends State<LoginPage> {
                             hintText: '••••••••',
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
-                              vertical: 12,
+                              vertical: 14,
                             ),
                             prefixIcon: const Icon(
-                              Icons.lock,
+                              Icons.lock_outline,
                               color: AppColors.inactive,
                               size: 20,
                             ),
@@ -280,7 +286,7 @@ class _LoginPageState extends State<LoginPage> {
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
                                 color: AppColors.primary,
-                                width: 2,
+                                width: 1.5,
                               ),
                             ),
                             hintStyle: const TextStyle(
@@ -290,14 +296,14 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           style: const TextStyle(fontSize: 14),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
 
                         // Keep me signed in checkbox
                         Row(
                           children: [
                             SizedBox(
-                              height: 24,
-                              width: 24,
+                              height: 22,
+                              width: 22,
                               child: Checkbox(
                                 value: _keepSignedIn,
                                 onChanged: (value) {
@@ -308,17 +314,21 @@ class _LoginPageState extends State<LoginPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(4),
                                 ),
+                                activeColor: AppColors.primary,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 10),
                             Text(
                               'Keep me signed in',
                               style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: AppColors.inactive),
+                                  ?.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 13,
+                                  ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 28),
 
                         // Error Message
                         if (_errorMessage != null)
@@ -358,10 +368,11 @@ class _LoginPageState extends State<LoginPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(24),
                               ),
+                              elevation: 0,
                             ),
                             onPressed: _isLoading ? null : _handleLogin,
                             child: _isLoading
@@ -369,7 +380,7 @@ class _LoginPageState extends State<LoginPage> {
                                     height: 20,
                                     width: 20,
                                     child: CircularProgressIndicator(
-                                      strokeWidth: 2,
+                                      strokeWidth: 2.5,
                                       valueColor: AlwaysStoppedAnimation<Color>(
                                         Colors.white,
                                       ),
@@ -379,7 +390,8 @@ class _LoginPageState extends State<LoginPage> {
                                     'Sign In',
                                     style: TextStyle(
                                       fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.3,
                                     ),
                                   ),
                           ),
@@ -387,7 +399,7 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
 
                   // Footer - Sign Up Link
                   Row(
@@ -395,7 +407,9 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Text(
                         "Don't have an account? ",
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
@@ -411,7 +425,7 @@ class _LoginPageState extends State<LoginPage> {
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                               ),
                         ),
                       ),
@@ -427,7 +441,7 @@ class _LoginPageState extends State<LoginPage> {
                     icon: const Icon(Icons.bug_report, size: 16),
                     label: const Text('Debug', style: TextStyle(fontSize: 12)),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),

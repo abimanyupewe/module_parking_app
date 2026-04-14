@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../config/colors.dart';
 import '../../../config/image_assets.dart';
 import '../controllers/onboarding_controller.dart';
@@ -58,12 +57,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     image: SizedBox(
                       width: 340,
                       height: 340,
-                      child: SvgPicture.asset(
+                      child: Image.asset(
                         ImageAssets.handWithCard,
                         fit: BoxFit.contain,
-                        placeholderBuilder: (BuildContext context) {
+                        errorBuilder: (context, error, stackTrace) {
                           return const Center(
-                            child: CircularProgressIndicator(),
+                            child: Icon(Icons.broken_image, size: 50),
                           );
                         },
                       ),
