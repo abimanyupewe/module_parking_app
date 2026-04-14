@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../models/area_parkir_model.dart';
+import '../../../models/jenis_kendaraan_model.dart';
+import '../../../services/database_helper.dart';
 import '../../../widgets/widgets.dart';
 import 'image_picker_widget.dart';
 
@@ -16,39 +19,75 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
   final _platnomorController = TextEditingController();
   final _merkController = TextEditingController();
   final _warnaController = TextEditingController();
+  final _databaseHelper = DatabaseHelper();
 
-  String? _selectedJenisKendaraan;
-  String? _selectedArea;
+  String? _selectedJenisKendaraanId;
+  String? _selectedAreaId;
   String? _selectedImagePath; // Path ke gambar yang dipilih
   bool _isLoading = false;
+  bool _isLoadingData = true;
+  String? _errorMessage;
 
-  // Mapping of jenis kendaraan ke category
-  final Map<String, String> _jenisKendaraanMap = {
-    'Motor Roda 2': 'Motor',
-    'Mobil': 'Mobil',
-    'Bus': 'Bus',
-  };
-
-  // Area data dengan kategori, kapasitas, dan spot tersedia
-  final List<Map<String, dynamic>> _allAreas = [
-    {'name': 'Blok A', 'category': 'Motor', 'kapasitas': 50, 'tersedia': 12},
-    {'name': 'Blok B', 'category': 'Mobil', 'kapasitas': 40, 'tersedia': 8},
-    {'name': 'Blok C', 'category': 'Bus', 'kapasitas': 10, 'tersedia': 3},
-  ];
-
-  final List<String> _jenisKendaraan = ['Motor Roda 2', 'Mobil', 'Bus'];
+  List<JenisKendaraanModel> _jenisKendaraanList = [];
+  List<AreaParkirModel> _areaList = [];
+  List<AreaParkirModel> _filteredAreaList = [];
 
   /// Get filtered areas based on selected vehicle type
-  List<String> get _filteredAreas {
-    if (_selectedJenisKendaraan == null) {
-      return [];
+  void _filterAreasByJenisKendaraan() {
+    if (_selectedJenisKendaraanId == null) {
+      _filteredAreaList = [];
+      return;
     }
 
-    final category = _jenisKendaraanMap[_selectedJenisKendaraan];
-    return _allAreas
-        .where((area) => area['category'] == category)
-        .map((area) => area['name'] as String)
+    final selectedJenisId = int.tryParse(_selectedJenisKendaraanId ?? '');
+    if (selectedJenisId == null) {
+      _filteredAreaList = [];
+      return;
+    }
+
+    _filteredAreaList = _areaList
+        .where((area) => area.idJenis == selectedJenisId)
         .toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() {
+        _isLoadingData = true;
+        _errorMessage = null;
+      });
+
+      final jenisKendaraanList = await _databaseHelper.getAllJenisKendaraan();
+      final areaList = await _databaseHelper.getAllAreaParkir();
+
+      if (mounted) {
+        setState(() {
+          _jenisKendaraanList = jenisKendaraanList;
+          _areaList = areaList;
+          _isLoadingData = false;
+
+          // Validate that data exists
+          if (_jenisKendaraanList.isEmpty) {
+            _errorMessage = 'Tidak ada data jenis kendaraan di database';
+          } else if (_areaList.isEmpty) {
+            _errorMessage = 'Tidak ada data area parkir di database';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error loading data: $e';
+          _isLoadingData = false;
+        });
+      }
+    }
   }
 
   @override
@@ -87,8 +126,8 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         _merkController.clear();
         _warnaController.clear();
         setState(() {
-          _selectedJenisKendaraan = null;
-          _selectedArea = null;
+          _selectedJenisKendaraanId = null;
+          _selectedAreaId = null;
           _selectedImagePath = null;
           _isLoading = false;
         });
@@ -137,6 +176,42 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading or error states
+    if (_isLoadingData) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            const Text('Memuat data...'),
+          ],
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: AppColors.danger, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.danger),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Form(
@@ -177,17 +252,20 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _selectedJenisKendaraan,
-                  items: _jenisKendaraan
+                  value: _selectedJenisKendaraanId,
+                  items: _jenisKendaraanList
                       .map(
-                        (jenis) =>
-                            DropdownMenuItem(value: jenis, child: Text(jenis)),
+                        (jenis) => DropdownMenuItem(
+                          value: jenis.idJenis.toString(),
+                          child: Text(jenis.namaJenis),
+                        ),
                       )
                       .toList(),
                   onChanged: (value) {
                     setState(() {
-                      _selectedJenisKendaraan = value;
-                      _selectedArea = null; // Reset area ketika jenis berubah
+                      _selectedJenisKendaraanId = value;
+                      _selectedAreaId = null; // Reset area ketika jenis berubah
+                      _filterAreasByJenisKendaraan();
                     });
                   },
                   validator: (value) {
@@ -258,19 +336,15 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _selectedArea,
-                  items: _filteredAreas.map((areaName) {
-                    final areaData = _allAreas.firstWhere(
-                      (area) => area['name'] == areaName,
-                      orElse: () => {'tersedia': 0},
-                    );
-                    final tersedia = areaData['tersedia'] ?? 0;
+                  value: _selectedAreaId,
+                  items: _filteredAreaList.map((area) {
+                    final tersedia = area.sisaKapasitas;
                     return DropdownMenuItem(
-                      value: areaName,
+                      value: area.idArea.toString(),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(areaName),
+                          Text(area.namaArea),
                           const SizedBox(width: 16),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -298,11 +372,11 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                       ),
                     );
                   }).toList(),
-                  onChanged: _selectedJenisKendaraan == null
+                  onChanged: _selectedJenisKendaraanId == null
                       ? null
                       : (value) {
                           setState(() {
-                            _selectedArea = value;
+                            _selectedAreaId = value;
                           });
                         },
                   validator: (value) {
@@ -312,9 +386,9 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                     return null;
                   },
                   decoration: InputDecoration(
-                    hintText: _selectedJenisKendaraan == null
+                    hintText: _selectedJenisKendaraanId == null
                         ? 'Pilih jenis kendaraan terlebih dahulu'
-                        : _filteredAreas.isEmpty
+                        : _filteredAreaList.isEmpty
                         ? 'Tidak ada area tersedia'
                         : 'Pilih area parkir',
                     filled: true,

@@ -392,38 +392,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                           style: const TextStyle(fontSize: 14),
                         ),
-                        const SizedBox(height: 20),
-
-                        // Keep me signed in checkbox
-                        Row(
-                          children: [
-                            SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: Checkbox(
-                                value: _keepSignedIn,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _keepSignedIn = value ?? false;
-                                  });
-                                },
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                activeColor: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Ingat saya',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                            ),
-                          ],
-                        ),
+                        
                         const SizedBox(height: 28),
 
                         // Error Message
@@ -533,7 +502,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        'Sudah punya akun? ',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                         ),

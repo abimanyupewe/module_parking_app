@@ -254,11 +254,35 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getActiveTransactions() async {
     final db = await database;
-    return await db.query(
-      AppConstants.tableTransaksi,
-      where: '${AppConstants.colTransaksiStatus} = ?',
-      whereArgs: [AppConstants.statusParkir],
-      orderBy: '${AppConstants.colWaktuMasuk} DESC',
+    return await db.rawQuery(
+      '''
+      SELECT 
+        t.${AppConstants.colTransaksiId},
+        t.${AppConstants.colKendaraanId},
+        t.${AppConstants.colAreaId},
+        t.${AppConstants.colWaktuMasuk},
+        t.${AppConstants.colWaktuKeluar},
+        t.${AppConstants.colTransaksiStatus},
+        t.${AppConstants.colTotalBiaya},
+        t.${AppConstants.colUserId},
+        t.image_path,
+        k.${AppConstants.colPlatNomor},
+        k.${AppConstants.colMerk},
+        k.${AppConstants.colWarna},
+        k.${AppConstants.colJenisId},
+        j.${AppConstants.colNamaJenis},
+        j.${AppConstants.colTarifPerJam},
+        a.${AppConstants.colNamaArea},
+        a.${AppConstants.colKapasitas},
+        a.${AppConstants.colTerisi}
+      FROM ${AppConstants.tableTransaksi} t
+      LEFT JOIN ${AppConstants.tableKendaraan} k ON t.${AppConstants.colKendaraanId} = k.${AppConstants.colKendaraanId}
+      LEFT JOIN ${AppConstants.tableJenisKendaraan} j ON k.${AppConstants.colJenisId} = j.${AppConstants.colJenisId}
+      LEFT JOIN ${AppConstants.tableAreaParkir} a ON t.${AppConstants.colAreaId} = a.${AppConstants.colAreaId}
+      WHERE t.${AppConstants.colTransaksiStatus} = ?
+      ORDER BY t.${AppConstants.colWaktuMasuk} DESC
+    ''',
+      [AppConstants.statusParkir],
     );
   }
 
@@ -266,10 +290,35 @@ class DatabaseHelper {
     int limit = 100,
   }) async {
     final db = await database;
-    return await db.query(
-      AppConstants.tableTransaksi,
-      orderBy: '${AppConstants.colWaktuMasuk} DESC',
-      limit: limit,
+    return await db.rawQuery(
+      '''
+      SELECT 
+        t.${AppConstants.colTransaksiId},
+        t.${AppConstants.colKendaraanId},
+        t.${AppConstants.colAreaId},
+        t.${AppConstants.colWaktuMasuk},
+        t.${AppConstants.colWaktuKeluar},
+        t.${AppConstants.colTransaksiStatus},
+        t.${AppConstants.colTotalBiaya},
+        t.${AppConstants.colUserId},
+        t.image_path,
+        k.${AppConstants.colPlatNomor},
+        k.${AppConstants.colMerk},
+        k.${AppConstants.colWarna},
+        k.${AppConstants.colJenisId},
+        j.${AppConstants.colNamaJenis},
+        j.${AppConstants.colTarifPerJam},
+        a.${AppConstants.colNamaArea},
+        a.${AppConstants.colKapasitas},
+        a.${AppConstants.colTerisi}
+      FROM ${AppConstants.tableTransaksi} t
+      LEFT JOIN ${AppConstants.tableKendaraan} k ON t.${AppConstants.colKendaraanId} = k.${AppConstants.colKendaraanId}
+      LEFT JOIN ${AppConstants.tableJenisKendaraan} j ON k.${AppConstants.colJenisId} = j.${AppConstants.colJenisId}
+      LEFT JOIN ${AppConstants.tableAreaParkir} a ON t.${AppConstants.colAreaId} = a.${AppConstants.colAreaId}
+      ORDER BY t.${AppConstants.colWaktuMasuk} DESC
+      LIMIT ?
+    ''',
+      [limit],
     );
   }
 
@@ -284,5 +333,111 @@ class DatabaseHelper {
       where: '${AppConstants.colTransaksiId} = ?',
       whereArgs: [transaksiId],
     );
+  }
+
+  // ==================== JENIS KENDARAAN OPERATIONS ====================
+
+  Future<int> insertJenisKendaraan(JenisKendaraanModel jenis) async {
+    final db = await database;
+    return await db.insert(AppConstants.tableJenisKendaraan, jenis.toMap());
+  }
+
+  Future<List<JenisKendaraanModel>> getAllJenisKendaraan() async {
+    final db = await database;
+    final maps = await db.query(AppConstants.tableJenisKendaraan);
+    return List.generate(
+      maps.length,
+      (i) => JenisKendaraanModel.fromMap(maps[i]),
+    );
+  }
+
+  Future<JenisKendaraanModel?> getJenisKendaraanById(int id) async {
+    final db = await database;
+    final maps = await db.query(
+      AppConstants.tableJenisKendaraan,
+      where: '${AppConstants.colJenisId} = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) return JenisKendaraanModel.fromMap(maps.first);
+    return null;
+  }
+
+  // ==================== AREA PARKIR OPERATIONS ====================
+
+  Future<int> insertAreaParkir(AreaParkirModel area) async {
+    final db = await database;
+    return await db.insert(AppConstants.tableAreaParkir, area.toMap());
+  }
+
+  Future<List<AreaParkirModel>> getAllAreaParkir() async {
+    final db = await database;
+    final maps = await db.query(AppConstants.tableAreaParkir);
+    return List.generate(maps.length, (i) => AreaParkirModel.fromMap(maps[i]));
+  }
+
+  Future<List<AreaParkirModel>> getAreaParkirByJenis(int idJenis) async {
+    final db = await database;
+    final maps = await db.query(
+      AppConstants.tableAreaParkir,
+      where: '${AppConstants.colJenisId} = ?',
+      whereArgs: [idJenis],
+    );
+    return List.generate(maps.length, (i) => AreaParkirModel.fromMap(maps[i]));
+  }
+
+  Future<AreaParkirModel?> getAreaParkirById(int id) async {
+    final db = await database;
+    final maps = await db.query(
+      AppConstants.tableAreaParkir,
+      where: '${AppConstants.colAreaId} = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) return AreaParkirModel.fromMap(maps.first);
+    return null;
+  }
+
+  Future<int> updateAreaParkir(AreaParkirModel area) async {
+    final db = await database;
+    return await db.update(
+      AppConstants.tableAreaParkir,
+      area.toMap(),
+      where: '${AppConstants.colAreaId} = ?',
+      whereArgs: [area.idArea],
+    );
+  }
+
+  // ==================== KENDARAAN OPERATIONS ====================
+
+  Future<int> insertKendaraan(KendaraanModel kendaraan) async {
+    final db = await database;
+    return await db.insert(AppConstants.tableKendaraan, kendaraan.toMap());
+  }
+
+  Future<List<KendaraanModel>> getAllKendaraan() async {
+    final db = await database;
+    final maps = await db.query(AppConstants.tableKendaraan);
+    return List.generate(maps.length, (i) => KendaraanModel.fromMap(maps[i]));
+  }
+
+  Future<KendaraanModel?> getKendaraanByPlatNomor(String platNomor) async {
+    final db = await database;
+    final maps = await db.query(
+      AppConstants.tableKendaraan,
+      where: '${AppConstants.colPlatNomor} = ?',
+      whereArgs: [platNomor],
+    );
+    if (maps.isNotEmpty) return KendaraanModel.fromMap(maps.first);
+    return null;
+  }
+
+  Future<KendaraanModel?> getKendaraanById(int id) async {
+    final db = await database;
+    final maps = await db.query(
+      AppConstants.tableKendaraan,
+      where: '${AppConstants.colKendaraanId} = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) return KendaraanModel.fromMap(maps.first);
+    return null;
   }
 }

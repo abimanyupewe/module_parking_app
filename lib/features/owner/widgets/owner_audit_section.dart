@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../config/constants.dart';
+import '../../../services/database_helper.dart';
 import '../../../widgets/widgets.dart';
 import '../../../services/pdf_service.dart';
 
@@ -13,38 +15,18 @@ class OwnerAuditSection extends StatefulWidget {
 
 class _OwnerAuditSectionState extends State<OwnerAuditSection>
     with SingleTickerProviderStateMixin {
+  final _databaseHelper = DatabaseHelper();
   late TabController _tabController;
 
-  final List<Map<String, dynamic>> _logTransaksi = [
-    {
-      'waktu': '10:45',
-      'jenis': 'Check-In',
-      'plat': 'AB 1234 CD',
-      'petugas': 'Budi',
-    },
-    {
-      'waktu': '10:30',
-      'jenis': 'Check-Out',
-      'plat': 'DE 5678 FG',
-      'petugas': 'Ani',
-    },
-    {
-      'waktu': '10:15',
-      'jenis': 'Check-In',
-      'plat': 'HI 9012 JK',
-      'petugas': 'Roni',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _logOtorisasi = [
-    {'waktu': '09:00', 'aktivitas': 'Disable Petugas', 'target': 'roni_p'},
-    {'waktu': '08:30', 'aktivitas': 'Edit Kategori', 'target': 'Motor Roda 2'},
-  ];
+  List<Map<String, dynamic>> _logTransaksi = [];
+  List<Map<String, dynamic>> _logOtorisasi = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadLogs();
   }
 
   @override
@@ -53,17 +35,56 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
     super.dispose();
   }
 
+  Future<void> _loadLogs() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Load transaction logs
+      final transaksiLogs = await _databaseHelper.getActivityLogs(
+        kategori: AppConstants.logTransaksi,
+        limit: 50,
+      );
+
+      // Load authorization logs
+      final otoriasLogs = await _databaseHelper.getActivityLogs(
+        kategori: AppConstants.logOtorisasi,
+        limit: 50,
+      );
+
+      if (mounted) {
+        setState(() {
+          _logTransaksi = transaksiLogs;
+          _logOtorisasi = otoriasLogs;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading logs: $e')));
+      }
+    }
+  }
+
   Future<void> _printActivityLog() async {
     try {
       final logs = _tabController.index == 0 ? _logTransaksi : _logOtorisasi;
       await PdfService.generateActivityLogReport(logs: logs);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error cetak laporan: $e'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error cetak laporan: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
     }
   }
 
@@ -113,10 +134,12 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
           const SizedBox(height: 16),
           // Content
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [_buildTransaksiLog(), _buildOtoriasLog()],
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : TabBarView(
+                    controller: _tabController,
+                    children: [_buildTransaksiLog(), _buildOtoriasLog()],
+                  ),
           ),
         ],
       ),
@@ -124,17 +147,22 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
   }
 
   Widget _buildTransaksiLog() {
+    if (_logTransaksi.isEmpty) {
+      return const Center(child: Text('Tidak ada log transaksi'));
+    }
+
     return ListView.builder(
       itemCount: _logTransaksi.length,
       itemBuilder: (context, index) {
         final log = _logTransaksi[index];
+        final aktivitas = log[AppConstants.colAktivitas] as String? ?? '';
+        final waktu = log[AppConstants.colWaktu] as String? ?? '';
+
         return CompactLogTimelineTile(
-          title: '${log['jenis']}: ${log['plat']}',
-          timestamp: '${log['waktu']} oleh ${log['petugas']}',
-          icon: log['jenis'] == 'Check-In' ? Icons.login : Icons.logout,
-          iconColor: log['jenis'] == 'Check-In'
-              ? AppColors.success
-              : AppColors.warning,
+          title: aktivitas,
+          timestamp: waktu,
+          icon: Icons.login,
+          iconColor: AppColors.success,
           isLast: index == _logTransaksi.length - 1,
         );
       },
@@ -142,13 +170,20 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
   }
 
   Widget _buildOtoriasLog() {
+    if (_logOtorisasi.isEmpty) {
+      return const Center(child: Text('Tidak ada log otorisasi'));
+    }
+
     return ListView.builder(
       itemCount: _logOtorisasi.length,
       itemBuilder: (context, index) {
         final log = _logOtorisasi[index];
+        final aktivitas = log[AppConstants.colAktivitas] as String? ?? '';
+        final waktu = log[AppConstants.colWaktu] as String? ?? '';
+
         return CompactLogTimelineTile(
-          title: log['aktivitas'],
-          timestamp: '${log['waktu']} • ${log['target']}',
+          title: aktivitas,
+          timestamp: waktu,
           icon: Icons.security,
           iconColor: AppColors.warning,
           isLast: index == _logOtorisasi.length - 1,

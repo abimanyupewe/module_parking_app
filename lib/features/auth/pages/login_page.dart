@@ -210,37 +210,13 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 24),
 
                         // Password Field dengan link Forgot Password
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Kata Sandi',
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                // TODO: Handle forgot password
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(0, 0),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        Text(
+                          'Kata Sandi',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
                               ),
-                              child: Text(
-                                'Forgot Password?',
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                    ),
-                              ),
-                            ),
-                          ],
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -296,38 +272,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           style: const TextStyle(fontSize: 14),
                         ),
-                        const SizedBox(height: 20),
-
-                        // Keep me signed in checkbox
-                        Row(
-                          children: [
-                            SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: Checkbox(
-                                value: _keepSignedIn,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _keepSignedIn = value ?? false;
-                                  });
-                                },
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                activeColor: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Ingat saya',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                            ),
-                          ],
-                        ),
+                        
                         const SizedBox(height: 28),
 
                         // Error Message
@@ -406,7 +351,7 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        "Belum punya akun? ",
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                         ),

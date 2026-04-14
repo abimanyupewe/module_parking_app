@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../services/database_helper.dart';
+import '../../../models/area_parkir_model.dart';
 
 /// Petugas Area Info Section - Menampilkan informasi sisa slot parkir
 class PetugasAreaInfoSection extends StatefulWidget {
@@ -10,23 +12,53 @@ class PetugasAreaInfoSection extends StatefulWidget {
 }
 
 class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
-  // Mock data - nanti ganti dengan data dari DB
-  final List<Map<String, dynamic>> _areaData = [
-    {'name': 'Blok A', 'category': 'Motor', 'available': 45, 'capacity': 50},
-    {'name': 'Blok B', 'category': 'Mobil', 'available': 12, 'capacity': 30},
-    {'name': 'Blok C', 'category': 'Bus', 'available': 8, 'capacity': 10},
-  ];
+  final _databaseHelper = DatabaseHelper();
+
+  List<AreaParkirModel> _areaData = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   String _selectedCategory = 'Semua';
   final List<String> _categories = ['Semua', 'Motor', 'Mobil', 'Bus'];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final areaData = await _databaseHelper.getAllAreaParkir();
+
+      if (mounted) {
+        setState(() {
+          _areaData = areaData;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error loading data: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   /// Get filtered areas based on selected category
-  List<Map<String, dynamic>> get _filteredAreas {
+  List<AreaParkirModel> get _filteredAreas {
     if (_selectedCategory == 'Semua') {
       return _areaData;
     }
     return _areaData
-        .where((area) => area['category'] == _selectedCategory)
+        .where((area) => area.namaArea.contains(_selectedCategory))
         .toList();
   }
 
@@ -76,7 +108,31 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
           // Area cards
           SizedBox(
             height: 110,
-            child: _filteredAreas.isEmpty
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: AppColors.danger,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            color: AppColors.danger,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  )
+                : _filteredAreas.isEmpty
                 ? Center(
                     child: Text(
                       'Tidak ada area untuk kategori ini',
@@ -88,11 +144,11 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
                     itemCount: _filteredAreas.length,
                     itemBuilder: (context, index) {
                       final area = _filteredAreas[index];
-                      final percentage =
-                          (area['available'] / area['capacity'] * 100)
-                              .toStringAsFixed(0);
-                      final isWarning =
-                          area['available'] < area['capacity'] * 0.2;
+                      final available = area.sisaKapasitas;
+                      final capacity = area.kapasitas;
+                      final percentage = (available / capacity * 100)
+                          .toStringAsFixed(0);
+                      final isWarning = available < capacity * 0.2;
 
                       return Container(
                         width: 160,
@@ -119,7 +175,7 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  area['name'],
+                                  area.namaArea,
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -129,7 +185,7 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  area['category'],
+                                  _getCategoryFromId(area.idJenis),
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w400,
@@ -143,7 +199,7 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(3),
                               child: LinearProgressIndicator(
-                                value: area['available'] / area['capacity'],
+                                value: available / capacity,
                                 minHeight: 5,
                                 backgroundColor: AppColors.tertiary,
                                 valueColor: AlwaysStoppedAnimation<Color>(
@@ -156,7 +212,7 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
                             const SizedBox(height: 5),
                             // Count - compact format
                             Text(
-                              '${area['available']}/${area['capacity']} ($percentage%)',
+                              '$available/$capacity ($percentage%)',
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
@@ -172,5 +228,22 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
         ],
       ),
     );
+  }
+
+  /// Get category name from jenis_id
+  /// Note: This is a simple mapping. In production, you might want to fetch
+  /// jenis_kendaraan data from database if needed
+  String _getCategoryFromId(int idJenis) {
+    // Map based on typical IDs - adjust based on your actual data
+    switch (idJenis) {
+      case 1:
+        return 'Motor';
+      case 2:
+        return 'Mobil';
+      case 3:
+        return 'Bus';
+      default:
+        return 'Lainnya';
+    }
   }
 }

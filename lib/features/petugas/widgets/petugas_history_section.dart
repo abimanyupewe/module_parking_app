@@ -1,53 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../config/constants.dart';
 import '../../../widgets/widgets.dart';
 import '../../../services/format_helper.dart';
+import '../../../services/database_helper.dart';
 
 /// Petugas History Section - Riwayat transaksi
 class PetugasHistorySection extends StatefulWidget {
-  const PetugasHistorySection({Key? key}) : super(key: key);
+  const PetugasHistorySection({super.key});
 
   @override
   State<PetugasHistorySection> createState() => _PetugasHistorySectionState();
 }
 
 class _PetugasHistorySectionState extends State<PetugasHistorySection> {
-  // Mock data - nanti ganti dengan data dari DB
-  final List<Map<String, dynamic>> _historyData = [
-    {
-      'id': 1,
-      'platNomor': 'AB 1234 CD',
-      'jenis': 'Motor',
-      'waktuMasuk': '08:30',
-      'waktuKeluar': '10:45',
-      'durasi': '2 jam 15 menit',
-      'biaya': 4500,
-      'status': 'Selesai',
-      'area': 'Blok A',
-    },
-    {
-      'id': 2,
-      'platNomor': 'DE 5678 FG',
-      'jenis': 'Mobil',
-      'waktuMasuk': '09:15',
-      'waktuKeluar': '11:30',
-      'durasi': '2 jam 15 menit',
-      'biaya': 9000,
-      'status': 'Selesai',
-      'area': 'Blok B',
-    },
-    {
-      'id': 3,
-      'platNomor': 'HI 9012 JK',
-      'jenis': 'Motor',
-      'waktuMasuk': '10:00',
-      'waktuKeluar': '11:15',
-      'durasi': '1 jam 15 menit',
-      'biaya': 2500,
-      'status': 'Selesai',
-      'area': 'Blok A',
-    },
-  ];
+  final _databaseHelper = DatabaseHelper();
+
+  List<Map<String, dynamic>> _historyData = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   int _selectedFilterIndex = 0;
   final List<String> _filters = [
@@ -58,10 +29,119 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final historyData = await _databaseHelper.getAllTransactions();
+
+      if (mounted) {
+        setState(() {
+          _historyData = historyData;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error loading data: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  /// Calculate filtered history data based on selected filter
+  List<Map<String, dynamic>> get _filteredHistoryData {
+    if (_selectedFilterIndex == 0) {
+      // Semua
+      return _historyData;
+    }
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final weekAgo = today.subtract(
+      Duration(days: today.weekday - 1),
+    ); // Monday of this week
+    final monthAgo = DateTime(now.year, now.month, 1); // First day of month
+
+    return _historyData.where((item) {
+      final waktuMasuk = DateTime.tryParse(
+        item[AppConstants.colWaktuMasuk] ?? '',
+      );
+      if (waktuMasuk == null) return false;
+
+      final itemDate = DateTime(
+        waktuMasuk.year,
+        waktuMasuk.month,
+        waktuMasuk.day,
+      );
+
+      switch (_selectedFilterIndex) {
+        case 1: // Hari Ini
+          return itemDate.isAtSameMomentAs(today);
+        case 2: // Minggu Ini
+          return waktuMasuk.isAfter(weekAgo) &&
+              waktuMasuk.isBefore(today.add(Duration(days: 1)));
+        case 3: // Bulan Ini
+          return waktuMasuk.isAfter(monthAgo) &&
+              waktuMasuk.isBefore(now.add(Duration(days: 1)));
+        default:
+          return true;
+      }
+    }).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final totalBiaya = _historyData.fold<int>(
+    // Show loading or error states
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            const Text('Memuat riwayat transaksi...'),
+          ],
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: AppColors.danger, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.danger),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final displayData = _filteredHistoryData;
+    final totalBiaya = displayData.fold<int>(
       0,
-      (sum, item) => sum + (item['biaya'] as int),
+      (sum, item) => sum + (item[AppConstants.colTotalBiaya] as int? ?? 0),
     );
 
     return SingleChildScrollView(
@@ -107,7 +187,7 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildSummaryItem('Total Transaksi', '${_historyData.length}'),
+                _buildSummaryItem('Total Transaksi', '${displayData.length}'),
                 _buildSummaryItem(
                   'Total Pendapatan',
                   FormatHelper.formatRupiah(totalBiaya),
@@ -117,45 +197,103 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection> {
             const SizedBox(height: 24),
 
             // Table
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columnSpacing: 16,
-                dataRowHeight: 56,
-                headingRowHeight: 48,
-                showCheckboxColumn: false,
-                columns: const [
-                  DataColumn(label: Text('Plat Nomor')),
-                  DataColumn(label: Text('Jenis')),
-                  DataColumn(label: Text('Masuk')),
-                  DataColumn(label: Text('Keluar')),
-                  DataColumn(label: Text('Durasi')),
-                  DataColumn(label: Text('Biaya'), numeric: true),
-                ],
-                rows: _historyData
-                    .map(
-                      (history) => DataRow(
-                        cells: [
-                          DataCell(Text(history['platNomor'])),
-                          DataCell(Text(history['jenis'])),
-                          DataCell(Text(history['waktuMasuk'])),
-                          DataCell(Text(history['waktuKeluar'])),
-                          DataCell(Text(history['durasi'])),
-                          DataCell(
-                            Text(
-                              FormatHelper.formatRupiah(history['biaya']),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
+            if (displayData.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.inbox_outlined,
+                        size: 64,
+                        color: AppColors.inactive,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Tidak ada transaksi untuk periode ini',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.inactive,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columnSpacing: 16,
+                  dataRowMinHeight: 56,
+                  dataRowMaxHeight: 56,
+                  headingRowHeight: 48,
+                  showCheckboxColumn: false,
+                  columns: const [
+                    DataColumn(label: Text('Plat Nomor')),
+                    DataColumn(label: Text('Jenis')),
+                    DataColumn(label: Text('Masuk')),
+                    DataColumn(label: Text('Keluar')),
+                    DataColumn(label: Text('Durasi')),
+                    DataColumn(label: Text('Biaya'), numeric: true),
+                  ],
+                  rows: displayData.map((history) {
+                    final waktuMasuk = DateTime.tryParse(
+                      history[AppConstants.colWaktuMasuk] ?? '',
+                    );
+                    final waktuKeluar = DateTime.tryParse(
+                      history[AppConstants.colWaktuKeluar] ?? '',
+                    );
+                    final durasi = waktuMasuk != null && waktuKeluar != null
+                        ? waktuKeluar.difference(waktuMasuk)
+                        : Duration.zero;
+                    final durasiText = durasi.inHours > 0
+                        ? '${durasi.inHours}h ${durasi.inMinutes % 60}m'
+                        : '${durasi.inMinutes}m';
+
+                    return DataRow(
+                      cells: [
+                        DataCell(
+                          Text(
+                            history[AppConstants.colPlatNomor],
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        DataCell(
+                          Text(history[AppConstants.colNamaJenis] ?? 'N/A'),
+                        ),
+                        DataCell(
+                          Text(
+                            _formatDateTime(
+                              history[AppConstants.colWaktuMasuk],
                             ),
                           ),
-                        ],
-                      ),
-                    )
-                    .toList(),
+                        ),
+                        DataCell(
+                          Text(
+                            _formatDateTime(
+                              history[AppConstants.colWaktuKeluar],
+                            ),
+                          ),
+                        ),
+                        DataCell(Text(durasiText)),
+                        DataCell(
+                          Text(
+                            FormatHelper.formatRupiah(
+                              history[AppConstants.colTotalBiaya] ?? 0,
+                            ),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
             const SizedBox(height: 16),
           ],
         ),
@@ -183,5 +321,15 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection> {
         ),
       ],
     );
+  }
+
+  String _formatDateTime(String? dateTimeStr) {
+    if (dateTimeStr == null || dateTimeStr.isEmpty) return 'N/A';
+    try {
+      final dateTime = DateTime.parse(dateTimeStr);
+      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return 'N/A';
+    }
   }
 }

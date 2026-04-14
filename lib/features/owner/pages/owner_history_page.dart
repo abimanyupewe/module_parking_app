@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
-import '../../../models/kendaraan_model.dart';
-import '../../../models/transaksi_model.dart';
+import '../../../services/database_helper.dart';
 import 'package:intl/intl.dart';
 
 /// Owner History Page - Menampilkan riwayat parkir dengan filter dan search
@@ -13,8 +12,8 @@ class OwnerHistoryPage extends StatefulWidget {
 }
 
 class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
-  late List<KendaraanModel> _allVehicles = [];
-  late List<TransaksiModel> _allTransaksi = [];
+  final _databaseHelper = DatabaseHelper();
+  late List<Map<String, dynamic>> _allData = [];
   late List<Map<String, dynamic>> _filteredData = [];
   bool _isLoading = false;
   String _searchQuery = '';
@@ -27,11 +26,11 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
   @override
   void initState() {
     super.initState();
-    _loadVehicles();
+    _loadData();
   }
 
-  /// Load vehicle data
-  Future<void> _loadVehicles() async {
+  /// Load transaction data from database
+  Future<void> _loadData() async {
     if (_isLoading) return;
 
     if (mounted) {
@@ -41,18 +40,13 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
     }
 
     try {
-      // Simulasi loading delay
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Generate mock data
-      final vehicles = _generateMockVehicles();
-      final transaksi = _generateMockTransaksi();
+      // Get all transactions from database
+      final transactions = await _databaseHelper.getAllTransactions();
 
       if (mounted) {
         setState(() {
-          _allVehicles = vehicles;
-          _allTransaksi = transaksi;
-          _filteredData = _combinedData();
+          _allData = transactions;
+          _filteredData = _filterAndSearchData(_allData);
           _isLoading = false;
         });
       }
@@ -68,83 +62,6 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
     }
   }
 
-  /// Generate mock vehicle data
-  List<KendaraanModel> _generateMockVehicles() {
-    final vehicles = <KendaraanModel>[];
-    final merk = [
-      'Honda Vario',
-      'Toyota Avanza',
-      'Yamaha Nmax',
-      'Daihatsu Xenia',
-      'Suzuki Carry',
-    ];
-
-    for (int i = 0; i < 15; i++) {
-      final jenisIdx = i % 3;
-      vehicles.add(
-        KendaraanModel(
-          idKendaraan: i + 1,
-          platNomor: 'AB ${1000 + i} CD',
-          idJenis: jenisIdx,
-          merk: merk[i % merk.length],
-          warna: 'Hitam',
-        ),
-      );
-    }
-
-    return vehicles;
-  }
-
-  /// Generate mock transaksi data
-  List<TransaksiModel> _generateMockTransaksi() {
-    final transaksi = <TransaksiModel>[];
-    final now = DateTime.now();
-
-    for (int i = 0; i < 15; i++) {
-      final waktuMasuk = now.subtract(Duration(hours: 24 - i));
-      final waktuKeluar = i < 10
-          ? waktuMasuk.add(Duration(hours: 2 + i))
-          : null;
-
-      transaksi.add(
-        TransaksiModel(
-          idTransaksi: i + 1,
-          idKendaraan: i + 1,
-          idArea: (i % 3) + 1,
-          waktuMasuk: waktuMasuk,
-          waktuKeluar: waktuKeluar,
-          status: waktuKeluar != null ? 'Selesai' : 'Parkir',
-          totalBiaya: waktuKeluar != null ? (10000 + (i * 5000)) : null,
-          idUser: 1,
-        ),
-      );
-    }
-
-    return transaksi;
-  }
-
-  /// Combine vehicle and transaksi data
-  List<Map<String, dynamic>> _combinedData() {
-    final combined = <Map<String, dynamic>>[];
-
-    for (final transaksi in _allTransaksi) {
-      final vehicle = _allVehicles.firstWhere(
-        (v) => v.idKendaraan == transaksi.idKendaraan,
-        orElse: () => KendaraanModel(
-          idKendaraan: 0,
-          platNomor: 'N/A',
-          idJenis: 0,
-          merk: 'N/A',
-          warna: 'N/A',
-        ),
-      );
-
-      combined.add({'vehicle': vehicle, 'transaksi': transaksi});
-    }
-
-    return _filterAndSearchData(combined);
-  }
-
   /// Filter and search combined data
   List<Map<String, dynamic>> _filterAndSearchData(
     List<Map<String, dynamic>> data,
@@ -152,49 +69,57 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
     final query = _searchQuery.toLowerCase();
 
     return data.where((item) {
-      final vehicle = item['vehicle'] as KendaraanModel;
-      final transaksi = item['transaksi'] as TransaksiModel;
+      final platNomor = item['plat_nomor'] as String? ?? '';
+      final merk = item['merk'] as String? ?? '';
+      final jenisId = item['id_jenis'] as int? ?? 0;
+      final waktuMasukStr = item['waktu_masuk'] as String? ?? '';
 
       // Filter by category
       final categoryMatch =
           _selectedCategory == 'Semua' ||
-          _getJenisKendaraan(vehicle.idJenis) == _selectedCategory;
+          _getJenisKendaraan(jenisId) == _selectedCategory;
 
       // Filter by search query
       final searchMatch =
           query.isEmpty ||
-          vehicle.platNomor.toLowerCase().contains(query) ||
-          vehicle.merk.toLowerCase().contains(query);
+          platNomor.toLowerCase().contains(query) ||
+          merk.toLowerCase().contains(query);
 
       // Filter by date range
       bool dateMatch = true;
-      if (_startDate != null) {
-        final startOfDay = DateTime(
-          _startDate!.year,
-          _startDate!.month,
-          _startDate!.day,
-        );
-        dateMatch =
-            transaksi.waktuMasuk.isAfter(startOfDay) ||
-            transaksi.waktuMasuk.day == startOfDay.day &&
-                transaksi.waktuMasuk.month == startOfDay.month &&
-                transaksi.waktuMasuk.year == startOfDay.year;
-      }
+      try {
+        final waktuMasuk = DateTime.parse(waktuMasukStr);
 
-      if (_endDate != null && dateMatch) {
-        final endOfDay = DateTime(
-          _endDate!.year,
-          _endDate!.month,
-          _endDate!.day,
-          23,
-          59,
-          59,
-        );
-        dateMatch =
-            transaksi.waktuMasuk.isBefore(endOfDay) ||
-            transaksi.waktuMasuk.day == endOfDay.day &&
-                transaksi.waktuMasuk.month == endOfDay.month &&
-                transaksi.waktuMasuk.year == endOfDay.year;
+        if (_startDate != null) {
+          final startOfDay = DateTime(
+            _startDate!.year,
+            _startDate!.month,
+            _startDate!.day,
+          );
+          dateMatch =
+              waktuMasuk.isAfter(startOfDay) ||
+              (waktuMasuk.day == startOfDay.day &&
+                  waktuMasuk.month == startOfDay.month &&
+                  waktuMasuk.year == startOfDay.year);
+        }
+
+        if (_endDate != null && dateMatch) {
+          final endOfDay = DateTime(
+            _endDate!.year,
+            _endDate!.month,
+            _endDate!.day,
+            23,
+            59,
+            59,
+          );
+          dateMatch =
+              waktuMasuk.isBefore(endOfDay) ||
+              (waktuMasuk.day == endOfDay.day &&
+                  waktuMasuk.month == endOfDay.month &&
+                  waktuMasuk.year == endOfDay.year);
+        }
+      } catch (e) {
+        dateMatch = false;
       }
 
       return categoryMatch && searchMatch && dateMatch;
@@ -204,11 +129,11 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
   /// Get jenis kendaraan string
   String _getJenisKendaraan(int idJenis) {
     switch (idJenis) {
-      case 0:
-        return 'Motor';
       case 1:
-        return 'Mobil';
+        return 'Motor';
       case 2:
+        return 'Mobil';
+      case 3:
         return 'Bus';
       default:
         return 'Lainnya';
@@ -218,7 +143,7 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
   /// Filter dan search vehicles
   void _applyFiltersAndSearch() {
     setState(() {
-      _filteredData = _combinedData();
+      _filteredData = _filterAndSearchData(_allData);
     });
   }
 
@@ -284,7 +209,6 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
         backgroundColor: Colors.green[600],
       ),
     );
-    // TODO: Implement actual PDF export using pdf package
   }
 
   @override
@@ -559,9 +483,14 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
                               index,
                             ) {
                               final item = _filteredData[index];
-                              final vehicle = item['vehicle'] as KendaraanModel;
-                              final transaksi =
-                                  item['transaksi'] as TransaksiModel;
+                              final platNomor =
+                                  item['plat_nomor'] as String? ?? '';
+                              final jenisId = item['id_jenis'] as int? ?? 0;
+                              final merk = item['merk'] as String? ?? '';
+                              final waktuMasuk =
+                                  item['waktu_masuk'] as String? ?? '';
+                              final waktuKeluar =
+                                  item['waktu_keluar'] as String?;
 
                               return DataRow(
                                 cells: [
@@ -577,7 +506,7 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
-                                        vehicle.platNomor,
+                                        platNomor,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 12,
@@ -585,32 +514,23 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
                                       ),
                                     ),
                                   ),
-                                  DataCell(
-                                    Text(_getJenisKendaraan(vehicle.idJenis)),
-                                  ),
-                                  DataCell(Text(vehicle.merk)),
+                                  DataCell(Text(_getJenisKendaraan(jenisId))),
+                                  DataCell(Text(merk)),
                                   DataCell(
                                     Text(
-                                      DateFormat(
-                                        'dd/MM/yyyy HH:mm',
-                                      ).format(transaksi.waktuMasuk),
+                                      waktuMasuk,
                                       style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
                                   DataCell(
                                     Text(
-                                      transaksi.waktuKeluar != null
-                                          ? DateFormat(
-                                              'dd/MM/yyyy HH:mm',
-                                            ).format(transaksi.waktuKeluar!)
-                                          : '-',
+                                      waktuKeluar ?? '-',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: transaksi.waktuKeluar == null
+                                        color: waktuKeluar == null
                                             ? Colors.orange
                                             : Colors.green,
-                                        fontWeight:
-                                            transaksi.waktuKeluar == null
+                                        fontWeight: waktuKeluar == null
                                             ? FontWeight.w600
                                             : FontWeight.normal,
                                       ),
