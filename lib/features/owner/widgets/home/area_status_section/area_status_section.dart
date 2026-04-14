@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../config/colors.dart';
+import '../../../pages/area_parking_status_page.dart';
 import 'area_status_item.dart';
 
 /// Area Status Section - Displays parking area status overview
@@ -11,11 +12,26 @@ class AreaStatusSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Status Area Parkir',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Status Area Parkir',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AreaParkingStatusPage(),
+                  ),
+                );
+              },
+              child: const Text('Lihat Semua'),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         // Lantai 1 Motor
