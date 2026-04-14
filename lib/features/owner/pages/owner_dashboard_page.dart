@@ -16,6 +16,7 @@ class OwnerDashboardPage extends StatefulWidget {
 
 class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
   int _selectedIndex = 0;
+  String? _username;
 
   final List<Widget> _pages = [
     const OwnerHomeSection(),
@@ -24,9 +25,12 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
     const OwnerSdmSection(),
   ];
 
+  final List<String> _pageNames = ['Overview', 'Audit Log', 'History', 'SDM'];
+
   @override
   void initState() {
     super.initState();
+    _username = AppPreferences.getUsername();
   }
 
   void _handleLogout() {
@@ -60,32 +64,89 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
     });
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Pagi';
+    } else if (hour < 17) {
+      return 'Siang';
+    } else {
+      return 'Sore';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Owner Dashboard'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
+        toolbarHeight: 100,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Selamat ${_getGreeting()},',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: AppColors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _username ?? 'Owner',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _pageNames[_selectedIndex],
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: AppColors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                _handleLogout();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'profile',
-                child: Text('Profile'),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'logout') {
+                  _handleLogout();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem<String>(
+                  value: 'profile',
+                  child: Text('Profile'),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Text('Logout'),
+                ),
+              ],
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.more_vert, size: 20),
               ),
-              const PopupMenuDivider(),
-              const PopupMenuItem<String>(
-                value: 'logout',
-                child: Text('Logout'),
-              ),
-            ],
+            ),
           ),
         ],
       ),
