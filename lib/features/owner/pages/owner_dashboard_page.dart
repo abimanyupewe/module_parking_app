@@ -5,6 +5,7 @@ import '../widgets/owner_home_section.dart';
 import '../widgets/owner_audit_section.dart';
 import '../widgets/owner_history_section.dart';
 import '../widgets/owner_sdm_section.dart';
+import 'owner_profile_page.dart';
 
 /// Owner Dashboard Page - Pemegang kendali penuh
 class OwnerDashboardPage extends StatefulWidget {
@@ -120,7 +121,13 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
             padding: const EdgeInsets.only(right: 8),
             child: PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'logout') {
+                if (value == 'profile') {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const OwnerProfilePage(),
+                    ),
+                  );
+                } else if (value == 'logout') {
                   _handleLogout();
                 }
               },
