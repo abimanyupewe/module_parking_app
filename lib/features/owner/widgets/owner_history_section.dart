@@ -179,18 +179,25 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
   }
 
   Future<void> _selectDate() async {
-    if (!mounted) return;
+    try {
+      if (!mounted) return;
 
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2024),
-      lastDate: DateTime(2025),
-      locale: const Locale('id', 'ID'),
-    );
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: _selectedDate ?? DateTime.now(),
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+      );
 
-    if (picked != null && mounted) {
-      _onDateChanged(picked);
+      if (picked != null && mounted) {
+        _onDateChanged(picked);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error memilih tanggal: $e')));
+      }
     }
   }
 
@@ -267,39 +274,24 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    InkWell(
+                    TextFormField(
+                      readOnly: true,
                       onTap: _selectDate,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
+                      decoration: InputDecoration(
+                        hintText: 'Pilih tanggal...',
+                        suffixIcon: const Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 12,
                         ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.tertiary),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _selectedDate == null
-                                  ? 'Pilih tanggal...'
-                                  : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _selectedDate == null
-                                    ? AppColors.inactive
-                                    : AppColors.black,
-                              ),
-                            ),
-                            const Icon(
-                              Icons.calendar_today,
-                              size: 18,
-                              color: AppColors.primary,
-                            ),
-                          ],
-                        ),
+                      ),
+                      controller: TextEditingController(
+                        text: _selectedDate == null
+                            ? ''
+                            : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                       ),
                     ),
                   ],
