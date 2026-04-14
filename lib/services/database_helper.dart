@@ -440,4 +440,100 @@ class DatabaseHelper {
     if (maps.isNotEmpty) return KendaraanModel.fromMap(maps.first);
     return null;
   }
+
+  // ==================== DATA CLEANUP OPERATIONS ====================
+
+  /// Hapus semua data dari semua tabel (untuk testing/debugging)
+  Future<void> clearAllData() async {
+    final db = await database;
+    try {
+      // Hapus dengan urutan yang tepat untuk menghindari foreign key constraint
+      await db.delete(AppConstants.tableLogAktivitas);
+      await db.delete(AppConstants.tableTransaksi);
+      await db.delete(AppConstants.tableKendaraan);
+      await db.delete(AppConstants.tableAreaParkir);
+      await db.delete(AppConstants.tableJenisKendaraan);
+      await db.delete(AppConstants.tableUser);
+    } catch (e) {
+      throw Exception('Error clearing data: $e');
+    }
+  }
+
+  /// Hapus hanya data user (keep master data)
+  Future<void> clearUsers() async {
+    final db = await database;
+    try {
+      await db.delete(AppConstants.tableUser);
+    } catch (e) {
+      throw Exception('Error clearing users: $e');
+    }
+  }
+
+  /// Hapus hanya data transaksi
+  Future<void> clearTransaksi() async {
+    final db = await database;
+    try {
+      await db.delete(AppConstants.tableTransaksi);
+    } catch (e) {
+      throw Exception('Error clearing transactions: $e');
+    }
+  }
+
+  /// Hapus hanya data kendaraan
+  Future<void> clearKendaraan() async {
+    final db = await database;
+    try {
+      await db.delete(AppConstants.tableKendaraan);
+    } catch (e) {
+      throw Exception('Error clearing vehicles: $e');
+    }
+  }
+
+  /// Hapus hanya data log aktivitas
+  Future<void> clearActivityLogs() async {
+    final db = await database;
+    try {
+      await db.delete(AppConstants.tableLogAktivitas);
+    } catch (e) {
+      throw Exception('Error clearing activity logs: $e');
+    }
+  }
+
+  /// Reset database ke state kosong (hapus semua dan recreate schema)
+  Future<void> resetDatabase() async {
+    final db = await database;
+    try {
+      // Hapus semua tabel
+      await db.execute(
+        'DROP TABLE IF EXISTS ${AppConstants.tableLogAktivitas}',
+      );
+      await db.execute('DROP TABLE IF EXISTS ${AppConstants.tableTransaksi}');
+      await db.execute('DROP TABLE IF EXISTS ${AppConstants.tableKendaraan}');
+      await db.execute('DROP TABLE IF EXISTS ${AppConstants.tableAreaParkir}');
+      await db.execute(
+        'DROP TABLE IF EXISTS ${AppConstants.tableJenisKendaraan}',
+      );
+      await db.execute('DROP TABLE IF EXISTS ${AppConstants.tableUser}');
+
+      // Recreate schema
+      await _createTables(db, AppConstants.databaseVersion);
+    } catch (e) {
+      throw Exception('Error resetting database: $e');
+    }
+  }
+
+  /// Delete entire database file
+  Future<void> deleteDatabaseFile() async {
+    try {
+      final dbPath = await getDatabasePath();
+      final file = File(dbPath);
+      if (await file.exists()) {
+        await file.delete();
+        _database = null;
+        _dbPath = null;
+      }
+    } catch (e) {
+      throw Exception('Error deleting database file: $e');
+    }
+  }
 }
