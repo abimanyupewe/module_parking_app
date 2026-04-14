@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../models/kendaraan_model.dart';
+import '../../../models/transaksi_model.dart';
+import 'package:intl/intl.dart';
 
 /// Admin History Page - Menampilkan riwayat kendaraan dengan filter dan search
 class AdminHistoryPage extends StatefulWidget {
-  const AdminHistoryPage({Key? key}) : super(key: key);
+  const AdminHistoryPage({super.key});
 
   @override
   State<AdminHistoryPage> createState() => _AdminHistoryPageState();
@@ -12,7 +14,8 @@ class AdminHistoryPage extends StatefulWidget {
 
 class _AdminHistoryPageState extends State<AdminHistoryPage> {
   late List<KendaraanModel> _allVehicles = [];
-  late List<KendaraanModel> _filteredVehicles = [];
+  late List<TransaksiModel> _allTransaksi = [];
+  late List<Map<String, dynamic>> _filteredData = [];
   bool _isLoading = false;
   String _searchQuery = '';
   String _selectedCategory = 'Semua';
@@ -41,11 +44,13 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
 
       // Generate mock data
       final vehicles = _generateMockVehicles();
+      final transaksi = _generateMockTransaksi();
 
       if (mounted) {
         setState(() {
           _allVehicles = vehicles;
-          _filteredVehicles = vehicles;
+          _allTransaksi = transaksi;
+          _filteredData = _combinedData();
           _isLoading = false;
         });
       }
@@ -88,6 +93,80 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
     return vehicles;
   }
 
+  /// Generate mock transaksi data
+  List<TransaksiModel> _generateMockTransaksi() {
+    final transaksi = <TransaksiModel>[];
+    final now = DateTime.now();
+
+    for (int i = 0; i < 15; i++) {
+      final waktuMasuk = now.subtract(Duration(hours: 24 - i));
+      final waktuKeluar = i < 10
+          ? waktuMasuk.add(Duration(hours: 2 + i))
+          : null;
+
+      transaksi.add(
+        TransaksiModel(
+          idTransaksi: i + 1,
+          idKendaraan: i + 1,
+          idArea: (i % 3) + 1,
+          waktuMasuk: waktuMasuk,
+          waktuKeluar: waktuKeluar,
+          status: waktuKeluar != null ? 'Selesai' : 'Parkir',
+          totalBiaya: waktuKeluar != null ? (10000 + (i * 5000)) : null,
+          idUser: 1,
+        ),
+      );
+    }
+
+    return transaksi;
+  }
+
+  /// Combine vehicle and transaksi data
+  List<Map<String, dynamic>> _combinedData() {
+    final combined = <Map<String, dynamic>>[];
+
+    for (final transaksi in _allTransaksi) {
+      final vehicle = _allVehicles.firstWhere(
+        (v) => v.idKendaraan == transaksi.idKendaraan,
+        orElse: () => KendaraanModel(
+          idKendaraan: 0,
+          platNomor: 'N/A',
+          idJenis: 0,
+          merk: 'N/A',
+          warna: 'N/A',
+        ),
+      );
+
+      combined.add({'vehicle': vehicle, 'transaksi': transaksi});
+    }
+
+    return _filterAndSearchData(combined);
+  }
+
+  /// Filter and search combined data
+  List<Map<String, dynamic>> _filterAndSearchData(
+    List<Map<String, dynamic>> data,
+  ) {
+    final query = _searchQuery.toLowerCase();
+
+    return data.where((item) {
+      final vehicle = item['vehicle'] as KendaraanModel;
+
+      // Filter by category
+      final categoryMatch =
+          _selectedCategory == 'Semua' ||
+          _getJenisKendaraan(vehicle.idJenis) == _selectedCategory;
+
+      // Filter by search query
+      final searchMatch =
+          query.isEmpty ||
+          vehicle.platNomor.toLowerCase().contains(query) ||
+          vehicle.merk.toLowerCase().contains(query);
+
+      return categoryMatch && searchMatch;
+    }).toList();
+  }
+
   /// Get jenis kendaraan string
   String _getJenisKendaraan(int idJenis) {
     switch (idJenis) {
@@ -104,24 +183,9 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
 
   /// Filter dan search vehicles
   void _applyFiltersAndSearch() {
-    final query = _searchQuery.toLowerCase();
-
-    _filteredVehicles = _allVehicles.where((vehicle) {
-      // Filter by category
-      final categoryMatch =
-          _selectedCategory == 'Semua' ||
-          _getJenisKendaraan(vehicle.idJenis) == _selectedCategory;
-
-      // Filter by search query
-      final searchMatch =
-          query.isEmpty ||
-          vehicle.platNomor.toLowerCase().contains(query) ||
-          vehicle.merk.toLowerCase().contains(query);
-
-      return categoryMatch && searchMatch;
-    }).toList();
-
-    setState(() {});
+    setState(() {
+      _filteredData = _combinedData();
+    });
   }
 
   /// Export to PDF
@@ -134,7 +198,7 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Mengekspor ${_filteredVehicles.length} data kendaraan ke PDF...',
+                'Mengekspor ${_filteredData.length} data kendaraan ke PDF...',
               ),
             ),
           ],
@@ -200,7 +264,7 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Total: ${_filteredVehicles.length} kendaraan',
+                    'Total: ${_filteredData.length} kendaraan',
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
@@ -263,7 +327,7 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                   // Data Table
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    child: _filteredVehicles.isEmpty
+                    child: _filteredData.isEmpty
                         ? Center(
                             child: Padding(
                               padding: const EdgeInsets.all(32),
@@ -301,48 +365,81 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                               ),
                               DataColumn(
                                 label: Text(
-                                  'Warna',
+                                  'Waktu Masuk',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Waktu Keluar',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ],
-                            rows: List<DataRow>.generate(
-                              _filteredVehicles.length,
-                              (index) {
-                                final vehicle = _filteredVehicles[index];
-                                return DataRow(
-                                  cells: [
-                                    DataCell(Text('${index + 1}')),
-                                    DataCell(
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primaryLight,
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          vehicle.platNomor,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 12,
-                                          ),
+                            rows: List<DataRow>.generate(_filteredData.length, (
+                              index,
+                            ) {
+                              final item = _filteredData[index];
+                              final vehicle = item['vehicle'] as KendaraanModel;
+                              final transaksi =
+                                  item['transaksi'] as TransaksiModel;
+
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text('${index + 1}')),
+                                  DataCell(
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryLight,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        vehicle.platNomor,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ),
-                                    DataCell(
-                                      Text(_getJenisKendaraan(vehicle.idJenis)),
+                                  ),
+                                  DataCell(
+                                    Text(_getJenisKendaraan(vehicle.idJenis)),
+                                  ),
+                                  DataCell(Text(vehicle.merk)),
+                                  DataCell(
+                                    Text(
+                                      DateFormat(
+                                        'dd/MM/yyyy HH:mm',
+                                      ).format(transaksi.waktuMasuk),
+                                      style: const TextStyle(fontSize: 12),
                                     ),
-                                    DataCell(Text(vehicle.merk)),
-                                    DataCell(Text(vehicle.warna)),
-                                  ],
-                                );
-                              },
-                            ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      transaksi.waktuKeluar != null
+                                          ? DateFormat(
+                                              'dd/MM/yyyy HH:mm',
+                                            ).format(transaksi.waktuKeluar!)
+                                          : '-',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: transaksi.waktuKeluar == null
+                                            ? Colors.orange
+                                            : Colors.green,
+                                        fontWeight:
+                                            transaksi.waktuKeluar == null
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
                           ),
                   ),
                 ],
