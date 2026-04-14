@@ -105,6 +105,17 @@ class AdminOverviewSection extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 24),
+
+          // Area Slot Status Section
+          Text(
+            'Status Slot Area Parkir',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          _buildAreaSlotStatus(),
         ],
       ),
     );
@@ -351,6 +362,90 @@ class AdminOverviewSection extends StatelessWidget {
           Text(unit, style: const TextStyle(fontSize: 10, color: Colors.grey)),
         ],
       ),
+    );
+  }
+
+  Widget _buildAreaSlotStatus() {
+    final areas = [
+      {
+        'name': 'Lantai 1 Motor',
+        'occupied': 87,
+        'total': 100,
+        'color': AppColors.primary,
+      },
+      {
+        'name': 'Lantai 2 Mobil',
+        'occupied': 48,
+        'total': 50,
+        'color': AppColors.warning,
+      },
+      {
+        'name': 'Basement Motor',
+        'occupied': 45,
+        'total': 80,
+        'color': AppColors.success,
+      },
+    ];
+
+    return Column(
+      children: List.generate(areas.length, (index) {
+        final area = areas[index];
+        final occupied = area['occupied'] as int;
+        final total = area['total'] as int;
+        final color = area['color'] as Color;
+        final percentage = (occupied / total) * 100;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      area['name'] as String,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '$occupied / $total',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.inactive,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: occupied / total,
+                    minHeight: 6,
+                    backgroundColor: color.withValues(alpha: 0.2),
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '${percentage.toStringAsFixed(1)}% terisi',
+                  style: TextStyle(fontSize: 11, color: AppColors.inactive),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
     );
   }
 }
