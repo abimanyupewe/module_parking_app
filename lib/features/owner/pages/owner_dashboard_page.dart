@@ -82,7 +82,8 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
-        toolbarHeight: 100,
+        toolbarHeight: 80,
+        centerTitle: false,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -96,24 +97,20 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              _username ?? 'Owner',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.white,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _pageNames[_selectedIndex],
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: AppColors.white,
-                letterSpacing: 0.5,
+            RichText(
+              text: TextSpan(
+                text: 'Hello, Boss! ',
+                style: const TextStyle(fontSize: 20, color: AppColors.white),
+                children: [
+                  TextSpan(
+                    text: _username ?? 'Owner',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -138,14 +135,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                   child: Text('Logout'),
                 ),
               ],
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.more_vert, size: 20),
-              ),
+              child: Icon(Icons.more_vert, size: 20),
             ),
           ),
         ],
