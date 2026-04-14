@@ -64,8 +64,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text('Admin Dashboard'),
             const SizedBox(height: 4),
@@ -75,7 +75,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 color: AppColors.success.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
