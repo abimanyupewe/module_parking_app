@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../widgets/widgets.dart';
+import 'image_picker_widget.dart';
 
 /// Petugas Check-In Section - Form input kendaraan masuk
 class PetugasCheckInSection extends StatefulWidget {
@@ -18,6 +19,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
 
   String? _selectedJenisKendaraan;
   String? _selectedArea;
+  String? _selectedImagePath; // Path ke gambar yang dipilih
   bool _isLoading = false;
 
   // Mapping of jenis kendaraan ke category
@@ -60,6 +62,17 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
   void _handleCheckIn() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validasi gambar harus dipilih
+    if (_selectedImagePath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Foto kendaraan harus dipilih'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -76,6 +89,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         setState(() {
           _selectedJenisKendaraan = null;
           _selectedArea = null;
+          _selectedImagePath = null;
           _isLoading = false;
         });
 
@@ -316,6 +330,19 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 24),
+
+            // Image Picker Widget - Foto Kendaraan
+            ImagePickerWidget(
+              label: 'Foto Kendaraan',
+              initialImagePath: _selectedImagePath,
+              onImageSelected: (imagePath) {
+                setState(() {
+                  _selectedImagePath = imagePath;
+                });
+              },
+              isRequired: true,
             ),
             const SizedBox(height: 32),
 

@@ -10,6 +10,7 @@ class TransaksiModel {
   final String status; // 'Parkir', 'Selesai'
   final int? totalBiaya;
   final int idUser;
+  final String? imagePath; // Path ke gambar kendaraan saat check-in
 
   TransaksiModel({
     this.idTransaksi,
@@ -20,6 +21,7 @@ class TransaksiModel {
     this.status = AppConstants.statusParkir,
     this.totalBiaya,
     required this.idUser,
+    this.imagePath,
   });
 
   /// Durasi parkir dalam jam (dibulatkan ke atas)
@@ -49,6 +51,7 @@ class TransaksiModel {
           json[AppConstants.colTransaksiStatus] ?? AppConstants.statusParkir,
       totalBiaya: json[AppConstants.colTotalBiaya],
       idUser: json[AppConstants.colUserId] ?? 0,
+      imagePath: json['image_path'],
     );
   }
 
@@ -62,6 +65,7 @@ class TransaksiModel {
       AppConstants.colTransaksiStatus: status,
       AppConstants.colTotalBiaya: totalBiaya,
       AppConstants.colUserId: idUser,
+      'image_path': imagePath,
     };
     if (idTransaksi != null) {
       map[AppConstants.colTransaksiId] = idTransaksi;
@@ -79,6 +83,7 @@ class TransaksiModel {
     String? status,
     int? totalBiaya,
     int? idUser,
+    String? imagePath,
   }) {
     return TransaksiModel(
       idTransaksi: idTransaksi ?? this.idTransaksi,
@@ -89,6 +94,7 @@ class TransaksiModel {
       status: status ?? this.status,
       totalBiaya: totalBiaya ?? this.totalBiaya,
       idUser: idUser ?? this.idUser,
+      imagePath: imagePath ?? this.imagePath,
     );
   }
 
