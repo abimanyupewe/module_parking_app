@@ -15,6 +15,15 @@ class OwnerDashboardPage extends StatefulWidget {
 }
 
 class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    const OwnerHomeSection(),
+    const OwnerAuditSection(),
+    const OwnerHistorySection(),
+    const OwnerSdmSection(),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -45,73 +54,62 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
     );
   }
 
+  void _onNavbarTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Owner Dashboard'),
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
-          elevation: 0,
-          actions: [
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'logout') {
-                  _handleLogout();
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem<String>(
-                  value: 'profile',
-                  child: Text('Profile'),
-                ),
-                const PopupMenuDivider(),
-                const PopupMenuItem<String>(
-                  value: 'logout',
-                  child: Text('Logout'),
-                ),
-              ],
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            // Tab Bar
-            Container(
-              color: AppColors.white,
-              child: TabBar(
-                isScrollable: true,
-                indicator: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: AppColors.primary, width: 3),
-                  ),
-                ),
-                indicatorColor: AppColors.primary,
-                labelColor: AppColors.primary,
-                unselectedLabelColor: AppColors.inactive,
-                tabs: const [
-                  Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
-                  Tab(icon: Icon(Icons.receipt), text: 'Audit Log'),
-                  Tab(icon: Icon(Icons.history), text: 'History'),
-                  Tab(icon: Icon(Icons.people), text: 'SDM'),
-                ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Owner Dashboard'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
+        elevation: 0,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'logout') {
+                _handleLogout();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<String>(
+                value: 'profile',
+                child: Text('Profile'),
               ),
-            ),
-            // Tab Content
-            const Expanded(
-              child: TabBarView(
-                children: [
-                  OwnerHomeSection(),
-                  OwnerAuditSection(),
-                  OwnerHistorySection(),
-                  OwnerSdmSection(),
-                ],
+              const PopupMenuDivider(),
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: Text('Logout'),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
+      ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onNavbarTapped,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.white,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.inactive,
+        elevation: 8,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Overview',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt),
+            label: 'Audit Log',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'SDM'),
+        ],
       ),
     );
   }
