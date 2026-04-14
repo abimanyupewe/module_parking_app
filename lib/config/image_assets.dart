@@ -1,11 +1,11 @@
 class ImageAssets {
   // SVG illustrations
   static const String characterPortrait =
-      'assets/images/character_3d_portrait.svg';
-  static const String personTablet = 'assets/images/person_with_tablet.svg';
+      'assets/images/character_3d_portrait.webp';
+  static const String personTablet = 'assets/images/person_with_tablet.webp';
   static const String characterCheerful =
-      'assets/images/character_3d_cheerful.svg';
-  static const String handWithCard = 'assets/images/hand_with_card.svg';
+      'assets/images/character_3d_cheerful.webp';
+  static const String handWithCard = 'assets/images/hand_with_card.webp';
 
   // PNG images - Authentication & Auth
   static const String authAdmin = 'assets/images/ui/auth_admin.png';
