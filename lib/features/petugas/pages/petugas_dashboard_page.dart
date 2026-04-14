@@ -52,7 +52,39 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Petugas Operasional'),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Petugas Operasional'),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 6,
+                      height: 6,
+                      child: CircleAvatar(backgroundColor: AppColors.success),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Aktif',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.success,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           elevation: 0,
@@ -64,15 +96,6 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem<String>(
-                  value: 'profile',
-                  child: Text('Profile'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'password',
-                  child: Text('Ubah Password'),
-                ),
-                const PopupMenuDivider(),
                 const PopupMenuItem<String>(
                   value: 'logout',
                   child: Text('Logout'),

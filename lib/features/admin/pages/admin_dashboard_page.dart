@@ -5,7 +5,6 @@ import '../widgets/admin_overview_section.dart';
 import '../widgets/admin_master_data_section.dart';
 import '../pages/admin_staff_page.dart';
 import '../pages/admin_history_page.dart';
-import '../pages/admin_profile_page.dart';
 
 /// Admin Dashboard Page - Manajer operasional
 class AdminDashboardPage extends StatefulWidget {
@@ -65,29 +64,50 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Admin Dashboard'),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 6,
+                    height: 6,
+                    child: CircleAvatar(backgroundColor: AppColors.success),
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'Aktif',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'profile') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const AdminProfilePage(),
-                  ),
-                );
-              } else if (value == 'logout') {
+              if (value == 'logout') {
                 _handleLogout();
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'profile',
-                child: Text('Profile'),
-              ),
-              const PopupMenuDivider(),
               const PopupMenuItem<String>(
                 value: 'logout',
                 child: Text('Logout'),
