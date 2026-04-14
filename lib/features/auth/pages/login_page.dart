@@ -54,13 +54,19 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         switch (role) {
           case AppConstants.roleOwner:
-            Navigator.of(context).pushReplacementNamed('/owner_dashboard');
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/owner_dashboard', (route) => false);
             break;
           case AppConstants.roleAdmin:
-            Navigator.of(context).pushReplacementNamed('/admin_dashboard');
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/admin_dashboard', (route) => false);
             break;
           case AppConstants.rolePetugas:
-            Navigator.of(context).pushReplacementNamed('/petugas_dashboard');
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/petugas_dashboard', (route) => false);
             break;
           default:
             setState(() {

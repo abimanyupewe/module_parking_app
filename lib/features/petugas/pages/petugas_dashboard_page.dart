@@ -87,7 +87,6 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           elevation: 0,
-          automaticallyImplyLeading: false,
           actions: [
             PopupMenuButton<String>(
               onSelected: (value) {
