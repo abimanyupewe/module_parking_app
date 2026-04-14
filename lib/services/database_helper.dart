@@ -141,7 +141,16 @@ class DatabaseHelper {
   /// Handle database upgrade
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     // Untuk pembelajaran, tidak perlu complex migration
-    // Bisa drop dan recreate jika needed
+    // Tapi karena tabel Transaksi tambah image_path maka tangani di v2:
+    if (oldVersion < 2) {
+      try {
+        await db.execute(
+          'ALTER TABLE ${AppConstants.tableTransaksi} ADD COLUMN image_path TEXT',
+        );
+      } catch (e) {
+        // Jika sudah ada (ignore error)
+      }
+    }
   }
 
   // ==================== USER OPERATIONS ====================
