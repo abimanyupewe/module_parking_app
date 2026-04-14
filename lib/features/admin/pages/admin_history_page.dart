@@ -19,6 +19,8 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
   bool _isLoading = false;
   String _searchQuery = '';
   String _selectedCategory = 'Semua';
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   final List<String> _categories = ['Semua', 'Motor', 'Mobil', 'Bus'];
 
@@ -151,6 +153,7 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
 
     return data.where((item) {
       final vehicle = item['vehicle'] as KendaraanModel;
+      final transaksi = item['transaksi'] as TransaksiModel;
 
       // Filter by category
       final categoryMatch =
@@ -163,7 +166,38 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
           vehicle.platNomor.toLowerCase().contains(query) ||
           vehicle.merk.toLowerCase().contains(query);
 
-      return categoryMatch && searchMatch;
+      // Filter by date range
+      bool dateMatch = true;
+      if (_startDate != null) {
+        final startOfDay = DateTime(
+          _startDate!.year,
+          _startDate!.month,
+          _startDate!.day,
+        );
+        dateMatch =
+            transaksi.waktuMasuk.isAfter(startOfDay) ||
+            transaksi.waktuMasuk.day == startOfDay.day &&
+                transaksi.waktuMasuk.month == startOfDay.month &&
+                transaksi.waktuMasuk.year == startOfDay.year;
+      }
+
+      if (_endDate != null && dateMatch) {
+        final endOfDay = DateTime(
+          _endDate!.year,
+          _endDate!.month,
+          _endDate!.day,
+          23,
+          59,
+          59,
+        );
+        dateMatch =
+            transaksi.waktuMasuk.isBefore(endOfDay) ||
+            transaksi.waktuMasuk.day == endOfDay.day &&
+                transaksi.waktuMasuk.month == endOfDay.month &&
+                transaksi.waktuMasuk.year == endOfDay.year;
+      }
+
+      return categoryMatch && searchMatch && dateMatch;
     }).toList();
   }
 
@@ -186,6 +220,49 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
     setState(() {
       _filteredData = _combinedData();
     });
+  }
+
+  /// Show date picker untuk start date
+  Future<void> _selectStartDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _startDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      locale: const Locale('id', 'ID'),
+    );
+    if (picked != null) {
+      setState(() {
+        _startDate = picked;
+      });
+      _applyFiltersAndSearch();
+    }
+  }
+
+  /// Show date picker untuk end date
+  Future<void> _selectEndDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _endDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      locale: const Locale('id', 'ID'),
+    );
+    if (picked != null) {
+      setState(() {
+        _endDate = picked;
+      });
+      _applyFiltersAndSearch();
+    }
+  }
+
+  /// Reset date filter
+  void _resetDateFilter() {
+    setState(() {
+      _startDate = null;
+      _endDate = null;
+    });
+    _applyFiltersAndSearch();
   }
 
   /// Export to PDF
@@ -321,6 +398,77 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                         );
                       }).toList(),
                     ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Date Range Filter
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _selectStartDate,
+                          icon: const Icon(Icons.calendar_today),
+                          label: Text(
+                            _startDate != null
+                                ? DateFormat('dd/MM/yyyy').format(_startDate!)
+                                : 'Tanggal Mulai',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _startDate != null
+                                ? AppColors.primary
+                                : Colors.grey[300],
+                            foregroundColor: _startDate != null
+                                ? Colors.white
+                                : Colors.black87,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _selectEndDate,
+                          icon: const Icon(Icons.calendar_today),
+                          label: Text(
+                            _endDate != null
+                                ? DateFormat('dd/MM/yyyy').format(_endDate!)
+                                : 'Tanggal Akhir',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _endDate != null
+                                ? AppColors.primary
+                                : Colors.grey[300],
+                            foregroundColor: _endDate != null
+                                ? Colors.white
+                                : Colors.black87,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        height: 48,
+                        child: OutlinedButton.icon(
+                          onPressed: (_startDate != null || _endDate != null)
+                              ? _resetDateFilter
+                              : null,
+                          icon: const Icon(Icons.close),
+                          label: const Text('Bersihkan'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
 
