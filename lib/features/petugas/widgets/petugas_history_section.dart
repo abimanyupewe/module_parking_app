@@ -123,6 +123,7 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection> {
                 columnSpacing: 16,
                 dataRowHeight: 56,
                 headingRowHeight: 48,
+                showCheckboxColumn: false,
                 columns: const [
                   DataColumn(label: Text('Plat Nomor')),
                   DataColumn(label: Text('Jenis')),
@@ -134,7 +135,6 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection> {
                 rows: _historyData
                     .map(
                       (history) => DataRow(
-                        onSelectChanged: (value) => _showDetailDialog(history),
                         cells: [
                           DataCell(Text(history['platNomor'])),
                           DataCell(Text(history['jenis'])),
@@ -180,89 +180,6 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection> {
             color: AppColors.primary,
           ),
           textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  void _showDetailDialog(Map<String, dynamic> history) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Detail Transaksi'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailRow('Plat Nomor', history['platNomor']),
-            const SizedBox(height: 12),
-            _buildDetailRow('Jenis Kendaraan', history['jenis']),
-            const SizedBox(height: 12),
-            _buildDetailRow('Area', history['area']),
-            const SizedBox(height: 12),
-            _buildDetailRow('Waktu Masuk', history['waktuMasuk']),
-            const SizedBox(height: 12),
-            _buildDetailRow('Waktu Keluar', history['waktuKeluar']),
-            const SizedBox(height: 12),
-            _buildDetailRow('Durasi', history['durasi']),
-            const SizedBox(height: 16),
-            // Total
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.primary),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Total Biaya',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  Text(
-                    FormatHelper.formatRupiah(history['biaya']),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 13, color: AppColors.inactive),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary,
-          ),
         ),
       ],
     );
