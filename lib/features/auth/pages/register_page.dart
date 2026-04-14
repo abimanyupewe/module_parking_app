@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../config/image_assets.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_header_widget.dart';
 
@@ -117,6 +118,15 @@ class _RegisterPageState extends State<RegisterPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           child: Column(
             children: [
+              // Illustration Image
+              const SizedBox(height: 20),
+              Image.asset(
+                ImageAssets.authSignupOwner,
+                height: 200,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 40),
+
               // Header
               const SizedBox(height: 40),
               const AuthHeaderWidget(

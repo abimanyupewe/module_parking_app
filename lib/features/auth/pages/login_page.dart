@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../config/constants.dart';
+import '../../../config/image_assets.dart';
 import '../../../core/preferences/app_preferences.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_header_widget.dart';
@@ -90,6 +91,15 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           child: Column(
             children: [
+              // Illustration Image
+              const SizedBox(height: 20),
+              Image.asset(
+                ImageAssets.authOwner,
+                height: 200,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 40),
+
               // Header
               const SizedBox(height: 40),
               const AuthHeaderWidget(

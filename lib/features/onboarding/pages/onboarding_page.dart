@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../config/colors.dart';
+import '../../../config/image_assets.dart';
 import '../controllers/onboarding_controller.dart';
 import '../widgets/onboarding_buttons.dart';
 import '../widgets/onboarding_dots_indicator.dart';
@@ -53,8 +55,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     title: 'Selamat Datang',
                     description:
                         'Sistem manajemen parkir modern yang mudah digunakan untuk semua jenis kendaraan.',
-                    icon: Icons.local_parking,
-                    iconColor: AppColors.primary,
+                    image: SvgPicture.asset(ImageAssets.characterPortrait),
                   ),
 
                   // Slide 2: Parking Management
@@ -62,8 +63,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     title: 'Kelola Parkir',
                     description:
                         'Check-in dan check-out kendaraan dengan cepat. Monitor kapasitas parkir real-time.',
-                    icon: Icons.directions_car,
-                    iconColor: AppColors.primary,
+                    image: SvgPicture.asset(ImageAssets.personTablet),
                   ),
 
                   // Slide 3: Reports
@@ -71,8 +71,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     title: 'Laporan Terpadu',
                     description:
                         'Lihat analitik pendapatan, riwayat transaksi, dan audit trail dalam satu dashboard.',
-                    icon: Icons.assessment,
-                    iconColor: AppColors.primary,
+                    image: SvgPicture.asset(ImageAssets.handWithCard),
                   ),
                 ],
               ),

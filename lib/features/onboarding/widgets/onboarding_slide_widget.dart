@@ -5,14 +5,16 @@ import '../../../config/colors.dart';
 class OnboardingSlideWidget extends StatelessWidget {
   final String title;
   final String description;
-  final IconData icon;
+  final Widget? image;
+  final IconData? icon;
   final Color iconColor;
 
   const OnboardingSlideWidget({
     Key? key,
     required this.title,
     required this.description,
-    required this.icon,
+    this.image,
+    this.icon,
     this.iconColor = AppColors.primary,
   }) : super(key: key);
 
@@ -31,7 +33,9 @@ class OnboardingSlideWidget extends StatelessWidget {
               color: AppColors.secondary,
               shape: BoxShape.circle,
             ),
-            child: Center(child: Icon(icon, size: 120, color: iconColor)),
+            child: Center(
+              child: image ?? Icon(icon, size: 120, color: iconColor),
+            ),
           ),
           const SizedBox(height: 48),
 
