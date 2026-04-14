@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../config/colors.dart';
 import '../../../config/image_assets.dart';
 import '../controllers/auth_controller.dart';
@@ -30,9 +31,9 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _keepSignedIn = false;
 
   final Map<String, String> _roleImageMap = {
-    'Owner': ImageAssets.authOwner,
-    'Admin': ImageAssets.authAdmin,
-    'Staff': ImageAssets.authPetugas,
+    'Owner': ImageAssets.characterPortrait,
+    'Admin': ImageAssets.characterCheerful,
+    'Staff': ImageAssets.characterPortrait,
   };
 
   @override
@@ -41,9 +42,11 @@ class _RegisterPageState extends State<RegisterPage> {
     _authController = AuthController();
   }
 
-  /// Ambil gambar karakter berdasarkan role
-  String _getCharacterImage() {
-    return _roleImageMap[_selectedRole] ?? ImageAssets.authOwner;
+  /// Ambil SVG character image berdasarkan role
+  Widget _getCharacterImage() {
+    final imagePath =
+        _roleImageMap[_selectedRole] ?? ImageAssets.characterPortrait;
+    return SvgPicture.asset(imagePath, height: 180, fit: BoxFit.contain);
   }
 
   /// Handle role change
@@ -143,12 +146,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Spacing dari top
                   const SizedBox(height: 16),
 
-                  // Character Image - dinamis berdasarkan role
-                  Image.asset(
-                    _getCharacterImage(),
-                    height: 180,
-                    fit: BoxFit.contain,
-                  ),
+                  // Character Image SVG - dinamis berdasarkan role
+                  _getCharacterImage(),
                   const SizedBox(height: 32),
 
                   // Auth Card Container dengan form

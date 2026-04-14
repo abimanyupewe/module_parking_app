@@ -50,12 +50,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   _controller.setCurrentPage(page);
                 },
                 children: [
-                  // Slide 1: Welcome dengan ilustrasi besar
+                  // Slide 1: Welcome dengan ilustrasi besar (hand with card)
                   OnboardingSlideWidget(
                     title: 'Smart Parking Solutions',
                     description:
                         'Monitor Parking, manage staff, and track transactions all in one powerful application.',
-                    image: SvgPicture.asset(ImageAssets.handWithCard),
+                    image: SvgPicture.asset(
+                      ImageAssets.handWithCard,
+                      fit: BoxFit.contain,
+                    ),
                     showLargeIllustration: true,
                   ),
 
