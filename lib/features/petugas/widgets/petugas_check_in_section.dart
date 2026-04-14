@@ -27,11 +27,11 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
     'Bus': 'Bus',
   };
 
-  // Area data dengan kategori
+  // Area data dengan kategori, kapasitas, dan spot tersedia
   final List<Map<String, dynamic>> _allAreas = [
-    {'name': 'Blok A', 'category': 'Motor'},
-    {'name': 'Blok B', 'category': 'Mobil'},
-    {'name': 'Blok C', 'category': 'Bus'},
+    {'name': 'Blok A', 'category': 'Motor', 'kapasitas': 50, 'tersedia': 12},
+    {'name': 'Blok B', 'category': 'Mobil', 'kapasitas': 40, 'tersedia': 8},
+    {'name': 'Blok C', 'category': 'Bus', 'kapasitas': 10, 'tersedia': 3},
   ];
 
   final List<String> _jenisKendaraan = ['Motor Roda 2', 'Mobil', 'Bus'];
@@ -55,6 +55,140 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
     _merkController.dispose();
     _warnaController.dispose();
     super.dispose();
+  }
+
+  /// Build area info card ketika area dipilih
+  Widget _buildAreaInfoCard() {
+    final selectedAreaData = _allAreas.firstWhere(
+      (area) => area['name'] == _selectedArea,
+      orElse: () => {'name': '', 'kapasitas': 0, 'tersedia': 0},
+    );
+
+    final kapasitas = selectedAreaData['kapasitas'] ?? 0;
+    final tersedia = selectedAreaData['tersedia'] ?? 0;
+    final terisi = kapasitas - tersedia;
+    final persentaseKapasitas = (terisi / kapasitas * 100).toStringAsFixed(0);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Informasi Area',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Kapasitas Total',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.inactive,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$kapasitas spot',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Terisi',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.inactive,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$terisi spot',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.danger,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Tersedia',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.inactive,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$tersedia spot',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: tersedia > 0
+                            ? AppColors.success
+                            : AppColors.danger,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: terisi / kapasitas,
+              minHeight: 6,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                terisi / kapasitas > 0.8
+                    ? AppColors.danger
+                    : terisi / kapasitas > 0.5
+                    ? AppColors.warning
+                    : AppColors.success,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$persentaseKapasitas% kapasitas terpakai',
+            style: const TextStyle(fontSize: 11, color: AppColors.inactive),
+          ),
+        ],
+      ),
+    );
   }
 
   void _handleCheckIn() async {
@@ -245,12 +379,45 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   value: _selectedArea,
-                  items: _filteredAreas
-                      .map(
-                        (area) =>
-                            DropdownMenuItem(value: area, child: Text(area)),
-                      )
-                      .toList(),
+                  items: _filteredAreas.map((areaName) {
+                    final areaData = _allAreas.firstWhere(
+                      (area) => area['name'] == areaName,
+                      orElse: () => {'tersedia': 0},
+                    );
+                    final tersedia = areaData['tersedia'] ?? 0;
+                    return DropdownMenuItem(
+                      value: areaName,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(areaName),
+                          const SizedBox(width: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: tersedia > 0
+                                  ? AppColors.success.withValues(alpha: 0.1)
+                                  : AppColors.danger.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '$tersedia tersedia',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: tersedia > 0
+                                    ? AppColors.success
+                                    : AppColors.danger,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                   onChanged: _selectedJenisKendaraan == null
                       ? null
                       : (value) {
@@ -284,6 +451,13 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+
+            // Area Info Card (tampil ketika area sudah dipilih)
+            if (_selectedArea != null)
+              _buildAreaInfoCard()
+            else
+              const SizedBox.shrink(),
             const SizedBox(height: 32),
 
             // Submit Button
