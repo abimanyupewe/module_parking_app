@@ -8,7 +8,7 @@ import '../widgets/petugas_area_info_section.dart';
 
 /// Petugas Dashboard Page - Kasir operasional harian
 class PetugasDashboardPage extends StatefulWidget {
-  const PetugasDashboardPage({Key? key}) : super(key: key);
+  const PetugasDashboardPage({super.key});
 
   @override
   State<PetugasDashboardPage> createState() => _PetugasDashboardPageState();
@@ -35,6 +35,7 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
             onPressed: () async {
               await AppPreferences.logout();
               if (mounted) {
+                // ignore: use_build_context_synchronously
                 Navigator.of(context).pushReplacementNamed('/login');
               }
             },
@@ -97,9 +98,9 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.inactive,
                 tabs: const [
-                  Tab(icon: Icon(Icons.login), text: 'Masuk'),
-                  Tab(icon: Icon(Icons.logout), text: 'Keluar'),
-                  Tab(icon: Icon(Icons.history), text: 'Riwayat'),
+                  Tab(text: 'Masuk'),
+                  Tab(text: 'Keluar'),
+                  Tab(text: 'Riwayat'),
                 ],
               ),
             ),
