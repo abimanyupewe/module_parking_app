@@ -15,7 +15,6 @@ class OwnerProfilePage extends StatefulWidget {
 
 class _OwnerProfilePageState extends State<OwnerProfilePage> {
   late String _username;
-  late String _userEmail;
   bool _isLoading = true;
 
   @override
@@ -26,7 +25,6 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
 
   void _loadUserData() {
     _username = AppPreferences.getUsername() ?? 'User';
-    _userEmail = '$_username@parking-system.local';
     setState(() {
       _isLoading = false;
     });
@@ -49,17 +47,12 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Header
-            ProfileHeader(
-              username: _username,
-              email: _userEmail,
-              role: 'Pemilik Parkir',
-            ),
+            ProfileHeader(username: _username, role: 'Pemilik Parkir'),
             const SizedBox(height: 24),
 
             // User Information
             ProfileInfoSection(
               username: _username,
-              email: _userEmail,
               role: 'Pemilik Parkir',
               status: 'Aktif',
             ),

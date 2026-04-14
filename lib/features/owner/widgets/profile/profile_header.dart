@@ -4,15 +4,10 @@ import '../../../../../config/colors.dart';
 /// Profile Header - Menampilkan informasi user dan profile picture
 class ProfileHeader extends StatelessWidget {
   final String username;
-  final String email;
   final String role;
 
-  const ProfileHeader({
-    Key? key,
-    required this.username,
-    required this.email,
-    required this.role,
-  }) : super(key: key);
+  const ProfileHeader({Key? key, required this.username, required this.role})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -50,15 +45,7 @@ class ProfileHeader extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  email,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,

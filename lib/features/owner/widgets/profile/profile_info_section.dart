@@ -4,14 +4,12 @@ import '../../../../../config/colors.dart';
 /// Profile Info Section - Menampilkan informasi user dalam section
 class ProfileInfoSection extends StatelessWidget {
   final String username;
-  final String email;
   final String role;
   final String status;
 
   const ProfileInfoSection({
     Key? key,
     required this.username,
-    required this.email,
     required this.role,
     required this.status,
   }) : super(key: key);
@@ -38,8 +36,6 @@ class ProfileInfoSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildInfoRow('Username', username),
-              const Divider(height: 16),
-              _buildInfoRow('Email', email),
               const Divider(height: 16),
               _buildInfoRow('Role', role),
               const Divider(height: 16),
