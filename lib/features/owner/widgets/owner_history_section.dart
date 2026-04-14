@@ -179,13 +179,17 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
   }
 
   Future<void> _selectDate() async {
+    if (!mounted) return;
+
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2024),
       lastDate: DateTime(2025),
+      locale: const Locale('id', 'ID'),
     );
-    if (picked != null) {
+
+    if (picked != null && mounted) {
       _onDateChanged(picked);
     }
   }
@@ -263,8 +267,9 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    GestureDetector(
+                    InkWell(
                       onTap: _selectDate,
+                      borderRadius: BorderRadius.circular(8),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
