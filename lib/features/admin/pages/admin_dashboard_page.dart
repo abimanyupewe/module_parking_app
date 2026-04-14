@@ -5,6 +5,7 @@ import '../widgets/admin_monitoring_section.dart';
 import '../widgets/admin_master_data_section.dart';
 import '../widgets/admin_staff_management_section.dart';
 import '../widgets/admin_audit_section.dart';
+import '../pages/admin_profile_page.dart';
 
 /// Admin Dashboard Page - Manajer operasional
 class AdminDashboardPage extends StatefulWidget {
@@ -58,7 +59,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           actions: [
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'logout') {
+                if (value == 'profile') {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AdminProfilePage(),
+                    ),
+                  );
+                } else if (value == 'logout') {
                   _handleLogout();
                 }
               },
@@ -66,10 +73,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 const PopupMenuItem<String>(
                   value: 'profile',
                   child: Text('Profile'),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'password',
-                  child: Text('Ubah Password'),
                 ),
                 const PopupMenuDivider(),
                 const PopupMenuItem<String>(
