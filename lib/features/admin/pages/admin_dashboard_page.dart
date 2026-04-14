@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../core/preferences/app_preferences.dart';
-import '../widgets/admin_monitoring_section.dart';
+import '../widgets/admin_overview_section.dart';
 import '../widgets/admin_master_data_section.dart';
 import '../widgets/admin_staff_management_section.dart';
-import '../widgets/admin_audit_section.dart';
+import '../pages/admin_history_page.dart';
 import '../pages/admin_profile_page.dart';
 
 /// Admin Dashboard Page - Manajer operasional
@@ -19,10 +19,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const AdminMonitoringSection(),
+    const AdminOverviewSection(),
     const AdminMasterDataSection(),
     const AdminStaffManagementSection(),
-    const AdminAuditSection(),
+    const AdminHistoryPage(),
   ];
 
   @override
@@ -115,10 +115,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             label: 'Master Data',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Petugas'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Audit Log',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
         ],
       ),
     );
