@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
-import '../../../core/preferences/app_preferences.dart';
 
 /// Owner Home Section - Overview dan Statistik
 class OwnerHomeSection extends StatefulWidget {
@@ -11,12 +10,9 @@ class OwnerHomeSection extends StatefulWidget {
 }
 
 class _OwnerHomeSectionState extends State<OwnerHomeSection> {
-  String? _username;
-
   @override
   void initState() {
     super.initState();
-    _username = AppPreferences.getUsername();
   }
 
   @override
@@ -26,10 +22,6 @@ class _OwnerHomeSectionState extends State<OwnerHomeSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Welcome Header
-          _buildWelcomeHeader(),
-          const SizedBox(height: 24),
-
           // Today's Summary Cards
           _buildSummarySection(),
           const SizedBox(height: 24),
@@ -40,42 +32,6 @@ class _OwnerHomeSectionState extends State<OwnerHomeSection> {
 
           // Recent Transactions
           _buildRecentTransactionsSection(),
-        ],
-      ),
-    );
-  }
-
-  /// Build welcome header
-  Widget _buildWelcomeHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF343858), Color(0xFF2C3548)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Selamat Datang, $_username',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Berikut ringkasan performa parkir hari ini',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.8),
-            ),
-          ),
         ],
       ),
     );
@@ -177,7 +133,10 @@ class _OwnerHomeSectionState extends State<OwnerHomeSection> {
           ),
           Text(
             subtitle,
-            style: TextStyle(fontSize: 11, color: titleColor.withValues(alpha: 0.7)),
+            style: TextStyle(
+              fontSize: 11,
+              color: titleColor.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
