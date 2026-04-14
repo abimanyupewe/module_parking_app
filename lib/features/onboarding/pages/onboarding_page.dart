@@ -51,15 +51,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 children: [
                   // Slide 1: Welcome dengan ilustrasi besar (hand with card)
                   OnboardingSlideWidget(
-                    title: 'Smart Parking Solutions',
+                    title: 'Solusi Parkir Cerdas',
                     description:
-                        'Monitor Parking, manage staff, and track transactions all in one powerful application.',
-                    image: SizedBox(
+                        'Kelola parkir, atur petugas, dan pantau transaksi semua dalam satu aplikasi canggih.',
+                    image: Container(
                       width: 340,
-                      height: 340,
+                      height: 380,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       child: Image.asset(
                         ImageAssets.handWithCard,
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return const Center(
                             child: Icon(Icons.broken_image, size: 50),
@@ -72,16 +76,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
                   // Slide 2: Parking Management tanpa ilustrasi
                   OnboardingSlideWidget(
-                    title: 'Kelola Parkir',
+                    title: 'Kelola Parkir dengan Mudah',
                     description:
-                        'Check-in dan check-out kendaraan dengan cepat. Monitor kapasitas parkir real-time.',
+                        'Check-in dan check-out kendaraan dengan cepat. Pantau kapasitas parkir secara real-time dan kelola area parkir dengan efisien.',
                   ),
 
                   // Slide 3: Reports tanpa ilustrasi
                   OnboardingSlideWidget(
-                    title: 'Laporan Terpadu',
+                    title: 'Laporan Lengkap',
                     description:
-                        'Lihat analitik pendapatan, riwayat transaksi, dan audit trail dalam satu dashboard.',
+                        'Lihat analitik pendapatan, riwayat transaksi, dan audit trail dalam satu dashboard yang komprehensif.',
                   ),
                 ],
               ),

@@ -28,9 +28,9 @@ class _LoginPageState extends State<LoginPage> {
   bool _keepSignedIn = false;
 
   final Map<String, String> _roleImageMap = {
-    'Owner': ImageAssets.characterPortrait,
-    'Admin': ImageAssets.characterCheerful,
-    'Staff': ImageAssets.characterPortrait,
+    'Owner': ImageAssets.personTablet,
+    'Admin': ImageAssets.characterPortrait,
+    'Staff': ImageAssets.characterCheerful,
   };
 
   @override
@@ -146,13 +146,13 @@ class _LoginPageState extends State<LoginPage> {
             SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Spacing dari top
                   const SizedBox(height: 24),
 
                   // Character Image - dinamis berdasarkan role
                   _getCharacterImage(),
-                  const SizedBox(height: 40),
 
                   // Auth Card Container dengan form
                   AuthCardContainer(
@@ -161,7 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         // Username Field
                         Text(
-                          'Username',
+                          'Nama Pengguna',
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -173,7 +173,7 @@ class _LoginPageState extends State<LoginPage> {
                           controller: _usernameController,
                           enabled: !_isLoading,
                           decoration: InputDecoration(
-                            hintText: 'Enter your username',
+                            hintText: 'Masukkan nama pengguna',
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 14,
@@ -214,7 +214,7 @@ class _LoginPageState extends State<LoginPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Password',
+                              'Kata Sandi',
                               style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.w600,
@@ -319,7 +319,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              'Keep me signed in',
+                              'Ingat saya',
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
                                     color: AppColors.textSecondary,
@@ -387,7 +387,7 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   )
                                 : const Text(
-                                    'Sign In',
+                                    'Masuk',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
@@ -421,7 +421,7 @@ class _LoginPageState extends State<LoginPage> {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(
-                          'Sign Up',
+                          'Daftar',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: AppColors.primary,

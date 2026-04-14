@@ -166,7 +166,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       children: [
                         // Nama Lengkap Field
                         Text(
-                          'Full Name',
+                          'Nama Lengkap',
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -178,7 +178,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _namaLengkapController,
                           enabled: !_isLoading,
                           decoration: InputDecoration(
-                            hintText: 'Enter your full name',
+                            hintText: 'Masukkan nama lengkap Anda',
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 14,
@@ -216,7 +216,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // Username Field
                         Text(
-                          'Username',
+                          'Nama Pengguna',
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -228,7 +228,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _usernameController,
                           enabled: !_isLoading,
                           decoration: InputDecoration(
-                            hintText: 'Enter your username',
+                            hintText: 'Masukkan nama pengguna',
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 14,
@@ -266,7 +266,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // Password Field
                         Text(
-                          'Password',
+                          'Kata Sandi',
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -331,7 +331,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // Re-Password Field
                         Text(
-                          'Re-Password',
+                          'Konfirmasi Kata Sandi',
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -415,7 +415,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              'Keep me signed in',
+                              'Ingat saya',
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
                                     color: AppColors.textSecondary,
@@ -514,7 +514,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     ),
                                   )
                                 : const Text(
-                                    'Sign Up',
+                                    'Daftar',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
@@ -548,7 +548,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(
-                          'Sign In',
+                          'Masuk',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: AppColors.primary,

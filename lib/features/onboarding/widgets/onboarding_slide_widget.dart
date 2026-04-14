@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 
 /// Widget untuk setiap slide di onboarding
-/// Slide pertama menampilkan ilustrasi besar, slide berikutnya minimal
+/// Slide pertama menampilkan ilustrasi besar + description
+/// Slide 2 & 3 menampilkan description saja tanpa container
 class OnboardingSlideWidget extends StatelessWidget {
   final String title;
   final String description;
@@ -47,52 +48,38 @@ class OnboardingSlideWidget extends StatelessWidget {
               ),
             const SizedBox(height: 48),
 
-            // White Card Container dengan title dan description
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
+            // Title dan Description tanpa container (hanya text)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.left,
-                  ),
-                  const SizedBox(height: 12),
+                  textAlign: TextAlign.left,
+                ),
+                const SizedBox(height: 12),
 
-                  // Description
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.left,
+                // Description
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.5,
                   ),
-                ],
-              ),
+                  textAlign: TextAlign.left,
+                ),
+              ],
             ),
           ],
         ),
       );
     }
 
-    // Slide minimal (Slide 2 & 3) - hanya text dan deskripsi
+    // Slide minimal (Slide 2 & 3) - hanya description text centered
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
