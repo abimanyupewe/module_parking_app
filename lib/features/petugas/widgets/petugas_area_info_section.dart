@@ -12,10 +12,23 @@ class PetugasAreaInfoSection extends StatefulWidget {
 class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
   // Mock data - nanti ganti dengan data dari DB
   final List<Map<String, dynamic>> _areaData = [
-    {'name': 'Blok A', 'available': 45, 'capacity': 50},
-    {'name': 'Blok B', 'available': 12, 'capacity': 30},
-    {'name': 'Blok C', 'available': 8, 'capacity': 10},
+    {'name': 'Blok A', 'category': 'Motor', 'available': 45, 'capacity': 50},
+    {'name': 'Blok B', 'category': 'Mobil', 'available': 12, 'capacity': 30},
+    {'name': 'Blok C', 'category': 'Bus', 'available': 8, 'capacity': 10},
   ];
+
+  String _selectedCategory = 'Semua';
+  final List<String> _categories = ['Semua', 'Motor', 'Mobil', 'Bus'];
+
+  /// Get filtered areas based on selected category
+  List<Map<String, dynamic>> get _filteredAreas {
+    if (_selectedCategory == 'Semua') {
+      return _areaData;
+    }
+    return _areaData
+        .where((area) => area['category'] == _selectedCategory)
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,78 +43,131 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
             'Informasi Area Parkir',
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 16),
-          // Area cards
-          SizedBox(
-            height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _areaData.length,
-              itemBuilder: (context, index) {
-                final area = _areaData[index];
-                final percentage = (area['available'] / area['capacity'] * 100)
-                    .toStringAsFixed(0);
-                final isWarning = area['available'] < area['capacity'] * 0.2;
+          const SizedBox(height: 12),
 
-                return Container(
-                  width: 150,
-                  margin: EdgeInsets.only(
-                    right: index != _areaData.length - 1 ? 12 : 0,
-                  ),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isWarning
-                        ? AppColors.danger.withValues(alpha: 0.1)
-                        : AppColors.secondary.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isWarning
-                          ? AppColors.danger.withValues(alpha: 0.3)
-                          : AppColors.tertiary,
+          // Category Filter
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _categories.map((category) {
+                final isSelected = _selectedCategory == category;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(category),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedCategory = category;
+                      });
+                    },
+                    backgroundColor: Colors.transparent,
+                    selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                    side: BorderSide(
+                      color: isSelected ? AppColors.primary : AppColors.border,
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name only
-                      Text(
-                        area['name'],
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Area cards
+          SizedBox(
+            height: 110,
+            child: _filteredAreas.isEmpty
+                ? Center(
+                    child: Text(
+                      'Tidak ada area untuk kategori ini',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  )
+                : ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _filteredAreas.length,
+                    itemBuilder: (context, index) {
+                      final area = _filteredAreas[index];
+                      final percentage =
+                          (area['available'] / area['capacity'] * 100)
+                              .toStringAsFixed(0);
+                      final isWarning =
+                          area['available'] < area['capacity'] * 0.2;
+
+                      return Container(
+                        width: 160,
+                        margin: EdgeInsets.only(
+                          right: index != _filteredAreas.length - 1 ? 12 : 0,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      // Progress bar
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
-                        child: LinearProgressIndicator(
-                          value: area['available'] / area['capacity'],
-                          minHeight: 5,
-                          backgroundColor: AppColors.tertiary,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            isWarning ? AppColors.danger : AppColors.success,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isWarning
+                              ? AppColors.danger.withValues(alpha: 0.1)
+                              : AppColors.secondary.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isWarning
+                                ? AppColors.danger.withValues(alpha: 0.3)
+                                : AppColors.tertiary,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      // Count - compact format
-                      Text(
-                        '${area['available']}/${area['capacity']} ($percentage%)',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.inactive,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Name with category
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  area['name'],
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  area['category'],
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            // Progress bar
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: LinearProgressIndicator(
+                                value: area['available'] / area['capacity'],
+                                minHeight: 5,
+                                backgroundColor: AppColors.tertiary,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isWarning
+                                      ? AppColors.danger
+                                      : AppColors.success,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            // Count - compact format
+                            Text(
+                              '${area['available']}/${area['capacity']} ($percentage%)',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.inactive,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
