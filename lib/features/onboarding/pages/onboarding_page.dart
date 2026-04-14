@@ -55,9 +55,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     title: 'Smart Parking Solutions',
                     description:
                         'Monitor Parking, manage staff, and track transactions all in one powerful application.',
-                    image: SvgPicture.asset(
-                      ImageAssets.handWithCard,
-                      fit: BoxFit.contain,
+                    image: SizedBox(
+                      width: 340,
+                      height: 340,
+                      child: SvgPicture.asset(
+                        ImageAssets.handWithCard,
+                        fit: BoxFit.contain,
+                        placeholderBuilder: (BuildContext context) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                      ),
                     ),
                     showLargeIllustration: true,
                   ),

@@ -46,7 +46,17 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget _getCharacterImage() {
     final imagePath =
         _roleImageMap[_selectedRole] ?? ImageAssets.characterPortrait;
-    return SvgPicture.asset(imagePath, height: 180, fit: BoxFit.contain);
+    return SizedBox(
+      width: 200,
+      height: 200,
+      child: SvgPicture.asset(
+        imagePath,
+        fit: BoxFit.contain,
+        placeholderBuilder: (BuildContext context) {
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
   }
 
   /// Handle role change
