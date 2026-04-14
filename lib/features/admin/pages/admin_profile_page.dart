@@ -3,7 +3,6 @@ import '../../../core/preferences/app_preferences.dart';
 import '../widgets/profile/profile_header.dart';
 import '../widgets/profile/profile_info_section.dart';
 import '../widgets/profile/account_settings_section.dart';
-import '../widgets/profile/change_password_section.dart';
 
 /// Admin Profile Page - Profile lengkap untuk admin
 class AdminProfilePage extends StatefulWidget {
@@ -60,14 +59,6 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
 
             // Account Settings
             const AccountSettingsSection(),
-            const SizedBox(height: 24),
-
-            // Change Password Section
-            ChangePasswordSection(
-              onPasswordChanged: () {
-                // Handle password change if needed
-              },
-            ),
             const SizedBox(height: 24),
           ],
         ),
