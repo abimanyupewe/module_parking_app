@@ -3,7 +3,7 @@ import '../../../config/colors.dart';
 import '../../../core/preferences/app_preferences.dart';
 import '../widgets/admin_overview_section.dart';
 import '../widgets/admin_master_data_section.dart';
-import '../widgets/admin_staff_management_section.dart';
+import '../pages/admin_staff_page.dart';
 import '../pages/admin_history_page.dart';
 import '../pages/admin_profile_page.dart';
 
@@ -21,7 +21,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   final List<Widget> _pages = [
     const AdminOverviewSection(),
     const AdminMasterDataSection(),
-    const AdminStaffManagementSection(),
+    const AdminStaffPage(),
     const AdminHistoryPage(),
   ];
 
