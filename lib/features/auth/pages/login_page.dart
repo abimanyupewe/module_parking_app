@@ -4,10 +4,10 @@ import '../../../config/constants.dart';
 import '../../../config/image_assets.dart';
 import '../../../core/preferences/app_preferences.dart';
 import '../controllers/auth_controller.dart';
-import '../widgets/auth_header_widget.dart';
-import '../widgets/login_form_widget.dart';
+import '../widgets/auth_card_container.dart';
+import '../widgets/auth_role_selector.dart';
 
-/// Login Page
+/// Login Page - Dengan role selector dan layout sesuai referensi
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
@@ -19,6 +19,19 @@ class _LoginPageState extends State<LoginPage> {
   late AuthController _authController;
   bool _isLoading = false;
   String? _errorMessage;
+  String _selectedRole = 'Owner';
+
+  // Form controllers
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _showPassword = false;
+  bool _keepSignedIn = false;
+
+  final Map<String, String> _roleImageMap = {
+    'Owner': ImageAssets.authOwner,
+    'Admin': ImageAssets.authAdmin,
+    'Staff': ImageAssets.authPetugas,
+  };
 
   @override
   void initState() {
@@ -32,14 +45,37 @@ class _LoginPageState extends State<LoginPage> {
     await AppPreferences.init();
   }
 
+  /// Ambil gambar karakter berdasarkan role
+  String _getCharacterImage() {
+    return _roleImageMap[_selectedRole] ?? ImageAssets.authOwner;
+  }
+
+  /// Handle role change
+  void _handleRoleChange(String newRole) {
+    setState(() {
+      _selectedRole = newRole;
+      _errorMessage = null;
+    });
+  }
+
   /// Handle login
-  Future<void> _handleLogin(String username, String password) async {
+  Future<void> _handleLogin() async {
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Username dan password harus diisi';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final result = await _authController.login(username, password);
+    final result = await _authController.login(
+      _usernameController.text,
+      _passwordController.text,
+    );
 
     if (!mounted) return;
 
@@ -48,7 +84,6 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (result['success']) {
-      // Navigate ke dashboard sesuai role
       final user = result['user'];
       final role = user.role;
 
@@ -83,74 +118,316 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Column(
-            children: [
-              // Illustration Image
-              const SizedBox(height: 20),
-              Image.asset(
-                ImageAssets.authOwner,
-                height: 200,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 40),
-
-              // Header
-              const SizedBox(height: 40),
-              const AuthHeaderWidget(
-                title: 'Login',
-                subtitle: 'Masukkan username dan password Anda',
-              ),
-              const SizedBox(height: 48),
-
-              // Form
-              LoginFormWidget(
-                onSubmit: _handleLogin,
-                isLoading: _isLoading,
-                errorMessage: _errorMessage,
-              ),
-              const SizedBox(height: 24),
-
-              // Footer Links
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
                 children: [
-                  Text(
-                    'Belum punya akun? ',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  // Spacing dari top
+                  const SizedBox(height: 16),
+
+                  // Character Image - dinamis berdasarkan role
+                  Image.asset(
+                    _getCharacterImage(),
+                    height: 180,
+                    fit: BoxFit.contain,
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/register');
-                    },
-                    child: Text(
-                      'Daftar',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                      ),
+                  const SizedBox(height: 32),
+
+                  // Auth Card Container dengan form
+                  AuthCardContainer(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Username Field
+                        Text(
+                          'Username',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _usernameController,
+                          enabled: !_isLoading,
+                          decoration: InputDecoration(
+                            hintText: 'Enter your username',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.person,
+                              color: AppColors.inactive,
+                              size: 20,
+                            ),
+                            filled: true,
+                            fillColor: AppColors.secondary,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
+                            ),
+                            hintStyle: const TextStyle(
+                              color: AppColors.inactive,
+                              fontSize: 14,
+                            ),
+                          ),
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Password Field dengan link Forgot Password
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Password',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                // TODO: Handle forgot password
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(0, 0),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Forgot Password?',
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _passwordController,
+                          enabled: !_isLoading,
+                          obscureText: !_showPassword,
+                          decoration: InputDecoration(
+                            hintText: '••••••••',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.lock,
+                              color: AppColors.inactive,
+                              size: 20,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _showPassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: AppColors.inactive,
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _showPassword = !_showPassword;
+                                });
+                              },
+                            ),
+                            filled: true,
+                            fillColor: AppColors.secondary,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
+                            ),
+                            hintStyle: const TextStyle(
+                              color: AppColors.inactive,
+                              fontSize: 14,
+                            ),
+                          ),
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Keep me signed in checkbox
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: Checkbox(
+                                value: _keepSignedIn,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _keepSignedIn = value ?? false;
+                                  });
+                                },
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Keep me signed in',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: AppColors.inactive),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Error Message
+                        if (_errorMessage != null)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.danger),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: AppColors.danger,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: const TextStyle(
+                                      color: AppColors.danger,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        // Sign In Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            onPressed: _isLoading ? null : _handleLogin,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Text(
+                                    'Sign In',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(height: 24),
+
+                  // Footer - Sign Up Link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pushNamed('/register');
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Sign Up',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Debug Button
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed('/debug');
+                    },
+                    icon: const Icon(Icons.bug_report, size: 16),
+                    label: const Text('Debug', style: TextStyle(fontSize: 12)),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
-              const SizedBox(height: 12),
-
-              // Debug Button
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pushNamed('/debug');
-                },
-                icon: const Icon(Icons.bug_report, size: 16),
-                label: const Text('Debug', style: TextStyle(fontSize: 12)),
-              ),
-            ],
-          ),
+            ),
+            // Role Selector - Positioned di top right
+            AuthRoleSelector(
+              initialRole: _selectedRole,
+              onRoleChanged: _handleRoleChange,
+            ),
+          ],
         ),
       ),
     );

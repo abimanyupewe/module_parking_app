@@ -50,28 +50,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   _controller.setCurrentPage(page);
                 },
                 children: [
-                  // Slide 1: Welcome
+                  // Slide 1: Welcome dengan ilustrasi besar
                   OnboardingSlideWidget(
-                    title: 'Selamat Datang',
+                    title: 'Smart Parking Solutions',
                     description:
-                        'Sistem manajemen parkir modern yang mudah digunakan untuk semua jenis kendaraan.',
-                    image: SvgPicture.asset(ImageAssets.characterPortrait),
+                        'Monitor Parking, manage staff, and track transactions all in one powerful application.',
+                    image: SvgPicture.asset(ImageAssets.handWithCard),
+                    showLargeIllustration: true,
                   ),
 
-                  // Slide 2: Parking Management
+                  // Slide 2: Parking Management tanpa ilustrasi
                   OnboardingSlideWidget(
                     title: 'Kelola Parkir',
                     description:
                         'Check-in dan check-out kendaraan dengan cepat. Monitor kapasitas parkir real-time.',
-                    image: SvgPicture.asset(ImageAssets.personTablet),
                   ),
 
-                  // Slide 3: Reports
+                  // Slide 3: Reports tanpa ilustrasi
                   OnboardingSlideWidget(
                     title: 'Laporan Terpadu',
                     description:
                         'Lihat analitik pendapatan, riwayat transaksi, dan audit trail dalam satu dashboard.',
-                    image: SvgPicture.asset(ImageAssets.handWithCard),
                   ),
                 ],
               ),
