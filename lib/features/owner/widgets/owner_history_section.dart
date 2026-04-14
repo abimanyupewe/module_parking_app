@@ -14,25 +14,7 @@ class OwnerHistorySection extends StatefulWidget {
 
 class _OwnerHistorySectionState extends State<OwnerHistorySection> {
   String _searchQuery = '';
-  int? _selectedMonth; // null = semua bulan
-  int? _selectedDay; // null = semua hari
-
-  final List<String> _months = [
-    'Januari',
-    'Februari',
-    'Maret',
-    'April',
-    'Mei',
-    'Juni',
-    'Juli',
-    'Agustus',
-    'September',
-    'Oktober',
-    'November',
-    'Desember',
-  ];
-
-  final List<int> _days = List.generate(31, (index) => index + 1);
+  DateTime? _selectedDate; // null = semua tanggal
 
   final List<Map<String, dynamic>> _allHistory = [
     {
@@ -167,16 +149,12 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
         return false;
       }
 
-      // Filter berdasarkan bulan
-      if (_selectedMonth != null) {
-        if (item['tanggal'].month != _selectedMonth) {
-          return false;
-        }
-      }
-
-      // Filter berdasarkan hari/tanggal
-      if (_selectedDay != null) {
-        if (item['tanggal'].day != _selectedDay) {
+      // Filter berdasarkan tanggal
+      if (_selectedDate != null) {
+        final itemDate = item['tanggal'] as DateTime;
+        if (itemDate.year != _selectedDate!.year ||
+            itemDate.month != _selectedDate!.month ||
+            itemDate.day != _selectedDate!.day) {
           return false;
         }
       }
@@ -187,25 +165,29 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
 
   void _clearFilters() {
     setState(() {
-      _selectedMonth = null;
-      _selectedDay = null;
+      _selectedDate = null;
       _searchQuery = '';
       _filteredHistory = _allHistory;
     });
   }
 
-  void _onMonthChanged(int? value) {
+  void _onDateChanged(DateTime? value) {
     setState(() {
-      _selectedMonth = value;
+      _selectedDate = value;
       _applyAllFilters();
     });
   }
 
-  void _onDayChanged(int? value) {
-    setState(() {
-      _selectedDay = value;
-      _applyAllFilters();
-    });
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2024),
+      lastDate: DateTime(2025),
+    );
+    if (picked != null) {
+      _onDateChanged(picked);
+    }
   }
 
   Future<void> _printHistory() async {
@@ -264,16 +246,16 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
           ),
           const SizedBox(height: 16),
 
-          // Filter Row (Bulan, Hari, Clear)
+          // Filter Row (Date Picker)
           Row(
             children: [
-              // Filter Bulan
+              // Filter Date Picker
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Bulan',
+                      'Pilih Tanggal',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -281,89 +263,38 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.tertiary),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButton<int?>(
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        value: _selectedMonth,
-                        hint: const Text('Semua Bulan'),
-                        items: [
-                          const DropdownMenuItem<int?>(
-                            value: null,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Text('Semua Bulan'),
-                            ),
-                          ),
-                          ..._months.asMap().entries.map((entry) {
-                            return DropdownMenuItem<int?>(
-                              value: entry.key + 1,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                child: Text(entry.value),
+                    GestureDetector(
+                      onTap: _selectDate,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.tertiary),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _selectedDate == null
+                                  ? 'Pilih tanggal...'
+                                  : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _selectedDate == null
+                                    ? AppColors.inactive
+                                    : AppColors.black,
                               ),
-                            );
-                          }),
-                        ],
-                        onChanged: _onMonthChanged,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Filter Hari
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Tanggal',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.tertiary),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButton<int?>(
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        value: _selectedDay,
-                        hint: const Text('Semua Tanggal'),
-                        items: [
-                          const DropdownMenuItem<int?>(
-                            value: null,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Text('Semua Tanggal'),
                             ),
-                          ),
-                          ..._days.map((day) {
-                            return DropdownMenuItem<int?>(
-                              value: day,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                child: Text('$day'),
-                              ),
-                            );
-                          }),
-                        ],
-                        onChanged: _onDayChanged,
+                            const Icon(
+                              Icons.calendar_today,
+                              size: 18,
+                              color: AppColors.primary,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -448,9 +379,7 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Text(
-                  _searchQuery.isEmpty &&
-                          _selectedMonth == null &&
-                          _selectedDay == null
+                  _searchQuery.isEmpty && _selectedDate == null
                       ? 'Tidak ada data'
                       : 'Data tidak ditemukan',
                   style: const TextStyle(color: AppColors.inactive),
@@ -575,22 +504,12 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                         Text(h['keluar'], style: const TextStyle(fontSize: 12)),
                       ),
                       DataCell(
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            FormatHelper.formatRupiah(h['biaya']),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
+                        Text(
+                          FormatHelper.formatRupiah(h['biaya']),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
