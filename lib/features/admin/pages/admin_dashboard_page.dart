@@ -100,6 +100,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
+        automaticallyImplyLeading: false,
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {

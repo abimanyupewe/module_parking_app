@@ -52,18 +52,17 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Petugas Operasional'),
-              const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.success.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
@@ -88,6 +87,7 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           elevation: 0,
+          automaticallyImplyLeading: false,
           actions: [
             PopupMenuButton<String>(
               onSelected: (value) {

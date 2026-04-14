@@ -85,6 +85,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
         elevation: 0,
         toolbarHeight: 80,
         centerTitle: false,
+        automaticallyImplyLeading: false,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
