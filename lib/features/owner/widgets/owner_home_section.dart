@@ -49,19 +49,19 @@ class _OwnerHomeSectionState extends State<OwnerHomeSection> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 140,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              _buildSummaryCard(
+        Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
                 title: 'Total Transaksi',
                 value: '45',
                 subtitle: 'Kendaraan parkir',
                 icon: Icons.directions_car,
               ),
-              const SizedBox(width: 12),
-              _buildSummaryCard(
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard(
                 title: 'Total Pendapatan',
                 value: 'Rp 215.000',
                 subtitle: 'Dari biaya parkir',
@@ -69,17 +69,8 @@ class _OwnerHomeSectionState extends State<OwnerHomeSection> {
                 bgColor: const Color(0xFFF0F4FF),
                 titleColor: AppColors.primary,
               ),
-              const SizedBox(width: 12),
-              _buildSummaryCard(
-                title: 'Area Penuh',
-                value: '3 / 4',
-                subtitle: 'Area parkir',
-                icon: Icons.local_parking,
-                bgColor: const Color(0xFFFFF3E0),
-                titleColor: const Color(0xFFF57C00),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -95,7 +86,6 @@ class _OwnerHomeSectionState extends State<OwnerHomeSection> {
     Color titleColor = AppColors.primary,
   }) {
     return Container(
-      width: 160,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: bgColor,
