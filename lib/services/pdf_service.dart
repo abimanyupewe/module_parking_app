@@ -20,7 +20,7 @@ class PdfService {
     return DateFormat('dd/MM/yyyy HH:mm:ss', 'id_ID').format(dateTime);
   }
 
-  /// Generate Struk Parkir (Receipt)
+  /// Generate Struk Parkir (Receipt) - Check Out
   static Future<void> generateParkingReceipt({
     required String platNomor,
     required String jenis,
@@ -47,9 +47,31 @@ class PdfService {
             mainAxisAlignment: pw.MainAxisAlignment.start,
             crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
+              // Status Badge
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(20),
+                  ),
+                ),
+                child: pw.Text(
+                  'STRUK CHECK-OUT',
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 15),
+
               // Header
               pw.Text(
-                'STRUK PARKIR',
+                'KENDARAAN KELUAR PARKIR',
                 style: pw.TextStyle(
                   fontSize: 20,
                   fontWeight: pw.FontWeight.bold,
@@ -80,14 +102,47 @@ class PdfService {
                 children: [
                   _buildRow('Waktu Masuk', formatDateTime(waktuMasuk)),
                   _buildRow('Waktu Keluar', formatDateTime(waktuKeluar)),
-                  _buildRow('Durasi', '$jam jam $menit menit'),
                 ],
               ),
               pw.SizedBox(height: 15),
               pw.Divider(),
               pw.SizedBox(height: 15),
 
-              // Biaya
+              // Durasi Parkir (Prominent)
+              pw.Container(
+                padding: const pw.EdgeInsets.all(12),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(width: 2),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(4),
+                  ),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                  children: [
+                    pw.Text(
+                      'DURASI PARKIR',
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 6),
+                    pw.Text(
+                      '$jam jam $menit menit',
+                      style: pw.TextStyle(
+                        fontSize: 18,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 15),
+              pw.Divider(),
+              pw.SizedBox(height: 15),
+
+              // Total Biaya
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -158,9 +213,31 @@ class PdfService {
             mainAxisAlignment: pw.MainAxisAlignment.start,
             crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
+              // Status Badge
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(20),
+                  ),
+                ),
+                child: pw.Text(
+                  'STRUK CHECK-IN',
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 15),
+
               // Header
               pw.Text(
-                'STRUK MASUK PARKIR',
+                'KENDARAAN MASUK PARKIR',
                 style: pw.TextStyle(
                   fontSize: 20,
                   fontWeight: pw.FontWeight.bold,
@@ -185,12 +262,12 @@ class PdfService {
               pw.Divider(),
               pw.SizedBox(height: 15),
 
-              // Informasi Tarif & Durasi
+              // Informasi Tarif
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   _buildRow('Tarif Per Jam', formatCurrency(tarifPerJam)),
-                  _buildRow('Durasi Parkir', '1 jam'),
+                  _buildRow('Estimasi Minimum', '1 jam'),
                 ],
               ),
               pw.SizedBox(height: 15),
@@ -209,12 +286,12 @@ class PdfService {
               pw.Divider(),
               pw.SizedBox(height: 15),
 
-              // Total Biaya
+              // Biaya Estimasi
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(
-                    'TOTAL BIAYA:',
+                    'BIAYA ESTIMASI (MINIMUM):',
                     style: pw.TextStyle(
                       fontSize: 14,
                       fontWeight: pw.FontWeight.bold,
@@ -240,7 +317,7 @@ class PdfService {
               ),
               pw.SizedBox(height: 20),
               pw.Text(
-                'Mohon simpan struk ini sebagai bukti parkir',
+                'Simpan struk ini untuk verifikasi saat check-out',
                 style: pw.TextStyle(fontSize: 10),
                 textAlign: pw.TextAlign.center,
               ),
