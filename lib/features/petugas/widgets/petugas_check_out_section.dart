@@ -8,7 +8,9 @@ import '../../../services/database_helper.dart';
 
 /// Petugas Check-Out Section - Pencarian dan checkout kendaraan
 class PetugasCheckOutSection extends StatefulWidget {
-  const PetugasCheckOutSection({super.key});
+  final VoidCallback? onCheckOutSuccess;
+
+  const PetugasCheckOutSection({super.key, this.onCheckOutSuccess});
 
   @override
   State<PetugasCheckOutSection> createState() => _PetugasCheckOutSectionState();
@@ -301,6 +303,9 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
 
     // Refresh data untuk remove kendaraan yang sudah check-out
     _loadData();
+
+    // Call callback to refresh area info
+    widget.onCheckOutSuccess?.call();
   }
 
   void _printReceipt(

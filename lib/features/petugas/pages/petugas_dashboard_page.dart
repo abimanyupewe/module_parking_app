@@ -145,7 +145,7 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
               child: TabBarView(
                 children: [
                   PetugasCheckInSection(onCheckInSuccess: refreshAreaInfo),
-                  const PetugasCheckOutSection(),
+                  PetugasCheckOutSection(onCheckOutSuccess: refreshAreaInfo),
                   const PetugasHistorySection(),
                 ],
               ),
