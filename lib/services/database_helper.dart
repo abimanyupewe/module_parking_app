@@ -436,6 +436,82 @@ class DatabaseHelper {
     );
   }
 
+  /// Get completed transactions (check-out sudah dilakukan)
+  Future<List<Map<String, dynamic>>> getCompletedTransactions({
+    int limit = 100,
+  }) async {
+    final db = await database;
+    return await db.rawQuery(
+      '''
+      SELECT 
+        t.${AppConstants.colTransaksiId},
+        t.${AppConstants.colKendaraanId},
+        t.${AppConstants.colAreaId},
+        t.${AppConstants.colWaktuMasuk},
+        t.${AppConstants.colWaktuKeluar},
+        t.${AppConstants.colTransaksiStatus},
+        t.${AppConstants.colTotalBiaya},
+        t.${AppConstants.colUserId},
+        t.image_path,
+        k.${AppConstants.colPlatNomor},
+        k.${AppConstants.colMerk},
+        k.${AppConstants.colWarna},
+        k.${AppConstants.colJenisId},
+        j.${AppConstants.colNamaJenis},
+        j.${AppConstants.colTarifPerJam},
+        a.${AppConstants.colNamaArea},
+        a.${AppConstants.colKapasitas},
+        a.${AppConstants.colTerisi}
+      FROM ${AppConstants.tableTransaksi} t
+      LEFT JOIN ${AppConstants.tableKendaraan} k ON t.${AppConstants.colKendaraanId} = k.${AppConstants.colKendaraanId}
+      LEFT JOIN ${AppConstants.tableJenisKendaraan} j ON k.${AppConstants.colJenisId} = j.${AppConstants.colJenisId}
+      LEFT JOIN ${AppConstants.tableAreaParkir} a ON t.${AppConstants.colAreaId} = a.${AppConstants.colAreaId}
+      WHERE t.${AppConstants.colWaktuKeluar} IS NOT NULL
+      ORDER BY t.${AppConstants.colWaktuMasuk} DESC
+      LIMIT ?
+    ''',
+      [limit],
+    );
+  }
+
+  /// Get ongoing transactions (belum check-out)
+  Future<List<Map<String, dynamic>>> getOngoingTransactions({
+    int limit = 100,
+  }) async {
+    final db = await database;
+    return await db.rawQuery(
+      '''
+      SELECT 
+        t.${AppConstants.colTransaksiId},
+        t.${AppConstants.colKendaraanId},
+        t.${AppConstants.colAreaId},
+        t.${AppConstants.colWaktuMasuk},
+        t.${AppConstants.colWaktuKeluar},
+        t.${AppConstants.colTransaksiStatus},
+        t.${AppConstants.colTotalBiaya},
+        t.${AppConstants.colUserId},
+        t.image_path,
+        k.${AppConstants.colPlatNomor},
+        k.${AppConstants.colMerk},
+        k.${AppConstants.colWarna},
+        k.${AppConstants.colJenisId},
+        j.${AppConstants.colNamaJenis},
+        j.${AppConstants.colTarifPerJam},
+        a.${AppConstants.colNamaArea},
+        a.${AppConstants.colKapasitas},
+        a.${AppConstants.colTerisi}
+      FROM ${AppConstants.tableTransaksi} t
+      LEFT JOIN ${AppConstants.tableKendaraan} k ON t.${AppConstants.colKendaraanId} = k.${AppConstants.colKendaraanId}
+      LEFT JOIN ${AppConstants.tableJenisKendaraan} j ON k.${AppConstants.colJenisId} = j.${AppConstants.colJenisId}
+      LEFT JOIN ${AppConstants.tableAreaParkir} a ON t.${AppConstants.colAreaId} = a.${AppConstants.colAreaId}
+      WHERE t.${AppConstants.colWaktuKeluar} IS NULL
+      ORDER BY t.${AppConstants.colWaktuMasuk} DESC
+      LIMIT ?
+    ''',
+      [limit],
+    );
+  }
+
   Future<int> updateTransaksi(
     int transaksiId,
     Map<String, dynamic> data,
