@@ -190,37 +190,106 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
     return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
-  void _handleCheckout(Map<String, dynamic> transaction) {
-    // Show dialog untuk konfirmasi print struk
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Checkout Berhasil'),
-        content: Text(
-          'Kendaraan ${transaction[AppConstants.colPlatNomor]} telah checkout.\n\nApakah Anda ingin mencetak struk?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _finishCheckout(transaction);
-            },
-            child: const Text('Tidak'),
+  void _handleCheckout(Map<String, dynamic> transaction) async {
+    try {
+      final transaksiId = transaction[AppConstants.colTransaksiId];
+      final waktuMasuk =
+          DateTime.tryParse(transaction[AppConstants.colWaktuMasuk] ?? '') ??
+          DateTime.now();
+      final waktuKeluar = DateTime.now();
+
+      // Calculate total biaya based on actual duration
+      final duration = waktuKeluar.difference(waktuMasuk);
+      final jam = duration.inHours;
+      final menit = duration.inMinutes % 60;
+      final tarifPerJam = transaction[AppConstants.colTarifPerJam] ?? 0;
+
+      // Hitung durasi dalam jam (minimum 1 jam)
+      final durasiJam = jam + (menit > 0 ? 1 : 0);
+      final durasiJam2 = durasiJam > 0 ? durasiJam : 1;
+      final totalBiaya = tarifPerJam * durasiJam2;
+
+      // Update transaksi di database
+      await _databaseHelper.updateTransaksi(transaksiId, {
+        AppConstants.colWaktuKeluar: waktuKeluar.toIso8601String(),
+        AppConstants.colTransaksiStatus: AppConstants.statusSelesai,
+        AppConstants.colTotalBiaya: totalBiaya,
+      });
+
+      // Update area capacity
+      final areaId = transaction[AppConstants.colAreaId];
+      final area = await _databaseHelper.getAreaParkirById(areaId);
+      if (area != null) {
+        final updatedArea = area.copyWith(terisi: area.terisi - 1);
+        await _databaseHelper.updateAreaParkir(updatedArea);
+      }
+
+      // Record activity log
+      await _databaseHelper.recordActivity(
+        1, // userId (TODO: Ambil dari session user)
+        AppConstants.logTransaksi,
+        'Check-Out Kendaraan ${transaction[AppConstants.colPlatNomor]} dari Area ${area?.namaArea}',
+      );
+
+      if (mounted) {
+        // Show success dialog dengan pilihan print
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Checkout Berhasil'),
+            content: Text(
+              'Kendaraan ${transaction[AppConstants.colPlatNomor]} telah checkout.\n\nApakah Anda ingin mencetak struk?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _finishCheckout(
+                    transaction,
+                    waktuMasuk,
+                    waktuKeluar,
+                    totalBiaya,
+                  );
+                },
+                child: const Text('Tidak'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _printReceipt(
+                    transaction,
+                    waktuMasuk,
+                    waktuKeluar,
+                    totalBiaya,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                ),
+                child: const Text('Print Struk'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _printReceipt(transaction);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Print Struk'),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error checkout: $e'),
+            backgroundColor: AppColors.danger,
           ),
-        ],
-      ),
-    );
+        );
+      }
+    }
   }
 
-  void _finishCheckout(Map<String, dynamic> transaction) {
+  void _finishCheckout(
+    Map<String, dynamic> transaction,
+    DateTime waktuMasuk,
+    DateTime waktuKeluar,
+    int totalBiaya,
+  ) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -230,17 +299,22 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
       ),
     );
 
-    // Hapus dari list dan reload
+    // Refresh data untuk remove kendaraan yang sudah check-out
     _loadData();
   }
 
-  void _printReceipt(Map<String, dynamic> transaction) async {
+  void _printReceipt(
+    Map<String, dynamic> transaction,
+    DateTime waktuMasuk,
+    DateTime waktuKeluar,
+    int totalBiaya,
+  ) async {
     try {
-      // Format data untuk PDF
-      final waktuMasuk =
-          DateTime.tryParse(transaction[AppConstants.colWaktuMasuk] ?? '') ??
-          DateTime.now();
-      final waktuKeluar = DateTime.now();
+      // Get petugas name
+      final petugas = await _databaseHelper.getUserById(
+        1,
+      ); // TODO: from session
+      final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
 
       await PdfService.generateParkingReceipt(
         platNomor: transaction[AppConstants.colPlatNomor],
@@ -250,12 +324,12 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
         area: transaction[AppConstants.colNamaArea],
         waktuMasuk: waktuMasuk,
         waktuKeluar: waktuKeluar,
-        totalBiaya: transaction[AppConstants.colTotalBiaya] ?? 0,
-        petugas: 'Petugas Parkir',
+        totalBiaya: totalBiaya,
+        petugas: petugasName,
       );
 
       if (mounted) {
-        _finishCheckout(transaction);
+        _finishCheckout(transaction, waktuMasuk, waktuKeluar, totalBiaya);
       }
     } catch (e) {
       if (mounted) {

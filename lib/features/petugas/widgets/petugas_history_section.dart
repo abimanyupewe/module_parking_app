@@ -31,6 +31,11 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
     'Bulan Ini',
   ];
 
+  // Pagination
+  int _itemsPerPage = 10;
+  int _currentPageCompleted = 0;
+  int _currentPageOngoing = 0;
+
   late TabController _tabController;
   Timer? _refreshTimer;
 
@@ -137,6 +142,15 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
       (sum, item) => sum + (item[AppConstants.colTotalBiaya] as int? ?? 0),
     );
 
+    // Calculate pagination
+    final totalPages = (displayData.length / _itemsPerPage).ceil();
+    final currentPage = isCompleted
+        ? _currentPageCompleted
+        : _currentPageOngoing;
+    final startIndex = currentPage * _itemsPerPage;
+    final endIndex = (startIndex + _itemsPerPage).clamp(0, displayData.length);
+    final paginatedData = displayData.sublist(startIndex, endIndex);
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -200,7 +214,7 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
                     const DataColumn(label: Text('Durasi')),
                     const DataColumn(label: Text('Biaya'), numeric: true),
                   ],
-                  rows: displayData.map((history) {
+                  rows: paginatedData.map((history) {
                     final waktuMasuk = DateTime.tryParse(
                       history[AppConstants.colWaktuMasuk] ?? '',
                     );
@@ -267,7 +281,68 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
                   }).toList(),
                 ),
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
+
+            // Pagination Controls
+            if (displayData.isNotEmpty)
+              Center(
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: currentPage > 0
+                              ? () {
+                                  setState(() {
+                                    if (isCompleted) {
+                                      _currentPageCompleted--;
+                                    } else {
+                                      _currentPageOngoing--;
+                                    }
+                                  });
+                                }
+                              : null,
+                          icon: const Icon(Icons.arrow_back),
+                          label: const Text('Sebelumnya'),
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          'Halaman ${currentPage + 1} dari ${totalPages > 0 ? totalPages : 1}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.inactive,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        ElevatedButton.icon(
+                          onPressed: currentPage < totalPages - 1
+                              ? () {
+                                  setState(() {
+                                    if (isCompleted) {
+                                      _currentPageCompleted++;
+                                    } else {
+                                      _currentPageOngoing++;
+                                    }
+                                  });
+                                }
+                              : null,
+                          icon: const Icon(Icons.arrow_forward),
+                          label: const Text('Berikutnya'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Menampilkan ${startIndex + 1}-${endIndex} dari ${displayData.length} data',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.inactive,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
@@ -343,6 +418,9 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
                         onTap: () {
                           setState(() {
                             _selectedFilterIndex = index;
+                            // Reset pagination when filter changes
+                            _currentPageCompleted = 0;
+                            _currentPageOngoing = 0;
                           });
                         },
                       ),
