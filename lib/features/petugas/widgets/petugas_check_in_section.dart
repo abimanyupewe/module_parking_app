@@ -184,7 +184,11 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         'Check-In Kendaraan ${_platnomorController.text} di Area ${area?.namaArea}',
       );
 
-      // Store data for print receipt
+      // Store data for print receipt BEFORE clearing form
+      final platNomorToStore = _platnomorController.text;
+      final merkToStore = _merkController.text;
+      final warnaToStore = _warnaController.text;
+
       _lastJenisKendaraanName = _jenisKendaraanList
           .firstWhere(
             (j) => j.idJenis == idJenis,
@@ -222,7 +226,11 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  _printCheckInReceipt();
+                  _printCheckInReceipt(
+                    platNomor: platNomorToStore,
+                    merk: merkToStore,
+                    warna: warnaToStore,
+                  );
                 },
                 child: const Text('Cetak Struk'),
               ),
@@ -244,11 +252,12 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
   }
 
   /// Print check-in receipt
-  Future<void> _printCheckInReceipt() async {
+  Future<void> _printCheckInReceipt({
+    required String platNomor,
+    required String merk,
+    required String warna,
+  }) async {
     try {
-      final platNomor = _platnomorController.text;
-      final merk = _merkController.text;
-      final warna = _warnaController.text;
       final jenis = _lastJenisKendaraanName ?? 'N/A';
       final area = _lastAreaName ?? 'N/A';
 
