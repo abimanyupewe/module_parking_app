@@ -226,11 +226,17 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
         await _databaseHelper.updateAreaParkir(updatedArea);
       }
 
-      // Record activity log
+      // Get petugas name dari database
+      final petugas = await _databaseHelper.getUserById(
+        1,
+      ); // TODO: Ambil dari session user
+      final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
+
+      // Record activity log with petugas name
       await _databaseHelper.recordActivity(
         1, // userId (TODO: Ambil dari session user)
         AppConstants.logTransaksi,
-        'Check-Out Kendaraan ${transaction[AppConstants.colPlatNomor]} dari Area ${area?.namaArea}',
+        'Check-Out Kendaraan ${transaction[AppConstants.colPlatNomor]} oleh $petugasName dari Area ${area?.namaArea}',
       );
 
       if (mounted) {

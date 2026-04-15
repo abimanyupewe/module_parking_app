@@ -184,25 +184,25 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
 
       await _databaseHelper.insertTransaksi(transaksi);
 
-      // 3. Update kapasitas area parkir
+      // 3. Get petugas name dari database
+      final petugas = await _databaseHelper.getUserById(
+        1,
+      ); // TODO: Ambil dari session user
+      final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
+
+      // 4. Update kapasitas area parkir
       final area = await _databaseHelper.getAreaParkirById(idArea);
       if (area != null) {
         final updatedArea = area.copyWith(terisi: area.terisi + 1);
         await _databaseHelper.updateAreaParkir(updatedArea);
       }
 
-      // 4. Record activity log
+      // 5. Record activity log with petugas name
       await _databaseHelper.recordActivity(
         1, // userId (TODO: Ambil dari session user)
         AppConstants.logTransaksi,
-        'Check-In Kendaraan ${_platnomorController.text} di Area ${area?.namaArea}',
+        'Check-In Kendaraan ${_platnomorController.text} oleh $petugasName di Area ${area?.namaArea}',
       );
-
-      // Get petugas name dari database
-      final petugas = await _databaseHelper.getUserById(
-        1,
-      ); // TODO: Ambil dari session user
-      final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
 
       // Store data for print receipt BEFORE clearing form
       final platNomorToStore = _platnomorController.text;
