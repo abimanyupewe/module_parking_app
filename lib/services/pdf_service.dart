@@ -582,31 +582,24 @@ class PdfService {
         'Warna',
         'Area',
         'Waktu Masuk',
-        'Durasi',
+        'Waktu Keluar',
       ],
     ];
 
     for (int i = 0; i < vehicles.length; i++) {
       final v = vehicles[i];
-      final waktuMasuk = v['waktuMasuk'] as DateTime?;
-      String durasi = '-';
-
-      if (waktuMasuk != null) {
-        final duration = DateTime.now().difference(waktuMasuk);
-        final jam = duration.inHours;
-        final menit = duration.inMinutes % 60;
-        durasi = '$jam jam $menit menit';
-      }
+      final waktuMasuk = v['waktu_masuk'] as String?;
+      final waktuKeluar = v['waktu_keluar'] as String?;
 
       data.add([
         (i + 1).toString(),
-        v['platNomor'] ?? '-',
-        v['jenis'] ?? '-',
+        v['plat_nomor'] ?? '-',
+        v['nama_jenis'] ?? '-',
         v['merk'] ?? '-',
         v['warna'] ?? '-',
-        v['area'] ?? '-',
+        v['nama_area'] ?? '-',
         _formatShortDateTime(waktuMasuk),
-        durasi,
+        _formatShortDateTime(waktuKeluar),
       ]);
     }
 
