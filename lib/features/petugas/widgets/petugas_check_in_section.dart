@@ -13,7 +13,9 @@ import 'image_picker_widget.dart';
 
 /// Petugas Check-In Section - Form input kendaraan masuk
 class PetugasCheckInSection extends StatefulWidget {
-  const PetugasCheckInSection({super.key});
+  final VoidCallback? onCheckInSuccess;
+
+  const PetugasCheckInSection({super.key, this.onCheckInSuccess});
 
   @override
   State<PetugasCheckInSection> createState() => _PetugasCheckInSectionState();
@@ -226,6 +228,9 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
           _selectedImagePath = null;
           _isLoading = false;
         });
+
+        // Call refresh callback to update area info
+        widget.onCheckInSuccess?.call();
 
         // Show success dialog
         showDialog(

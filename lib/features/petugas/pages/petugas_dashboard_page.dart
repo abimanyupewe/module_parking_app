@@ -15,6 +15,8 @@ class PetugasDashboardPage extends StatefulWidget {
 }
 
 class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
+  BuildContext? _areaInfoContext;
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +48,13 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
     );
   }
 
+  /// Refresh area info after check-in
+  Future<void> refreshAreaInfo() async {
+    if (_areaInfoContext != null) {
+      PetugasAreaInfoSection.of(_areaInfoContext!)?.refreshAreaData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -70,7 +79,7 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
                       height: 6,
                       child: CircleAvatar(backgroundColor: AppColors.success),
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
                       'Aktif',
                       style: TextStyle(
@@ -106,7 +115,12 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
         body: Column(
           children: [
             // Area Info Section
-            const PetugasAreaInfoSection(),
+            Builder(
+              builder: (context) {
+                _areaInfoContext = context;
+                return const PetugasAreaInfoSection();
+              },
+            ),
             // Tab Bar
             Container(
               color: AppColors.white,
@@ -127,12 +141,12 @@ class _PetugasDashboardPageState extends State<PetugasDashboardPage> {
               ),
             ),
             // Tab Content
-            const Expanded(
+            Expanded(
               child: TabBarView(
                 children: [
-                  PetugasCheckInSection(),
-                  PetugasCheckOutSection(),
-                  PetugasHistorySection(),
+                  PetugasCheckInSection(onCheckInSuccess: refreshAreaInfo),
+                  const PetugasCheckOutSection(),
+                  const PetugasHistorySection(),
                 ],
               ),
             ),

@@ -6,10 +6,17 @@ import '../../../models/jenis_kendaraan_model.dart';
 
 /// Petugas Area Info Section - Menampilkan informasi sisa slot parkir
 class PetugasAreaInfoSection extends StatefulWidget {
-  const PetugasAreaInfoSection({super.key});
+  final VoidCallback? onRefresh;
+
+  const PetugasAreaInfoSection({super.key, this.onRefresh});
 
   @override
   State<PetugasAreaInfoSection> createState() => _PetugasAreaInfoSectionState();
+
+  /// Expose a static method to get state for refresh from parent
+  static _PetugasAreaInfoSectionState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_PetugasAreaInfoSectionState>();
+  }
 }
 
 class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
@@ -52,6 +59,9 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
           _isLoading = false;
         });
       }
+
+      // Call onRefresh callback if provided
+      widget.onRefresh?.call();
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -60,6 +70,11 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
         });
       }
     }
+  }
+
+  /// Public method to refresh area data from parent widget
+  Future<void> refreshAreaData() async {
+    await _loadData();
   }
 
   /// Get filtered areas based on selected category
