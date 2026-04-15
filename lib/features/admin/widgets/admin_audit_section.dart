@@ -128,6 +128,8 @@ class _AdminAuditSectionState extends State<AdminAuditSection> {
                   final aktivitas =
                       log[AppConstants.colAktivitas] as String? ?? '';
                   final waktu = log[AppConstants.colWaktu] as String? ?? '';
+                  final username = log[AppConstants.colUsername] ?? 'Sistem';
+                  final role = log[AppConstants.colRole] ?? '-';
 
                   return Padding(
                     padding: EdgeInsets.only(
@@ -135,7 +137,7 @@ class _AdminAuditSectionState extends State<AdminAuditSection> {
                     ),
                     child: LogTimelineTile(
                       title: aktivitas,
-                      subtitle: 'Waktu: $waktu',
+                      subtitle: 'Oleh: $username ($role)',
                       timestamp: waktu,
                       category: kategori,
                       icon: kategori == AppConstants.logTransaksi
@@ -197,6 +199,11 @@ class _AdminAuditSectionState extends State<AdminAuditSection> {
             _buildLogDetailRow(
               'Aktivitas',
               log[AppConstants.colAktivitas] as String? ?? '',
+            ),
+            const SizedBox(height: 12),
+            _buildLogDetailRow(
+              'Oleh',
+              '${log[AppConstants.colUsername] ?? 'Sistem'} (${log[AppConstants.colRole] ?? '-'})',
             ),
             const SizedBox(height: 12),
             _buildLogDetailRow(

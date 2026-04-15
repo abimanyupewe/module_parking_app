@@ -49,7 +49,9 @@ class LogTimelineTile extends StatelessWidget {
                   border: Border.all(color: AppColors.white, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: (iconColor ?? AppColors.primary).withValues(alpha: 0.3),
+                      color: (iconColor ?? AppColors.primary).withValues(
+                        alpha: 0.3,
+                      ),
                       blurRadius: 4,
                     ),
                   ],
@@ -71,7 +73,9 @@ class LogTimelineTile extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: backgroundColor ?? AppColors.secondary.withValues(alpha: 0.3),
+                color:
+                    backgroundColor ??
+                    AppColors.secondary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: AppColors.tertiary, width: 1),
               ),
@@ -163,6 +167,7 @@ class LogTimelineTile extends StatelessWidget {
 /// Compact timeline tile widget untuk layout yang lebih padat
 class CompactLogTimelineTile extends StatelessWidget {
   final String title;
+  final String? subtitle;
   final String timestamp;
   final IconData icon;
   final Color? iconColor;
@@ -172,6 +177,7 @@ class CompactLogTimelineTile extends StatelessWidget {
   const CompactLogTimelineTile({
     Key? key,
     required this.title,
+    this.subtitle,
     required this.timestamp,
     required this.icon,
     this.iconColor,
@@ -202,7 +208,7 @@ class CompactLogTimelineTile extends StatelessWidget {
               if (!isLast)
                 Container(
                   width: 2,
-                  height: 60,
+                  height: subtitle != null ? 70 : 60,
                   color: AppColors.tertiary,
                   margin: const EdgeInsets.only(top: 4),
                 ),
@@ -226,6 +232,19 @@ class CompactLogTimelineTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.primary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                   const SizedBox(height: 2),
                   Text(
                     timestamp,

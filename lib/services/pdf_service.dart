@@ -359,16 +359,20 @@ class PdfService {
     List<Map<String, dynamic>> logs,
   ) {
     final data = [
-      ['No', 'User', 'Kategori', 'Aktivitas', 'Waktu'],
+      ['No', 'User', 'Role', 'Kategori', 'Aktivitas', 'Waktu'],
     ];
 
     for (int i = 0; i < logs.length; i++) {
       final log = logs[i];
+      final username = log['username'] ?? log['user'] ?? 'Sistem';
+      final role = log['role'] ?? '-';
+
       data.add([
         (i + 1).toString(),
-        log['user'] ?? '-',
-        log['kategori'] ?? '-',
-        log['aktivitas'] ?? '-',
+        username.toString(),
+        role.toString(),
+        log['kategori']?.toString() ?? '-',
+        log['aktivitas']?.toString() ?? '-',
         _formatShortDateTime(log['waktu']),
       ]);
     }

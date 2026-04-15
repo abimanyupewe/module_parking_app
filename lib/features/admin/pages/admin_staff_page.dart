@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../config/constants.dart';
+import '../../../services/database_helper.dart';
+import '../../../models/user_model.dart';
 
 /// Admin Staff Page - Manage petugas dengan tabel dan deactivate functionality
 class AdminStaffPage extends StatefulWidget {
@@ -10,8 +13,9 @@ class AdminStaffPage extends StatefulWidget {
 }
 
 class _AdminStaffPageState extends State<AdminStaffPage> {
-  late List<Map<String, dynamic>> _staff = [];
-  late List<Map<String, dynamic>> _filteredStaff = [];
+  final _databaseHelper = DatabaseHelper();
+  List<UserModel> _staff = [];
+  List<UserModel> _filteredStaff = [];
   bool _isLoading = false;
   String _searchQuery = '';
 
@@ -32,16 +36,18 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
     }
 
     try {
-      // Simulasi loading delay
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Generate mock data
-      final staff = _generateMockStaff();
+      final allUsers = await _databaseHelper.getAllUsers();
+      final petugasList = allUsers
+          .where(
+            (u) =>
+                u.role.toLowerCase() == AppConstants.rolePetugas.toLowerCase(),
+          )
+          .toList();
 
       if (mounted) {
         setState(() {
-          _staff = staff;
-          _filteredStaff = staff;
+          _staff = petugasList;
+          _filteredStaff = petugasList;
           _isLoading = false;
         });
       }
@@ -57,60 +63,13 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
     }
   }
 
-  /// Generate mock staff data
-  List<Map<String, dynamic>> _generateMockStaff() {
-    return [
-      {
-        'id': 1,
-        'nama': 'Budi Santoso',
-        'username': 'budi_s',
-        'email': 'budi@parking.com',
-        'joinDate': '2024-01-15',
-        'status': 'Aktif',
-      },
-      {
-        'id': 2,
-        'nama': 'Ani Wijaya',
-        'username': 'ani_w',
-        'email': 'ani@parking.com',
-        'joinDate': '2024-02-20',
-        'status': 'Aktif',
-      },
-      {
-        'id': 3,
-        'nama': 'Roni Pratama',
-        'username': 'roni_p',
-        'email': 'roni@parking.com',
-        'joinDate': '2024-01-10',
-        'status': 'Aktif',
-      },
-      {
-        'id': 4,
-        'nama': 'Siti Nurhaliza',
-        'username': 'siti_n',
-        'email': 'siti@parking.com',
-        'joinDate': '2024-03-05',
-        'status': 'Aktif',
-      },
-      {
-        'id': 5,
-        'nama': 'Ahmad Rizki',
-        'username': 'ahmad_r',
-        'email': 'ahmad@parking.com',
-        'joinDate': '2024-01-25',
-        'status': 'Nonaktif',
-      },
-    ];
-  }
-
   /// Apply search filter
   void _applySearch() {
     final query = _searchQuery.toLowerCase();
 
     _filteredStaff = _staff.where((staff) {
-      return staff['nama'].toLowerCase().contains(query) ||
-          staff['username'].toLowerCase().contains(query) ||
-          staff['email'].toLowerCase().contains(query);
+      return staff.namaLengkap.toLowerCase().contains(query) ||
+          staff.username.toLowerCase().contains(query);
     }).toList();
 
     setState(() {});
@@ -131,23 +90,35 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
             child: const Text('Batal'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
 
               // Find and update staff status
-              final staffIndex = _staff.indexWhere((s) => s['id'] == staffId);
-              if (staffIndex != -1) {
-                setState(() {
-                  _staff[staffIndex]['status'] = 'Nonaktif';
-                });
-                _applySearch();
+              final staff = _staff.firstWhere((s) => s.idUser == staffId);
 
+              final updatedUser = UserModel(
+                idUser: staff.idUser,
+                username: staff.username,
+                password: staff.password,
+                role: staff.role,
+                namaLengkap: staff.namaLengkap,
+                status: AppConstants.statusNonaktif,
+                securityQuestion: staff.securityQuestion,
+                securityAnswer: staff.securityAnswer,
+                isDefaultPassword: staff.isDefaultPassword,
+              );
+
+              await _databaseHelper.updateUser(updatedUser);
+
+              if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Petugas berhasil dinonaktifkan'),
                   ),
                 );
               }
+
+              await _loadStaff();
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             child: const Text('Nonaktifkan'),
@@ -193,7 +164,7 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
                   // Search Field
                   TextField(
                     decoration: InputDecoration(
-                      hintText: 'Cari nama, username, atau email...',
+                      hintText: 'Cari nama, username...',
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -245,18 +216,6 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
                               ),
                               DataColumn(
                                 label: Text(
-                                  'Email',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Join Date',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
                                   'Status',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
@@ -272,32 +231,21 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
                               _filteredStaff.length,
                               (index) {
                                 final staff = _filteredStaff[index];
-                                final isActive = staff['status'] == 'Aktif';
+                                final isActive =
+                                    staff.status == AppConstants.statusAktif;
 
                                 return DataRow(
                                   cells: [
                                     DataCell(Text('${index + 1}')),
                                     DataCell(
                                       Text(
-                                        staff['nama'],
+                                        staff.namaLengkap,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
-                                    DataCell(Text('@${staff['username']}')),
-                                    DataCell(
-                                      Text(
-                                        staff['email'],
-                                        style: const TextStyle(fontSize: 11),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Text(
-                                        staff['joinDate'],
-                                        style: const TextStyle(fontSize: 11),
-                                      ),
-                                    ),
+                                    DataCell(Text('@${staff.username}')),
                                     DataCell(
                                       Container(
                                         padding: const EdgeInsets.symmetric(
@@ -306,19 +254,19 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: _getStatusColor(
-                                            staff['status'],
+                                            staff.status,
                                           ).withValues(alpha: 0.1),
                                           borderRadius: BorderRadius.circular(
                                             6,
                                           ),
                                         ),
                                         child: Text(
-                                          staff['status'],
+                                          staff.status,
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w600,
                                             color: _getStatusColor(
-                                              staff['status'],
+                                              staff.status,
                                             ),
                                           ),
                                         ),
@@ -328,7 +276,7 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
                                       isActive
                                           ? ElevatedButton(
                                               onPressed: () {
-                                                _deactivateStaff(staff['id']);
+                                                _deactivateStaff(staff.idUser!);
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor:
@@ -344,27 +292,40 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
                                                 style: TextStyle(fontSize: 11),
                                               ),
                                             )
-                                          : Tooltip(
-                                              message: 'Petugas sudah nonaktif',
-                                              child: Container(
+                                          : ElevatedButton(
+                                              onPressed: () async {
+                                                final updatedUser = UserModel(
+                                                  idUser: staff.idUser,
+                                                  username: staff.username,
+                                                  password: staff.password,
+                                                  role: staff.role,
+                                                  namaLengkap:
+                                                      staff.namaLengkap,
+                                                  status:
+                                                      AppConstants.statusAktif,
+                                                  securityQuestion:
+                                                      staff.securityQuestion,
+                                                  securityAnswer:
+                                                      staff.securityAnswer,
+                                                  isDefaultPassword:
+                                                      staff.isDefaultPassword,
+                                                );
+                                                await _databaseHelper
+                                                    .updateUser(updatedUser);
+                                                await _loadStaff();
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    AppColors.success,
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                       horizontal: 12,
                                                       vertical: 8,
                                                     ),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.inactive
-                                                      .withValues(alpha: 0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: const Text(
-                                                  'Nonaktif',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: AppColors.inactive,
-                                                  ),
-                                                ),
+                                              ),
+                                              child: const Text(
+                                                'Aktifkan',
+                                                style: TextStyle(fontSize: 11),
                                               ),
                                             ),
                                     ),

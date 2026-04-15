@@ -157,9 +157,12 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
         final log = _logTransaksi[index];
         final aktivitas = log[AppConstants.colAktivitas] as String? ?? '';
         final waktu = log[AppConstants.colWaktu] as String? ?? '';
+        final username = log[AppConstants.colUsername] ?? 'Sistem';
+        final role = log[AppConstants.colRole] ?? '-';
 
         return CompactLogTimelineTile(
           title: aktivitas,
+          subtitle: 'Petugas: $username ($role)',
           timestamp: waktu,
           icon: Icons.login,
           iconColor: AppColors.success,
@@ -180,9 +183,14 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
         final log = _logOtorisasi[index];
         final aktivitas = log[AppConstants.colAktivitas] as String? ?? '';
         final waktu = log[AppConstants.colWaktu] as String? ?? '';
+        final username = log[AppConstants.colUsername] ?? 'Sistem';
+        final role = log[AppConstants.colRole] ?? '-';
+
+        final subtitle = 'Oleh: $username ($role)';
 
         return CompactLogTimelineTile(
           title: aktivitas,
+          subtitle: subtitle,
           timestamp: waktu,
           icon: Icons.security,
           iconColor: AppColors.warning,

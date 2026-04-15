@@ -236,21 +236,27 @@ class DatabaseHelper {
     List<dynamic> whereArgs = [];
 
     if (userId != null) {
-      where = '${AppConstants.colUserId} = ?';
+      where = 'l.${AppConstants.colUserId} = ?';
       whereArgs.add(userId);
     }
     if (kategori != null) {
       if (where.isNotEmpty) where += ' AND ';
-      where += '${AppConstants.colKategoriLog} = ?';
+      where += 'l.${AppConstants.colKategoriLog} = ?';
       whereArgs.add(kategori);
     }
 
-    return await db.query(
-      AppConstants.tableLogAktivitas,
-      where: where.isEmpty ? null : where,
-      whereArgs: whereArgs.isEmpty ? null : whereArgs,
-      orderBy: '${AppConstants.colWaktu} DESC',
-      limit: limit,
+    final whereClause = where.isEmpty ? '' : 'WHERE $where';
+
+    return await db.rawQuery(
+      '''
+      SELECT l.*, u.${AppConstants.colRole}, u.${AppConstants.colNamaLengkap}, u.${AppConstants.colUsername}
+      FROM ${AppConstants.tableLogAktivitas} l
+      LEFT JOIN ${AppConstants.tableUser} u ON l.${AppConstants.colUserId} = u.${AppConstants.colUserId}
+      $whereClause
+      ORDER BY l.${AppConstants.colWaktu} DESC
+      LIMIT ?
+    ''',
+      [...whereArgs, limit],
     );
   }
 

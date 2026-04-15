@@ -18,7 +18,7 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
   DateTime? _selectedDate;
 
   List<Map<String, dynamic>> _allHistory = [];
-  late List<Map<String, dynamic>> _filteredHistory;
+  List<Map<String, dynamic>> _filteredHistory = [];
   bool _isLoading = true;
 
   @override

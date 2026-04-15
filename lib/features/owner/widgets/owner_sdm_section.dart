@@ -19,7 +19,7 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
   String? _selectedRole;
 
   List<UserModel> _allSdm = [];
-  late List<UserModel> _filteredSdm;
+  List<UserModel> _filteredSdm = [];
   bool _isLoading = true;
 
   final List<String> _roles = ['Petugas', 'Admin'];
@@ -41,8 +41,12 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
       final filteredUsers = allUsers
           .where(
             (user) =>
-                user.role == AppConstants.rolePetugas ||
-                user.role == AppConstants.roleAdmin,
+                user.role.toLowerCase() ==
+                    AppConstants.rolePetugas.toLowerCase() ||
+                user.role.toLowerCase() ==
+                    AppConstants.roleAdmin.toLowerCase() ||
+                user.role == 'Petugas' ||
+                user.role == 'Admin',
           )
           .toList();
 
@@ -76,7 +80,7 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
 
       // Filter berdasarkan role
       if (_selectedRole != null) {
-        if (item.role != _selectedRole) {
+        if (item.role.toLowerCase() != _selectedRole!.toLowerCase()) {
           return false;
         }
       }
@@ -161,7 +165,7 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                 ),
                 _buildStatCard(
                   'Admin',
-                  '${_allSdm.where((s) => s.role == AppConstants.roleAdmin).length}',
+                  '${_allSdm.where((s) => s.role.toLowerCase() == AppConstants.roleAdmin.toLowerCase()).length}',
                   Icons.admin_panel_settings,
                 ),
               ],
@@ -173,7 +177,7 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
           Row(
             children: [
               Expanded(
-                flex: 2,
+                flex: 1,
                 child: CustomSearchBar(
                   hintText: 'Cari nama SDM...',
                   onChanged: _onSearchChanged,
@@ -191,13 +195,13 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                     isExpanded: true,
                     underline: const SizedBox(),
                     value: _selectedRole,
-                    hint: const Text('Semua Role'),
+                    hint: const Text('Semua'),
                     items: [
                       const DropdownMenuItem<String?>(
                         value: null,
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text('Semua Role'),
+                          child: Text('Semua'),
                         ),
                       ),
                       ..._roles.map((role) {
