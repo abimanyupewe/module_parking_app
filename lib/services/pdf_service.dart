@@ -2,6 +2,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
+import 'format_helper.dart';
 
 /// Service untuk generate dan print PDF reports
 class PdfService {
@@ -519,9 +520,11 @@ class PdfService {
       [
         'No',
         'Plat Nomor',
+        'Jenis',
         'Area',
         'Waktu Masuk',
         'Waktu Keluar',
+        'Durasi',
         'Biaya',
         'Status',
       ],
@@ -529,14 +532,29 @@ class PdfService {
 
     for (int i = 0; i < transactions.length; i++) {
       final t = transactions[i];
+      final waktuMasuk = t['waktu_masuk'] != null
+          ? DateTime.tryParse(t['waktu_masuk'])
+          : null;
+      final waktuKeluar = t['waktu_keluar'] != null
+          ? DateTime.tryParse(t['waktu_keluar'])
+          : null;
+
+      String durasiStr = '-';
+      if (waktuMasuk != null && waktuKeluar != null) {
+        final durasi = waktuKeluar.difference(waktuMasuk);
+        durasiStr = '${durasi.inHours}j ${durasi.inMinutes % 60}m';
+      }
+
       data.add([
         (i + 1).toString(),
-        t['platNomor'] ?? '-',
-        t['area'] ?? '-',
-        _formatShortDateTime(t['waktuMasuk']),
-        _formatShortDateTime(t['waktuKeluar']),
-        formatCurrency(t['totalBiaya'] ?? 0),
-        t['status'] ?? '-',
+        t['plat_nomor']?.toString() ?? '-',
+        t['nama_jenis']?.toString() ?? '-',
+        t['nama_area']?.toString() ?? '-',
+        waktuMasuk != null ? FormatHelper.formatFullDate(waktuMasuk) : '-',
+        waktuKeluar != null ? FormatHelper.formatFullDate(waktuKeluar) : '-',
+        durasiStr,
+        formatCurrency(t['total_biaya'] ?? 0),
+        t['transaksi_status']?.toString() ?? '-',
       ]);
     }
 
@@ -556,13 +574,16 @@ class PdfService {
       final username = log['username'] ?? log['user'] ?? 'Sistem';
       final role = log['role'] ?? '-';
 
+      final waktuStr = log['waktu'] != null ? log['waktu'].toString() : null;
+      final waktu = waktuStr != null ? DateTime.tryParse(waktuStr) : null;
+
       data.add([
         (i + 1).toString(),
         username.toString(),
         role.toString(),
         log['kategori']?.toString() ?? '-',
         log['aktivitas']?.toString() ?? '-',
-        _formatShortDateTime(log['waktu']),
+        waktu != null ? FormatHelper.formatFullDate(waktu) : '-',
       ]);
     }
 
@@ -588,37 +609,25 @@ class PdfService {
 
     for (int i = 0; i < vehicles.length; i++) {
       final v = vehicles[i];
-      final waktuMasuk = v['waktu_masuk'] as String?;
-      final waktuKeluar = v['waktu_keluar'] as String?;
+      final waktuMasuk = v['waktu_masuk'] != null
+          ? DateTime.tryParse(v['waktu_masuk'].toString())
+          : null;
+      final waktuKeluar = v['waktu_keluar'] != null
+          ? DateTime.tryParse(v['waktu_keluar'].toString())
+          : null;
 
       data.add([
         (i + 1).toString(),
-        v['plat_nomor'] ?? '-',
-        v['nama_jenis'] ?? '-',
-        v['merk'] ?? '-',
-        v['warna'] ?? '-',
-        v['nama_area'] ?? '-',
-        _formatShortDateTime(waktuMasuk),
-        _formatShortDateTime(waktuKeluar),
+        v['plat_nomor']?.toString() ?? '-',
+        v['nama_jenis']?.toString() ?? '-',
+        v['merk']?.toString() ?? '-',
+        v['warna']?.toString() ?? '-',
+        v['nama_area']?.toString() ?? '-',
+        waktuMasuk != null ? FormatHelper.formatFullDate(waktuMasuk) : '-',
+        waktuKeluar != null ? FormatHelper.formatFullDate(waktuKeluar) : '-',
       ]);
     }
 
     return data;
-  }
-
-  /// Helper: Format short datetime (HH:mm)
-  static String _formatShortDateTime(dynamic dateTime) {
-    if (dateTime == null) return '-';
-    if (dateTime is String) {
-      try {
-        dateTime = DateTime.parse(dateTime);
-      } catch (_) {
-        return dateTime;
-      }
-    }
-    if (dateTime is DateTime) {
-      return DateFormat('dd/MM/yyyy HH:mm', 'id_ID').format(dateTime);
-    }
-    return '-';
   }
 }

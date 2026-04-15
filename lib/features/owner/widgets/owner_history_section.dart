@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../services/database_helper.dart';
@@ -323,6 +324,16 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                 columns: const [
                   DataColumn(
                     label: Text(
+                      'Foto',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
                       'Plat Nomor',
                       style: TextStyle(
                         fontSize: 13,
@@ -390,9 +401,49 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                   final waktuMasuk = h['waktu_masuk'] as String? ?? '';
                   final waktuKeluar = h['waktu_keluar'] as String?;
                   final totalBiaya = h['total_biaya'] as int? ?? 0;
+                  final imagePath = h['image_path'] as String?;
+
+                  final fmtWaktuMasuk = waktuMasuk.isNotEmpty
+                      ? FormatHelper.formatFullDate(
+                          DateTime.tryParse(waktuMasuk) ?? DateTime.now(),
+                        )
+                      : '-';
+                  final fmtWaktuKeluar =
+                      (waktuKeluar != null && waktuKeluar.isNotEmpty)
+                      ? FormatHelper.formatFullDate(
+                          DateTime.tryParse(waktuKeluar) ?? DateTime.now(),
+                        )
+                      : '-';
 
                   return DataRow(
                     cells: [
+                      DataCell(
+                        imagePath != null && imagePath.isNotEmpty
+                            ? Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(4),
+                                  image: DecorationImage(
+                                    image: FileImage(File(imagePath)),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.tertiary,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  size: 20,
+                                  color: AppColors.inactive,
+                                ),
+                              ),
+                      ),
                       DataCell(
                         Text(
                           platNomor,
@@ -410,11 +461,14 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                         Text(namaArea, style: const TextStyle(fontSize: 12)),
                       ),
                       DataCell(
-                        Text(waktuMasuk, style: const TextStyle(fontSize: 12)),
+                        Text(
+                          fmtWaktuMasuk,
+                          style: const TextStyle(fontSize: 12),
+                        ),
                       ),
                       DataCell(
                         Text(
-                          waktuKeluar ?? '-',
+                          fmtWaktuKeluar,
                           style: const TextStyle(fontSize: 12),
                         ),
                       ),

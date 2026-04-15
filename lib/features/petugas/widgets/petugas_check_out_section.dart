@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../config/constants.dart';
@@ -5,6 +6,7 @@ import '../../../widgets/widgets.dart';
 import '../../../services/format_helper.dart';
 import '../../../services/pdf_service.dart';
 import '../../../services/database_helper.dart';
+import '../../../core/preferences/app_preferences.dart';
 
 /// Petugas Check-Out Section - Pencarian dan checkout kendaraan
 class PetugasCheckOutSection extends StatefulWidget {
@@ -227,14 +229,13 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
       }
 
       // Get petugas name dari database
-      final petugas = await _databaseHelper.getUserById(
-        1,
-      ); // TODO: Ambil dari session user
+      final currentUserId = AppPreferences.getUserId() ?? 1;
+      final petugas = await _databaseHelper.getUserById(currentUserId);
       final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
 
       // Record activity log with petugas name
       await _databaseHelper.recordActivity(
-        1, // userId (TODO: Ambil dari session user)
+        currentUserId, // userId dari session user
         AppConstants.logTransaksi,
         'Check-Out Kendaraan ${transaction[AppConstants.colPlatNomor]} oleh $petugasName dari Area ${area?.namaArea}',
       );
@@ -470,29 +471,60 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
                         children: [
                           // Plat nomor & jenis
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    tx[AppConstants.colPlatNomor],
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                      letterSpacing: 2,
+                              // Thumbnail Foto Kendaraan
+                              if (tx['image_path'] != null &&
+                                  tx['image_path'].toString().isNotEmpty)
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    image: DecorationImage(
+                                      image: FileImage(File(tx['image_path'])),
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    tx[AppConstants.colMerk],
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.inactive,
-                                    ),
+                                )
+                              else
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.tertiary,
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                ],
+                                  child: const Icon(
+                                    Icons.directions_car,
+                                    color: AppColors.inactive,
+                                    size: 24,
+                                  ),
+                                ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      tx[AppConstants.colPlatNomor],
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primary,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      tx[AppConstants.colMerk],
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.inactive,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                               StatusBadge(
                                 status: tx[AppConstants.colNamaJenis] ?? 'N/A',

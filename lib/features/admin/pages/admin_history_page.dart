@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import '../../../config/colors.dart';
+import '../../../services/format_helper.dart';
 import '../../../services/database_helper.dart';
 import '../../../services/csv_service.dart';
 import '../../../services/pdf_service.dart';
@@ -358,6 +360,12 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                               ),
                               DataColumn(
                                 label: Text(
+                                  'Foto',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
                                   'Plat Nomor',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
@@ -400,10 +408,53 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                                   item['waktu_masuk'] as String? ?? '';
                               final waktuKeluar =
                                   item['waktu_keluar'] as String?;
+                              final imagePath = item['image_path'] as String?;
 
                               return DataRow(
                                 cells: [
                                   DataCell(Text('${index + 1}')),
+                                  DataCell(
+                                    imagePath != null && imagePath.isNotEmpty
+                                        ? Container(
+                                            margin: const EdgeInsets.symmetric(
+                                              vertical: 4,
+                                            ),
+                                            width: 50,
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: Colors.grey.shade300,
+                                              ),
+                                              image: DecorationImage(
+                                                image: FileImage(
+                                                  File(imagePath),
+                                                ),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          )
+                                        : Container(
+                                            margin: const EdgeInsets.symmetric(
+                                              vertical: 4,
+                                            ),
+                                            width: 50,
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade200,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: Colors.grey.shade300,
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.directions_car,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                  ),
                                   DataCell(
                                     Container(
                                       padding: const EdgeInsets.symmetric(
@@ -427,19 +478,32 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                                   DataCell(Text(merk)),
                                   DataCell(
                                     Text(
-                                      waktuMasuk,
+                                      waktuMasuk.isNotEmpty
+                                          ? FormatHelper.formatFullDate(
+                                              DateTime.parse(waktuMasuk),
+                                            )
+                                          : '-',
                                       style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
                                   DataCell(
                                     Text(
-                                      waktuKeluar ?? '-',
+                                      waktuKeluar != null &&
+                                              waktuKeluar.isNotEmpty
+                                          ? FormatHelper.formatFullDate(
+                                              DateTime.parse(waktuKeluar),
+                                            )
+                                          : '-',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: waktuKeluar == null
+                                        color:
+                                            waktuKeluar == null ||
+                                                waktuKeluar.isEmpty
                                             ? Colors.orange
                                             : Colors.green,
-                                        fontWeight: waktuKeluar == null
+                                        fontWeight:
+                                            waktuKeluar == null ||
+                                                waktuKeluar.isEmpty
                                             ? FontWeight.w600
                                             : FontWeight.normal,
                                       ),

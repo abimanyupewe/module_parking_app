@@ -141,89 +141,10 @@ class DatabaseHelper {
     await _seedInitialData(db);
   }
 
-  /// Seed data awal untuk database
+  /// Seed data awal untuk database (kosong - tidak ada data dummy)
   Future<void> _seedInitialData(Database db) async {
-    try {
-      // Insert Jenis Kendaraan
-      await db.insert(AppConstants.tableJenisKendaraan, {
-        AppConstants.colNamaJenis: 'Motor Roda 2',
-        AppConstants.colTarifPerJam: 2000,
-      });
-
-      await db.insert(AppConstants.tableJenisKendaraan, {
-        AppConstants.colNamaJenis: 'Mobil Roda 4',
-        AppConstants.colTarifPerJam: 5000,
-      });
-
-      await db.insert(AppConstants.tableJenisKendaraan, {
-        AppConstants.colNamaJenis: 'Bus',
-        AppConstants.colTarifPerJam: 10000,
-      });
-
-      // Insert Area Parkir
-      await db.insert(AppConstants.tableAreaParkir, {
-        AppConstants.colNamaArea: 'Lantai 1 Motor',
-        AppConstants.colJenisId: 1,
-        AppConstants.colKapasitas: 100,
-        AppConstants.colTerisi: 45,
-      });
-
-      await db.insert(AppConstants.tableAreaParkir, {
-        AppConstants.colNamaArea: 'Lantai 2 Motor',
-        AppConstants.colJenisId: 1,
-        AppConstants.colKapasitas: 80,
-        AppConstants.colTerisi: 60,
-      });
-
-      await db.insert(AppConstants.tableAreaParkir, {
-        AppConstants.colNamaArea: 'Blok A Mobil',
-        AppConstants.colJenisId: 2,
-        AppConstants.colKapasitas: 50,
-        AppConstants.colTerisi: 42,
-      });
-
-      await db.insert(AppConstants.tableAreaParkir, {
-        AppConstants.colNamaArea: 'Blok B Mobil',
-        AppConstants.colJenisId: 2,
-        AppConstants.colKapasitas: 50,
-        AppConstants.colTerisi: 38,
-      });
-
-      await db.insert(AppConstants.tableAreaParkir, {
-        AppConstants.colNamaArea: 'Basement Bus',
-        AppConstants.colJenisId: 3,
-        AppConstants.colKapasitas: 20,
-        AppConstants.colTerisi: 8,
-      });
-
-      // Insert test users
-      await db.insert(AppConstants.tableUser, {
-        AppConstants.colNamaLengkap: 'Admin Test',
-        AppConstants.colUsername: 'admin',
-        AppConstants.colPassword: 'admin123',
-        AppConstants.colRole: AppConstants.roleAdmin,
-        AppConstants.colStatus: AppConstants.statusAktif,
-      });
-
-      await db.insert(AppConstants.tableUser, {
-        AppConstants.colNamaLengkap: 'Petugas Test',
-        AppConstants.colUsername: 'petugas',
-        AppConstants.colPassword: 'petugas123',
-        AppConstants.colRole: AppConstants.rolePetugas,
-        AppConstants.colStatus: AppConstants.statusAktif,
-      });
-
-      await db.insert(AppConstants.tableUser, {
-        AppConstants.colNamaLengkap: 'Owner Test',
-        AppConstants.colUsername: 'owner',
-        AppConstants.colPassword: 'owner123',
-        AppConstants.colRole: AppConstants.roleOwner,
-        AppConstants.colStatus: AppConstants.statusAktif,
-      });
-    } catch (e) {
-      // Ignore errors ketika seed data sudah ada
-      // (misalnya UNIQUE constraint violation)
-    }
+    // Database dibuat kosong tanpa data dummy
+    // User harus membuat/register data sendiri melalui aplikasi
   }
 
   /// Handle database upgrade
@@ -237,6 +158,27 @@ class DatabaseHelper {
         );
       } catch (e) {
         // Jika sudah ada (ignore error)
+      }
+    }
+
+    if (oldVersion < 3) {
+      try {
+        await db.execute(
+          'DROP TABLE IF EXISTS ${AppConstants.tableLogAktivitas}',
+        );
+        await db.execute('DROP TABLE IF EXISTS ${AppConstants.tableTransaksi}');
+        await db.execute('DROP TABLE IF EXISTS ${AppConstants.tableKendaraan}');
+        await db.execute(
+          'DROP TABLE IF EXISTS ${AppConstants.tableAreaParkir}',
+        );
+        await db.execute(
+          'DROP TABLE IF EXISTS ${AppConstants.tableJenisKendaraan}',
+        );
+        await db.execute('DROP TABLE IF EXISTS ${AppConstants.tableUser}');
+
+        await _createTables(db, newVersion);
+      } catch (e) {
+        // Ignore errors
       }
     }
   }

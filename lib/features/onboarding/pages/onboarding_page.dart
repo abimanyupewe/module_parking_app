@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
-import '../../../config/image_assets.dart';
 import '../controllers/onboarding_controller.dart';
 import '../widgets/onboarding_buttons.dart';
 import '../widgets/onboarding_dots_indicator.dart';
@@ -48,44 +47,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 onPageChanged: (page) {
                   _controller.setCurrentPage(page);
                 },
-                children: [
-                  // Slide 1: Welcome dengan ilustrasi besar (hand with card)
+                children: const [
+                  // Slide 1: Welcome
                   OnboardingSlideWidget(
                     title: 'Solusi Parkir Cerdas',
-                    description:
-                        'Kelola parkir, atur petugas, dan pantau transaksi semua dalam satu aplikasi canggih.',
-                    image: Container(
-                      width: 340,
-                      height: 380,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Image.asset(
-                        ImageAssets.handWithCard,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(Icons.broken_image, size: 50),
-                          );
-                        },
-                      ),
-                    ),
-                    showLargeIllustration: true,
+                    description: 'Kelola parkir, atur petugas, dan pantau transaksi semua dalam satu aplikasi canggih.',
                   ),
 
-                  // Slide 2: Parking Management tanpa ilustrasi
+                  // Slide 2: Parking Management
                   OnboardingSlideWidget(
-                    title: 'Kelola Parkir dengan Mudah',
-                    description:
-                        'Check-in dan check-out kendaraan dengan cepat. Pantau kapasitas parkir secara real-time dan kelola area parkir dengan efisien.',
+                    title: 'Kelola Parkir Mudah',
+                    description: 'Check-in dan check-out kendaraan dengan cepat. Pantau kapasitas parkir secara real-time dan efisien.',
                   ),
 
-                  // Slide 3: Reports tanpa ilustrasi
+                  // Slide 3: Reports
                   OnboardingSlideWidget(
-                    title: 'Laporan Lengkap',
-                    description:
-                        'Lihat analitik pendapatan, riwayat transaksi, dan audit trail dalam satu dashboard yang komprehensif.',
+                    title: 'Laporan Komprehensif',
+                    description: 'Lihat analitik pendapatan, riwayat transaksi, dan audit trail dalam satu dashboard terpusat.',
                   ),
                 ],
               ),
@@ -102,10 +80,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
             // Navigation Buttons
             OnboardingButtonsWidget(
-              currentPage: _controller.currentPage,
-              onNext: () => _controller.onNext(),
-              onSkip: () => _handleSkip(),
-              onStart: () => _handleStart(),
+               currentPage: _controller.currentPage,
+               onNext: () => _controller.onNext(),
+               onSkip: () => _handleSkip(),
+               onStart: () => _handleStart(),
             ),
           ],
         ),

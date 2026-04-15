@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../config/colors.dart';
@@ -157,6 +158,7 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
                   headingRowHeight: 48,
                   showCheckboxColumn: false,
                   columns: [
+                    const DataColumn(label: Text('Foto')),
                     const DataColumn(label: Text('Plat Nomor')),
                     const DataColumn(label: Text('Jenis')),
                     const DataColumn(label: Text('Masuk')),
@@ -188,8 +190,37 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
                           : '${durasi.inMinutes}m';
                     }
 
+                    final String? imagePath = history['image_path'] as String?;
+
                     return DataRow(
                       cells: [
+                        DataCell(
+                          imagePath != null && imagePath.isNotEmpty
+                              ? Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(4),
+                                    image: DecorationImage(
+                                      image: FileImage(File(imagePath)),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.tertiary,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Icon(
+                                    Icons.broken_image,
+                                    size: 20,
+                                    color: AppColors.inactive,
+                                  ),
+                                ),
+                        ),
                         DataCell(
                           Text(
                             history[AppConstants.colPlatNomor],
@@ -396,7 +427,7 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
     if (dateTimeStr == null || dateTimeStr.isEmpty) return 'N/A';
     try {
       final dateTime = DateTime.parse(dateTimeStr);
-      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      return FormatHelper.formatFullDate(dateTime);
     } catch (e) {
       return 'N/A';
     }

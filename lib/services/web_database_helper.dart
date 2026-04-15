@@ -26,39 +26,8 @@ class WebDatabaseHelper {
 
   /// Initialize default data jika belum ada
   void _initializeDefaultData() {
-    // Check apakah sudah ada users
-    final usersJson = _prefs.getString('users');
-    if (usersJson == null) {
-      // Tambah default users
-      final defaultUsers = [
-        {
-          'idUser': 1,
-          'namaLengkap': 'Owner Parkir',
-          'username': 'owner',
-          'password': '\$2b\$12\$abc123', // hash dari 'password' (dummy)
-          'role': 'owner',
-          'status': 'aktif',
-        },
-        {
-          'idUser': 2,
-          'namaLengkap': 'Admin Parkir',
-          'username': 'admin',
-          'password': '\$2b\$12\$def456', // hash dari 'password' (dummy)
-          'role': 'admin',
-          'status': 'aktif',
-        },
-        {
-          'idUser': 3,
-          'namaLengkap': 'Petugas Parkir',
-          'username': 'petugas',
-          'password': '\$2b\$12\$ghi789', // hash dari 'password' (dummy)
-          'role': 'petugas',
-          'status': 'aktif',
-        },
-      ];
-      _prefs.setString('users', jsonEncode(defaultUsers));
-      _prefs.setInt('nextUserId', 4);
-    }
+    // Database dibuat kosong tanpa data dummy
+    // User harus membuat/register data sendiri melalui aplikasi
   }
 
   // ==================== USER OPERATIONS ====================
