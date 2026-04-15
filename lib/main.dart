@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: AppConstants.appName,
       theme: AppTheme.lightTheme,
-      home: OnboardingPage(),
+      home: SplashPage(),
       routes: {
         '/splash': (context) => const SplashPage(),
         '/onboarding': (context) => const OnboardingPage(),
