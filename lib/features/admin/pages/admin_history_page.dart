@@ -16,11 +16,10 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
   final _databaseHelper = DatabaseHelper();
   late List<Map<String, dynamic>> _allData = [];
   late List<Map<String, dynamic>> _filteredData = [];
+  late List<String> _categories = ['Semua'];
   bool _isLoading = false;
   String _searchQuery = '';
   String _selectedCategory = 'Semua';
-
-  final List<String> _categories = ['Semua', 'Motor', 'Mobil', 'Bus'];
 
   @override
   void initState() {
@@ -42,9 +41,14 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
       // Get all transactions from database
       final transactions = await _databaseHelper.getAllTransactions();
 
+      // Get all jenis kendaraan for categories
+      final jenisData = await _databaseHelper.getAllJenisKendaraan();
+      final jenisNames = jenisData.map((j) => j.namaJenis).toList();
+
       if (mounted) {
         setState(() {
           _allData = transactions;
+          _categories = ['Semua', ...jenisNames];
           _filteredData = _filterAndSearchData(_allData);
           _isLoading = false;
         });
