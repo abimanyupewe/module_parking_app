@@ -315,6 +315,7 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
         1,
       ); // TODO: from session
       final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
+      final tarifPerJam = transaction[AppConstants.colTarifPerJam] ?? 0;
 
       await PdfService.generateParkingReceipt(
         platNomor: transaction[AppConstants.colPlatNomor],
@@ -324,7 +325,9 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
         area: transaction[AppConstants.colNamaArea],
         waktuMasuk: waktuMasuk,
         waktuKeluar: waktuKeluar,
+        tarifPerJam: tarifPerJam,
         totalBiaya: totalBiaya,
+
         petugas: petugasName,
       );
 

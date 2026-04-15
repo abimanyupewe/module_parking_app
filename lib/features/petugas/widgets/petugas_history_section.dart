@@ -283,62 +283,50 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
               ),
             const SizedBox(height: 24),
 
-            // Pagination Controls
+            // Pagination Controls - Simple
             if (displayData.isNotEmpty)
               Center(
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: currentPage > 0
-                              ? () {
-                                  setState(() {
-                                    if (isCompleted) {
-                                      _currentPageCompleted--;
-                                    } else {
-                                      _currentPageOngoing--;
-                                    }
-                                  });
+                    TextButton(
+                      onPressed: currentPage > 0
+                          ? () {
+                              setState(() {
+                                if (isCompleted) {
+                                  _currentPageCompleted--;
+                                } else {
+                                  _currentPageOngoing--;
                                 }
-                              : null,
-                          icon: const Icon(Icons.arrow_back),
-                          label: const Text('Sebelumnya'),
-                        ),
-                        const SizedBox(width: 16),
-                        Text(
-                          'Halaman ${currentPage + 1} dari ${totalPages > 0 ? totalPages : 1}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.inactive,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        ElevatedButton.icon(
-                          onPressed: currentPage < totalPages - 1
-                              ? () {
-                                  setState(() {
-                                    if (isCompleted) {
-                                      _currentPageCompleted++;
-                                    } else {
-                                      _currentPageOngoing++;
-                                    }
-                                  });
-                                }
-                              : null,
-                          icon: const Icon(Icons.arrow_forward),
-                          label: const Text('Berikutnya'),
-                        ),
-                      ],
+                              });
+                            }
+                          : null,
+                      child: const Text('← Sebelumnya'),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Menampilkan ${startIndex + 1}-${endIndex} dari ${displayData.length} data',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.inactive,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        '${currentPage + 1}/${totalPages > 0 ? totalPages : 1}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.inactive,
+                        ),
                       ),
+                    ),
+                    TextButton(
+                      onPressed: currentPage < totalPages - 1
+                          ? () {
+                              setState(() {
+                                if (isCompleted) {
+                                  _currentPageCompleted++;
+                                } else {
+                                  _currentPageOngoing++;
+                                }
+                              });
+                            }
+                          : null,
+                      child: const Text('Berikutnya →'),
                     ),
                   ],
                 ),
