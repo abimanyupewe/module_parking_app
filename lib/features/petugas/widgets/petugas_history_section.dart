@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../config/colors.dart';
 import '../../../config/constants.dart';
-import '../../../widgets/widgets.dart';
 import '../../../services/format_helper.dart';
 import '../../../services/database_helper.dart';
 
@@ -22,14 +21,6 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
   List<Map<String, dynamic>> _ongoingData = [];
   bool _isLoading = true;
   String? _errorMessage;
-
-  int _selectedFilterIndex = 0;
-  final List<String> _filters = [
-    'Semua',
-    'Hari Ini',
-    'Minggu Ini',
-    'Bulan Ini',
-  ];
 
   // Pagination
   int _itemsPerPage = 10;
@@ -94,49 +85,8 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
     super.dispose();
   }
 
-  /// Calculate filtered history data based on selected filter
-  List<Map<String, dynamic>> _getFilteredData(List<Map<String, dynamic>> data) {
-    if (_selectedFilterIndex == 0) {
-      // Semua
-      return data;
-    }
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final weekAgo = today.subtract(
-      Duration(days: today.weekday - 1),
-    ); // Monday of this week
-    final monthAgo = DateTime(now.year, now.month, 1); // First day of month
-
-    return data.where((item) {
-      final waktuMasuk = DateTime.tryParse(
-        item[AppConstants.colWaktuMasuk] ?? '',
-      );
-      if (waktuMasuk == null) return false;
-
-      final itemDate = DateTime(
-        waktuMasuk.year,
-        waktuMasuk.month,
-        waktuMasuk.day,
-      );
-
-      switch (_selectedFilterIndex) {
-        case 1: // Hari Ini
-          return itemDate.isAtSameMomentAs(today);
-        case 2: // Minggu Ini
-          return waktuMasuk.isAfter(weekAgo) &&
-              waktuMasuk.isBefore(today.add(Duration(days: 1)));
-        case 3: // Bulan Ini
-          return waktuMasuk.isAfter(monthAgo) &&
-              waktuMasuk.isBefore(now.add(Duration(days: 1)));
-        default:
-          return true;
-      }
-    }).toList();
-  }
-
   Widget _buildTabContent(List<Map<String, dynamic>> data, bool isCompleted) {
-    final displayData = _getFilteredData(data);
+    final displayData = data;
     final totalBiaya = displayData.fold<int>(
       0,
       (sum, item) => sum + (item[AppConstants.colTotalBiaya] as int? ?? 0),
@@ -380,43 +330,9 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
         // Header
         Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Riwayat Transaksi',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-
-              // Filter chips
-              SizedBox(
-                height: 40,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _filters.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        right: index != _filters.length - 1 ? 8 : 0,
-                      ),
-                      child: CustomFilterChip(
-                        label: _filters[index],
-                        isSelected: _selectedFilterIndex == index,
-                        onTap: () {
-                          setState(() {
-                            _selectedFilterIndex = index;
-                            // Reset pagination when filter changes
-                            _currentPageCompleted = 0;
-                            _currentPageOngoing = 0;
-                          });
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+          child: Text(
+            'Riwayat Transaksi',
+            style: Theme.of(context).textTheme.headlineSmall,
           ),
         ),
 
