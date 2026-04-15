@@ -3,9 +3,6 @@ import '../../../config/colors.dart';
 import '../../../services/database_helper.dart';
 import '../../../services/csv_service.dart';
 import '../../../services/pdf_service.dart';
-import '../../../models/kendaraan_model.dart';
-import '../../../models/transaksi_model.dart';
-import 'package:intl/intl.dart';
 
 /// Admin History Page - Menampilkan riwayat kendaraan dengan filter dan search
 class AdminHistoryPage extends StatefulWidget {
@@ -73,12 +70,11 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
     return data.where((item) {
       final platNomor = item['plat_nomor'] as String? ?? '';
       final merk = item['merk'] as String? ?? '';
-      final jenisId = item['id_jenis'] as int? ?? 0;
+      final namaJenis = item['nama_jenis'] as String? ?? '';
 
       // Filter by category
       final categoryMatch =
-          _selectedCategory == 'Semua' ||
-          _getJenisKendaraan(jenisId) == _selectedCategory;
+          _selectedCategory == 'Semua' || namaJenis == _selectedCategory;
 
       // Filter by search query
       final searchMatch =
@@ -88,20 +84,6 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
 
       return categoryMatch && searchMatch;
     }).toList();
-  }
-
-  /// Get jenis kendaraan string
-  String _getJenisKendaraan(int idJenis) {
-    switch (idJenis) {
-      case 1:
-        return 'Motor';
-      case 2:
-        return 'Mobil';
-      case 3:
-        return 'Bus';
-      default:
-        return 'Lainnya';
-    }
   }
 
   /// Filter dan search vehicles
@@ -407,7 +389,8 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                               final item = _filteredData[index];
                               final platNomor =
                                   item['plat_nomor'] as String? ?? '';
-                              final jenisId = item['id_jenis'] as int? ?? 0;
+                              final namaJenis =
+                                  item['nama_jenis'] as String? ?? '';
                               final merk = item['merk'] as String? ?? '';
                               final waktuMasuk =
                                   item['waktu_masuk'] as String? ?? '';
@@ -436,7 +419,7 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                                       ),
                                     ),
                                   ),
-                                  DataCell(Text(_getJenisKendaraan(jenisId))),
+                                  DataCell(Text(namaJenis)),
                                   DataCell(Text(merk)),
                                   DataCell(
                                     Text(
