@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../config/constants.dart';
+import '../../../services/format_helper.dart';
 import '../../../services/database_helper.dart';
 import '../../../widgets/widgets.dart';
 
@@ -127,7 +128,12 @@ class _AdminAuditSectionState extends State<AdminAuditSection> {
                       log[AppConstants.colKategoriLog] as String? ?? '';
                   final aktivitas =
                       log[AppConstants.colAktivitas] as String? ?? '';
-                  final waktu = log[AppConstants.colWaktu] as String? ?? '';
+                  final rawWaktu = log[AppConstants.colWaktu] as String? ?? '';
+                  final waktu = rawWaktu.isNotEmpty
+                      ? FormatHelper.formatFullDate(
+                          DateTime.tryParse(rawWaktu) ?? DateTime.now(),
+                        )
+                      : '';
                   final username = log[AppConstants.colUsername] ?? 'Sistem';
                   final role = log[AppConstants.colRole] ?? '-';
 
@@ -188,6 +194,13 @@ class _AdminAuditSectionState extends State<AdminAuditSection> {
   }
 
   void _showLogDetail(Map<String, dynamic> log) {
+    final rawWaktu = log[AppConstants.colWaktu] as String? ?? '';
+    final waktu = rawWaktu.isNotEmpty
+        ? FormatHelper.formatFullDate(
+            DateTime.tryParse(rawWaktu) ?? DateTime.now(),
+          )
+        : '';
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -211,10 +224,7 @@ class _AdminAuditSectionState extends State<AdminAuditSection> {
               log[AppConstants.colKategoriLog] as String? ?? '',
             ),
             const SizedBox(height: 12),
-            _buildLogDetailRow(
-              'Waktu',
-              log[AppConstants.colWaktu] as String? ?? '',
-            ),
+            _buildLogDetailRow('Waktu', waktu),
             const SizedBox(height: 16),
             // Note
             Container(

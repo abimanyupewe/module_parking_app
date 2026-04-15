@@ -87,6 +87,7 @@ class _LoginPageState extends State<LoginPage> {
     final result = await _authController.login(
       _usernameController.text,
       _passwordController.text,
+      _selectedRole,
     );
 
     if (!mounted) return;
@@ -97,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success']) {
       final user = result['user'];
-      final role = user.role;
+      final role = user.role.toString().toLowerCase();
 
       if (mounted) {
         switch (role) {
@@ -272,7 +273,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           style: const TextStyle(fontSize: 14),
                         ),
-                        
+
                         const SizedBox(height: 28),
 
                         // Error Message
@@ -346,37 +347,39 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 28),
 
-                  // Footer - Sign Up Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Belum punya akun? ",
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pushNamed('/register');
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 0),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Daftar',
+                  // Footer - Sign Up Link (Hanya untuk Owner)
+                  if (_selectedRole.toLowerCase() ==
+                      AppConstants.roleOwner.toLowerCase()) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Belum punya akun? ",
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pushNamed('/register');
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Daftar',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Debug Button
                   TextButton.icon(

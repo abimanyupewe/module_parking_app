@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
-import '../../../config/constants.dart';
 import '../../../services/database_helper.dart';
+import '../../../services/error_handler.dart';
 import '../../../models/jenis_kendaraan_model.dart';
 import '../../../models/area_parkir_model.dart';
 import '../../../widgets/widgets.dart';
@@ -371,6 +371,24 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
                   return;
                 }
 
+                // Check apakah kategori sudah ada (hanya saat insert, bukan edit)
+                if (data == null) {
+                  final isDuplicate = await _databaseHelper
+                      .isDuplicateJenisKendaraan(namaController.text);
+                  if (isDuplicate) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Kategori \'${namaController.text}\' sudah ada dalam database. Silakan gunakan nama yang berbeda.',
+                          ),
+                        ),
+                      );
+                    }
+                    return;
+                  }
+                }
+
                 final tarif = int.tryParse(tarifController.text) ?? 0;
                 final kategori = JenisKendaraanModel(
                   idJenis: data?.idJenis,
@@ -380,6 +398,8 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
 
                 if (data == null) {
                   await _databaseHelper.insertJenisKendaraan(kategori);
+                } else {
+                  await _databaseHelper.updateJenisKendaraan(kategori);
                 }
 
                 if (mounted) {
@@ -395,9 +415,10 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
                 }
               } catch (e) {
                 if (mounted) {
+                  final errorMsg = ErrorHandler.transformError(e);
                   ScaffoldMessenger.of(
                     context,
-                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ).showSnackBar(SnackBar(content: Text(errorMsg)));
                 }
               }
             },
@@ -501,6 +522,24 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
                     return;
                   }
 
+                  // Check apakah area sudah ada (hanya saat insert, bukan edit)
+                  if (data == null) {
+                    final isDuplicate = await _databaseHelper
+                        .isDuplicateAreaParkir(namaController.text);
+                    if (isDuplicate) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Area \'${namaController.text}\' sudah ada dalam database. Silakan gunakan nama yang berbeda.',
+                            ),
+                          ),
+                        );
+                      }
+                      return;
+                    }
+                  }
+
                   final kapasitas = int.tryParse(kapasitasController.text) ?? 0;
                   final area = AreaParkirModel(
                     idArea: data?.idArea,
@@ -512,6 +551,8 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
 
                   if (data == null) {
                     await _databaseHelper.insertAreaParkir(area);
+                  } else {
+                    await _databaseHelper.updateAreaParkir(area);
                   }
 
                   if (mounted) {
@@ -527,9 +568,10 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
                   }
                 } catch (e) {
                   if (mounted) {
+                    final errorMsg = ErrorHandler.transformError(e);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    ).showSnackBar(SnackBar(content: Text(errorMsg)));
                   }
                 }
               },
@@ -553,12 +595,24 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
             child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _loadData();
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Kategori dihapus')));
+            onPressed: () async {
+              try {
+                Navigator.pop(context);
+                await _databaseHelper.deleteJenisKendaraan(idKategori);
+                await _loadData();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Kategori dihapus')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  final errorMsg = ErrorHandler.transformError(e);
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(errorMsg)));
+                }
+              }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.danger),
             child: const Text('Hapus'),
@@ -580,12 +634,24 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
             child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _loadData();
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Area dihapus')));
+            onPressed: () async {
+              try {
+                Navigator.pop(context);
+                await _databaseHelper.deleteAreaParkir(idArea);
+                await _loadData();
+                if (mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Area dihapus')));
+                }
+              } catch (e) {
+                if (mounted) {
+                  final errorMsg = ErrorHandler.transformError(e);
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(errorMsg)));
+                }
+              }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.danger),
             child: const Text('Hapus'),

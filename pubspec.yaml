@@ -63,6 +63,9 @@ dependencies:
   # Image Picker
   image_picker: ^1.0.0
 
+  # CSV Export
+  csv: ^6.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../config/constants.dart';
 import '../../../services/database_helper.dart';
+import '../../../services/error_handler.dart';
 import '../../../models/user_model.dart';
 import '../../../widgets/widgets.dart';
+import '../../../services/password_service.dart';
 
 /// Owner SDM Section - Manajemen SDM (penambahan, monitoring, edit, hapus)
 class OwnerSdmSection extends StatefulWidget {
@@ -365,6 +367,34 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                             SizedBox(
                               height: 32,
                               child: OutlinedButton(
+                                onPressed: () => _toggleSdmStatus(sdm),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor:
+                                      sdm.status == AppConstants.statusAktif
+                                      ? AppColors.warning
+                                      : AppColors.success,
+                                  side: BorderSide(
+                                    color:
+                                        sdm.status == AppConstants.statusAktif
+                                        ? AppColors.warning
+                                        : AppColors.success,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                ),
+                                child: Text(
+                                  sdm.status == AppConstants.statusAktif
+                                      ? 'Nonaktifkan'
+                                      : 'Aktifkan',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              height: 32,
+                              child: OutlinedButton(
                                 onPressed: () => _removeSDM(sdm),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.danger,
@@ -535,11 +565,32 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                 }
 
                 try {
+                  // Check apakah username sudah terdaftar
+                  final isDuplicate = await _databaseHelper.isDuplicateUsername(
+                    usernameController.text,
+                  );
+                  if (isDuplicate) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Username \'${usernameController.text}\' sudah terdaftar. Silakan gunakan username lain.',
+                          ),
+                        ),
+                      );
+                    }
+                    return;
+                  }
+
+                  final hashedPassword = PasswordService.hashPassword(
+                    passwordController.text,
+                  );
+
                   final user = UserModel(
                     namaLengkap: namaController.text,
                     username: usernameController.text,
-                    password: passwordController.text,
-                    role: selectedRole!,
+                    password: hashedPassword,
+                    role: selectedRole!.toLowerCase(),
                     status: AppConstants.statusAktif,
                   );
 
@@ -558,9 +609,10 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                   }
                 } catch (e) {
                   if (mounted) {
+                    final errorMsg = ErrorHandler.transformError(e);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    ).showSnackBar(SnackBar(content: Text(errorMsg)));
                   }
                 }
               },
@@ -673,13 +725,18 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                 }
 
                 try {
+                  final String computedPassword =
+                      passwordController.text.isNotEmpty
+                      ? PasswordService.hashPassword(passwordController.text)
+                      : staff.password;
+
                   final updatedUser = staff.copyWith(
                     namaLengkap: namaController.text,
                     username: usernameController.text,
-                    password: passwordController.text.isNotEmpty
-                        ? passwordController.text
-                        : staff.password,
-                    role: selectedRole ?? staff.role,
+                    password: computedPassword,
+                    role: selectedRole != null
+                        ? selectedRole!.toLowerCase()
+                        : staff.role,
                   );
 
                   await _databaseHelper.updateUser(updatedUser);
@@ -697,9 +754,10 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                   }
                 } catch (e) {
                   if (mounted) {
+                    final errorMsg = ErrorHandler.transformError(e);
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    ).showSnackBar(SnackBar(content: Text(errorMsg)));
                   }
                 }
               },
@@ -707,6 +765,63 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _toggleSdmStatus(UserModel sdm) {
+    final isAktif = sdm.status == AppConstants.statusAktif;
+    final action = isAktif ? 'dinonaktifkan' : 'diaktifkan';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isAktif ? 'Nonaktifkan SDM' : 'Aktifkan SDM'),
+        content: Text(
+          isAktif
+              ? 'Apakah Anda yakin ingin menonaktifkan ${sdm.namaLengkap}? SDM tidak akan bisa login ke sistem.'
+              : 'Apakah Anda yakin ingin mengaktifkan kembali ${sdm.namaLengkap}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                final updatedUser = sdm.copyWith(
+                  status: isAktif
+                      ? AppConstants.statusNonaktif
+                      : AppConstants.statusAktif,
+                );
+
+                await _databaseHelper.updateUser(updatedUser);
+
+                if (mounted) {
+                  await _loadSDM();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('SDM ${sdm.namaLengkap} berhasil $action'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  final errorMsg = ErrorHandler.transformError(e);
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(errorMsg)));
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isAktif ? AppColors.danger : AppColors.success,
+            ),
+            child: Text(isAktif ? 'Nonaktifkan' : 'Aktifkan'),
+          ),
+        ],
       ),
     );
   }
@@ -738,9 +853,10 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                 }
               } catch (e) {
                 if (mounted) {
+                  final errorMsg = ErrorHandler.transformError(e);
                   ScaffoldMessenger.of(
                     context,
-                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ).showSnackBar(SnackBar(content: Text(errorMsg)));
                 }
               }
             },

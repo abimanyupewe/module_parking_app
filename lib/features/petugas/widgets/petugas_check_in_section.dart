@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../config/constants.dart';
 import '../../../models/area_parkir_model.dart';
 import '../../../models/jenis_kendaraan_model.dart';
+import '../../../models/kendaraan_model.dart';
 import '../../../services/database_helper.dart';
+import '../../../services/error_handler.dart';
+import '../../../services/pdf_service.dart';
 import '../../../widgets/widgets.dart';
 import 'image_picker_widget.dart';
 
@@ -27,6 +31,10 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
   bool _isLoading = false;
   bool _isLoadingData = true;
   String? _errorMessage;
+
+  // For storing data for print receipt
+  String? _lastJenisKendaraanName;
+  String? _lastAreaName;
 
   List<JenisKendaraanModel> _jenisKendaraanList = [];
   List<AreaParkirModel> _areaList = [];
@@ -101,11 +109,11 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
   void _handleCheckIn() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validasi gambar harus dipilih
-    if (_selectedImagePath == null) {
+    // Validasi area harus dipilih
+    if (_selectedAreaId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Foto kendaraan harus dipilih'),
+          content: Text('Area parkir harus dipilih'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -117,8 +125,73 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
     });
 
     try {
-      // Simulasi API call / Database operation
-      await Future.delayed(const Duration(seconds: 1));
+      final idJenis = int.tryParse(_selectedJenisKendaraanId ?? '0') ?? 0;
+      final idArea = int.tryParse(_selectedAreaId ?? '0') ?? 0;
+
+      // Validasi: Cek apakah kendaraan dengan plat nomor yang sama sedang parkir
+      final activeTransactionId = await _databaseHelper
+          .getActiveTransactionByPlate(_platnomorController.text);
+      if (activeTransactionId != null) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Kendaraan dengan plat nomor \'${_platnomorController.text}\' sedang parkir. Silakan lakukan check-out terlebih dahulu sebelum check-in kembali.',
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // 1. Insert Kendaraan ke database
+      final kendaraan = KendaraanModel(
+        platNomor: _platnomorController.text,
+        idJenis: idJenis,
+        merk: _merkController.text,
+        warna: _warnaController.text,
+      );
+
+      final idKendaraan = await _databaseHelper.insertKendaraan(kendaraan);
+
+      // 2. Insert Transaksi ke database
+      final transaksi = {
+        AppConstants.colKendaraanId: idKendaraan,
+        AppConstants.colAreaId: idArea,
+        AppConstants.colWaktuMasuk: DateTime.now().toIso8601String(),
+        AppConstants.colTransaksiStatus: AppConstants.statusParkir,
+        AppConstants.colUserId: 1, // TODO: Ambil dari session user
+        'image_path': _selectedImagePath,
+      };
+
+      await _databaseHelper.insertTransaksi(transaksi);
+
+      // 3. Update kapasitas area parkir
+      final area = await _databaseHelper.getAreaParkirById(idArea);
+      if (area != null) {
+        final updatedArea = area.copyWith(terisi: area.terisi + 1);
+        await _databaseHelper.updateAreaParkir(updatedArea);
+      }
+
+      // 4. Record activity log
+      await _databaseHelper.recordActivity(
+        1, // userId (TODO: Ambil dari session user)
+        AppConstants.logTransaksi,
+        'Check-In Kendaraan ${_platnomorController.text} di Area ${area?.namaArea}',
+      );
+
+      // Store data for print receipt
+      _lastJenisKendaraanName = _jenisKendaraanList
+          .firstWhere(
+            (j) => j.idJenis == idJenis,
+            orElse: () => JenisKendaraanModel(namaJenis: 'N/A', tarifPerJam: 0),
+          )
+          .namaJenis;
+      _lastAreaName = area?.namaArea ?? 'N/A';
 
       if (mounted) {
         // Reset form
@@ -149,12 +222,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  // TODO: Implement print receipt
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Cetak struk: Feature Coming Soon'),
-                    ),
-                  );
+                  _printCheckInReceipt();
                 },
                 child: const Text('Cetak Struk'),
               ),
@@ -167,9 +235,42 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         setState(() {
           _isLoading = false;
         });
+        final errorMsg = ErrorHandler.transformError(e);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(SnackBar(content: Text(errorMsg)));
+      }
+    }
+  }
+
+  /// Print check-in receipt
+  Future<void> _printCheckInReceipt() async {
+    try {
+      final platNomor = _platnomorController.text;
+      final merk = _merkController.text;
+      final warna = _warnaController.text;
+      final jenis = _lastJenisKendaraanName ?? 'N/A';
+      final area = _lastAreaName ?? 'N/A';
+
+      // For check-in receipt, we show the entry time
+      // Total biaya is not calculated yet since vehicle is just checking in
+      await PdfService.generateCheckInReceipt(
+        platNomor: platNomor,
+        jenis: jenis,
+        merk: merk,
+        warna: warna,
+        area: area,
+        waktuMasuk: DateTime.now(),
+        petugas: 'Petugas Parkir',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error cetak struk: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
       }
     }
   }
@@ -407,16 +508,16 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
             ),
             const SizedBox(height: 24),
 
-            // Image Picker Widget - Foto Kendaraan
+            // Image Picker Widget - Foto Kendaraan (Opsional)
             ImagePickerWidget(
-              label: 'Foto Kendaraan',
+              label: 'Foto Kendaraan (Opsional)',
               initialImagePath: _selectedImagePath,
               onImageSelected: (imagePath) {
                 setState(() {
                   _selectedImagePath = imagePath;
                 });
               },
-              isRequired: true,
+              isRequired: false,
             ),
             const SizedBox(height: 32),
 

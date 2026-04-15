@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../services/database_helper.dart';
+import '../../../services/csv_service.dart';
+import '../../../services/pdf_service.dart';
 import 'package:intl/intl.dart';
 
 /// Owner History Page - Menampilkan riwayat parkir dengan filter dan search
@@ -190,25 +192,130 @@ class _OwnerHistoryPageState extends State<OwnerHistoryPage> {
     _applyFiltersAndSearch();
   }
 
-  /// Export to PDF
+  /// Export to PDF or CSV
   void _exportToPDF() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Mengekspor ${_filteredData.length} data kendaraan ke PDF...',
-              ),
-            ),
-          ],
-        ),
-        duration: const Duration(seconds: 2),
-        backgroundColor: Colors.green[600],
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pilih Format Export'),
+        content: const Text('Pilih format file untuk mengekspor data:'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _exportToCSV();
+            },
+            icon: const Icon(Icons.download),
+            label: const Text('CSV'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _exportToPDFFormat();
+            },
+            icon: const Icon(Icons.picture_as_pdf),
+            label: const Text('PDF'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          ),
+        ],
       ),
     );
+  }
+
+  /// Export filtered data to CSV
+  Future<void> _exportToCSV() async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.downloading, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Mengunduh ${_filteredData.length} data parkir sebagai CSV...',
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.blue[600],
+        ),
+      );
+
+      await CsvService.generateTransactionCSV(transactions: _filteredData);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Berhasil mengunduh ${_filteredData.length} data parkir',
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.green[600],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    }
+  }
+
+  /// Export filtered data to PDF
+  Future<void> _exportToPDFFormat() async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.print, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Mengekspor ${_filteredData.length} data parkir ke PDF...',
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.orange[600],
+        ),
+      );
+
+      await PdfService.generateTransactionReport(
+        transactions: _filteredData,
+        reportTitle: 'LAPORAN TRANSAKSI PARKIR',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    }
   }
 
   @override

@@ -26,7 +26,7 @@ class SplashController {
 
       if (isLoggedIn) {
         // Get user role
-        String? userRole = AppPreferences.getUserRole();
+        String? userRole = AppPreferences.getUserRole()?.toLowerCase();
 
         // Navigate ke dashboard sesuai role
         if (context.mounted) {

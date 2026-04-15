@@ -136,7 +136,87 @@ class PdfService {
     );
   }
 
-  /// Generate Laporan Transaksi
+  /// Generate Struk Check-In (Entry Ticket)
+  static Future<void> generateCheckInReceipt({
+    required String platNomor,
+    required String jenis,
+    required String merk,
+    required String warna,
+    required String area,
+    required DateTime waktuMasuk,
+    required String petugas,
+  }) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            mainAxisAlignment: pw.MainAxisAlignment.start,
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              // Header
+              pw.Text(
+                'STRUK MASUK PARKIR',
+                style: pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Divider(),
+              pw.SizedBox(height: 10),
+
+              // Informasi Kendaraan
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  _buildRow('Plat Nomor', platNomor),
+                  _buildRow('Jenis', jenis),
+                  _buildRow('Merk', merk),
+                  _buildRow('Warna', warna),
+                  _buildRow('Area Parkir', area),
+                ],
+              ),
+              pw.SizedBox(height: 15),
+              pw.Divider(),
+              pw.SizedBox(height: 15),
+
+              // Informasi Waktu
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  _buildRow('Waktu Masuk', formatDateTime(waktuMasuk)),
+                  _buildRow('Tanggal Cetak', formatDateTime(DateTime.now())),
+                ],
+              ),
+              pw.SizedBox(height: 15),
+              pw.Divider(),
+              pw.SizedBox(height: 15),
+
+              // Petugas
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [_buildRow('Petugas', petugas)],
+              ),
+              pw.SizedBox(height: 20),
+              pw.Text(
+                'Mohon simpan struk ini sebagai bukti parkir',
+                style: pw.TextStyle(fontSize: 10),
+                textAlign: pw.TextAlign.center,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+  }
+
   static Future<void> generateTransactionReport({
     required List<Map<String, dynamic>> transactions,
     required String reportTitle,

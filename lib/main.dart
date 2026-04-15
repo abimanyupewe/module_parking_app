@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'dart:io';
 import 'config/themes.dart';
 import 'config/constants.dart';
@@ -17,6 +18,7 @@ import 'features/petugas/pages/petugas_dashboard_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
 
   // Inisialisasi sqflite untuk platform desktop (Windows, Linux, macOS)
   // Web tidak support SQLite, akan menggunakan SharedPreferences via WebDatabaseHelper

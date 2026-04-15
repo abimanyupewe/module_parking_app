@@ -136,6 +136,94 @@ class DatabaseHelper {
         FOREIGN KEY (${AppConstants.colUserId}) REFERENCES ${AppConstants.tableUser}(${AppConstants.colUserId})
       )
     ''');
+
+    // Seed initial data
+    await _seedInitialData(db);
+  }
+
+  /// Seed data awal untuk database
+  Future<void> _seedInitialData(Database db) async {
+    try {
+      // Insert Jenis Kendaraan
+      await db.insert(AppConstants.tableJenisKendaraan, {
+        AppConstants.colNamaJenis: 'Motor Roda 2',
+        AppConstants.colTarifPerJam: 2000,
+      });
+
+      await db.insert(AppConstants.tableJenisKendaraan, {
+        AppConstants.colNamaJenis: 'Mobil Roda 4',
+        AppConstants.colTarifPerJam: 5000,
+      });
+
+      await db.insert(AppConstants.tableJenisKendaraan, {
+        AppConstants.colNamaJenis: 'Bus',
+        AppConstants.colTarifPerJam: 10000,
+      });
+
+      // Insert Area Parkir
+      await db.insert(AppConstants.tableAreaParkir, {
+        AppConstants.colNamaArea: 'Lantai 1 Motor',
+        AppConstants.colJenisId: 1,
+        AppConstants.colKapasitas: 100,
+        AppConstants.colTerisi: 45,
+      });
+
+      await db.insert(AppConstants.tableAreaParkir, {
+        AppConstants.colNamaArea: 'Lantai 2 Motor',
+        AppConstants.colJenisId: 1,
+        AppConstants.colKapasitas: 80,
+        AppConstants.colTerisi: 60,
+      });
+
+      await db.insert(AppConstants.tableAreaParkir, {
+        AppConstants.colNamaArea: 'Blok A Mobil',
+        AppConstants.colJenisId: 2,
+        AppConstants.colKapasitas: 50,
+        AppConstants.colTerisi: 42,
+      });
+
+      await db.insert(AppConstants.tableAreaParkir, {
+        AppConstants.colNamaArea: 'Blok B Mobil',
+        AppConstants.colJenisId: 2,
+        AppConstants.colKapasitas: 50,
+        AppConstants.colTerisi: 38,
+      });
+
+      await db.insert(AppConstants.tableAreaParkir, {
+        AppConstants.colNamaArea: 'Basement Bus',
+        AppConstants.colJenisId: 3,
+        AppConstants.colKapasitas: 20,
+        AppConstants.colTerisi: 8,
+      });
+
+      // Insert test users
+      await db.insert(AppConstants.tableUser, {
+        AppConstants.colNamaLengkap: 'Admin Test',
+        AppConstants.colUsername: 'admin',
+        AppConstants.colPassword: 'admin123',
+        AppConstants.colRole: AppConstants.roleAdmin,
+        AppConstants.colStatus: AppConstants.statusAktif,
+      });
+
+      await db.insert(AppConstants.tableUser, {
+        AppConstants.colNamaLengkap: 'Petugas Test',
+        AppConstants.colUsername: 'petugas',
+        AppConstants.colPassword: 'petugas123',
+        AppConstants.colRole: AppConstants.rolePetugas,
+        AppConstants.colStatus: AppConstants.statusAktif,
+      });
+
+      await db.insert(AppConstants.tableUser, {
+        AppConstants.colNamaLengkap: 'Owner Test',
+        AppConstants.colUsername: 'owner',
+        AppConstants.colPassword: 'owner123',
+        AppConstants.colRole: AppConstants.roleOwner,
+        AppConstants.colStatus: AppConstants.statusAktif,
+      });
+    } catch (e) {
+      // Ignore errors ketika seed data sudah ada
+      // (misalnya UNIQUE constraint violation)
+    }
   }
 
   /// Handle database upgrade
@@ -205,6 +293,17 @@ class DatabaseHelper {
       where: '${AppConstants.colUserId} = ?',
       whereArgs: [id],
     );
+  }
+
+  /// Check apakah username sudah terdaftar
+  Future<bool> isDuplicateUsername(String username) async {
+    final db = await database;
+    final result = await db.query(
+      AppConstants.tableUser,
+      where: '${AppConstants.colUsername} = ?',
+      whereArgs: [username],
+    );
+    return result.isNotEmpty;
   }
 
   // ==================== ACTIVITY LOG OPERATIONS ====================
@@ -377,6 +476,36 @@ class DatabaseHelper {
     return null;
   }
 
+  Future<int> updateJenisKendaraan(JenisKendaraanModel jenis) async {
+    final db = await database;
+    return await db.update(
+      AppConstants.tableJenisKendaraan,
+      jenis.toMap(),
+      where: '${AppConstants.colJenisId} = ?',
+      whereArgs: [jenis.idJenis],
+    );
+  }
+
+  Future<int> deleteJenisKendaraan(int idJenis) async {
+    final db = await database;
+    return await db.delete(
+      AppConstants.tableJenisKendaraan,
+      where: '${AppConstants.colJenisId} = ?',
+      whereArgs: [idJenis],
+    );
+  }
+
+  /// Check apakah nama jenis kendaraan sudah ada
+  Future<bool> isDuplicateJenisKendaraan(String namaJenis) async {
+    final db = await database;
+    final result = await db.query(
+      AppConstants.tableJenisKendaraan,
+      where: '${AppConstants.colNamaJenis} = ?',
+      whereArgs: [namaJenis],
+    );
+    return result.isNotEmpty;
+  }
+
   // ==================== AREA PARKIR OPERATIONS ====================
 
   Future<int> insertAreaParkir(AreaParkirModel area) async {
@@ -421,6 +550,26 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> deleteAreaParkir(int idArea) async {
+    final db = await database;
+    return await db.delete(
+      AppConstants.tableAreaParkir,
+      where: '${AppConstants.colAreaId} = ?',
+      whereArgs: [idArea],
+    );
+  }
+
+  /// Check apakah nama area parkir sudah ada
+  Future<bool> isDuplicateAreaParkir(String namaArea) async {
+    final db = await database;
+    final result = await db.query(
+      AppConstants.tableAreaParkir,
+      where: '${AppConstants.colNamaArea} = ?',
+      whereArgs: [namaArea],
+    );
+    return result.isNotEmpty;
+  }
+
   // ==================== KENDARAAN OPERATIONS ====================
 
   Future<int> insertKendaraan(KendaraanModel kendaraan) async {
@@ -453,6 +602,28 @@ class DatabaseHelper {
       whereArgs: [id],
     );
     if (maps.isNotEmpty) return KendaraanModel.fromMap(maps.first);
+    return null;
+  }
+
+  /// Check apakah kendaraan dengan plat nomor sedang aktif/parkir
+  /// Return transaksi id jika ada transaksi aktif, null jika tidak ada
+  Future<int?> getActiveTransactionByPlate(String platNomor) async {
+    final db = await database;
+    final result = await db.rawQuery(
+      '''
+      SELECT t.${AppConstants.colTransaksiId}
+      FROM ${AppConstants.tableTransaksi} t
+      JOIN ${AppConstants.tableKendaraan} k ON t.${AppConstants.colKendaraanId} = k.${AppConstants.colKendaraanId}
+      WHERE k.${AppConstants.colPlatNomor} = ? 
+      AND t.${AppConstants.colTransaksiStatus} = ?
+      LIMIT 1
+    ''',
+      [platNomor, AppConstants.statusParkir],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first[AppConstants.colTransaksiId] as int?;
+    }
     return null;
   }
 

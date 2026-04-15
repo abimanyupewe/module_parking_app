@@ -57,19 +57,26 @@ class StatusBadge extends StatelessWidget {
   Map<String, Color> _getStatusColors() {
     final lowerStatus = status.toLowerCase();
 
-    if (lowerStatus.contains('aktif') || lowerStatus.contains('selesai')) {
+    if (lowerStatus == 'aktif' || lowerStatus.contains('selesai')) {
       return {
         'bg': AppColors.success.withValues(alpha: 0.1),
         'text': AppColors.success,
       };
-    } else if (lowerStatus.contains('nonaktif') ||
-        lowerStatus.contains('parkir')) {
+    } else if (lowerStatus.contains('nonaktif')) {
+      return {
+        'bg': AppColors.danger.withValues(alpha: 0.1),
+        'text': AppColors.danger,
+      };
+    } else if (lowerStatus.contains('parkir')) {
       return {
         'bg': AppColors.warning.withValues(alpha: 0.1),
         'text': AppColors.warning,
       };
     } else if (lowerStatus.contains('pending')) {
-      return {'bg': AppColors.info.withValues(alpha: 0.1), 'text': AppColors.info};
+      return {
+        'bg': AppColors.info.withValues(alpha: 0.1),
+        'text': AppColors.info,
+      };
     } else {
       return {
         'bg': AppColors.inactive.withValues(alpha: 0.1),
@@ -143,7 +150,7 @@ class StatusIndicator extends StatelessWidget {
   Map<String, Color> _getStatusColors() {
     final lowerStatus = status.toLowerCase();
 
-    if (lowerStatus.contains('aktif') || lowerStatus.contains('online')) {
+    if (lowerStatus == 'aktif' || lowerStatus.contains('online')) {
       return {
         'bg': AppColors.success.withValues(alpha: 0.1),
         'text': AppColors.success,
@@ -160,7 +167,10 @@ class StatusIndicator extends StatelessWidget {
         'text': AppColors.warning,
       };
     } else {
-      return {'bg': AppColors.info.withValues(alpha: 0.1), 'text': AppColors.info};
+      return {
+        'bg': AppColors.info.withValues(alpha: 0.1),
+        'text': AppColors.info,
+      };
     }
   }
 }

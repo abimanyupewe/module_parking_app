@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../services/database_helper.dart';
 import '../../../models/area_parkir_model.dart';
+import '../../../models/jenis_kendaraan_model.dart';
 
 /// Petugas Area Info Section - Menampilkan informasi sisa slot parkir
 class PetugasAreaInfoSection extends StatefulWidget {
@@ -15,11 +16,12 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
   final _databaseHelper = DatabaseHelper();
 
   List<AreaParkirModel> _areaData = [];
+  Map<int, String> _jenisKendaraanMap = {};
   bool _isLoading = true;
   String? _errorMessage;
 
   String _selectedCategory = 'Semua';
-  final List<String> _categories = ['Semua', 'Motor', 'Mobil', 'Bus'];
+  List<String> _categories = ['Semua'];
 
   @override
   void initState() {
@@ -35,10 +37,18 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
       });
 
       final areaData = await _databaseHelper.getAllAreaParkir();
+      final jenisData = await _databaseHelper.getAllJenisKendaraan();
 
       if (mounted) {
         setState(() {
           _areaData = areaData;
+          _jenisKendaraanMap = {
+            for (var j in jenisData) j.idJenis!: j.namaJenis,
+          };
+          _categories = [
+            'Semua',
+            ...jenisData.map((j) => j.namaJenis).toList(),
+          ];
           _isLoading = false;
         });
       }
@@ -58,7 +68,7 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
       return _areaData;
     }
     return _areaData
-        .where((area) => area.namaArea.contains(_selectedCategory))
+        .where((area) => _jenisKendaraanMap[area.idJenis] == _selectedCategory)
         .toList();
   }
 
@@ -106,144 +116,156 @@ class _PetugasAreaInfoSectionState extends State<PetugasAreaInfoSection> {
           const SizedBox(height: 12),
 
           // Area cards
-          SizedBox(
-            height: 110,
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: AppColors.danger,
+                        size: 32,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(
                           color: AppColors.danger,
-                          size: 32,
+                          fontSize: 12,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            color: AppColors.danger,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  )
-                : _filteredAreas.isEmpty
-                ? Center(
-                    child: Text(
-                      'Tidak ada area untuk kategori ini',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  )
-                : ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _filteredAreas.length,
-                    itemBuilder: (context, index) {
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+              : _filteredAreas.isEmpty
+              ? Center(
+                  child: Text(
+                    'Tidak ada area untuk kategori ini',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                )
+              : SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(_filteredAreas.length, (index) {
                       final area = _filteredAreas[index];
-                      final available = area.sisaKapasitas;
-                      final capacity = area.kapasitas;
-                      final percentage = (available / capacity * 100)
-                          .toStringAsFixed(0);
-                      final isWarning = available < capacity * 0.2;
+                      final occupied = area.terisi;
+                      final total = area.kapasitas;
+                      final vehicleType =
+                          _jenisKendaraanMap[area.idJenis] ?? 'Unknown';
 
-                      return Container(
-                        width: 160,
-                        margin: EdgeInsets.only(
+                      // Determine color based on percentage
+                      late Color color;
+                      final percentage = total > 0
+                          ? (occupied / total) * 100
+                          : 0.0;
+                      if (percentage >= 80) {
+                        color = AppColors.danger;
+                      } else if (percentage >= 50) {
+                        color = AppColors.warning;
+                      } else {
+                        color = AppColors.success;
+                      }
+
+                      return Padding(
+                        padding: EdgeInsets.only(
                           right: index != _filteredAreas.length - 1 ? 12 : 0,
                         ),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isWarning
-                              ? AppColors.danger.withValues(alpha: 0.1)
-                              : AppColors.secondary.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isWarning
-                                ? AppColors.danger.withValues(alpha: 0.3)
-                                : AppColors.tertiary,
+                        child: Container(
+                          width: 250,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.border),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          area.namaArea,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          vehicleType,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w400,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    '$occupied / $total',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.inactive,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: total > 0 ? occupied / total : 0,
+                                  minHeight: 6,
+                                  backgroundColor: color.withValues(alpha: 0.2),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    color,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${percentage.toStringAsFixed(1)}% terisi',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.inactive,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Sisa: ${area.sisaKapasitas}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: color,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Name with category
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  area.namaArea,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  _getCategoryFromId(area.idJenis),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.grey[500],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            // Progress bar
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(3),
-                              child: LinearProgressIndicator(
-                                value: available / capacity,
-                                minHeight: 5,
-                                backgroundColor: AppColors.tertiary,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  isWarning
-                                      ? AppColors.danger
-                                      : AppColors.success,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            // Count - compact format
-                            Text(
-                              '$available/$capacity ($percentage%)',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.inactive,
-                              ),
-                            ),
-                          ],
-                        ),
                       );
-                    },
+                    }),
                   ),
-          ),
+                ),
         ],
       ),
     );
-  }
-
-  /// Get category name from jenis_id
-  /// Note: This is a simple mapping. In production, you might want to fetch
-  /// jenis_kendaraan data from database if needed
-  String _getCategoryFromId(int idJenis) {
-    // Map based on typical IDs - adjust based on your actual data
-    switch (idJenis) {
-      case 1:
-        return 'Motor';
-      case 2:
-        return 'Mobil';
-      case 3:
-        return 'Bus';
-      default:
-        return 'Lainnya';
-    }
   }
 }

@@ -130,10 +130,10 @@ class _AdminStaffPageState extends State<AdminStaffPage> {
 
   /// Get status badge color
   Color _getStatusColor(String status) {
-    if (status == 'Aktif') {
-      return AppColors.success;
-    } else {
+    if (status.toLowerCase() == AppConstants.statusNonaktif.toLowerCase()) {
       return AppColors.danger;
+    } else {
+      return AppColors.success;
     }
   }
 

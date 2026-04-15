@@ -9,7 +9,11 @@ class AuthController {
   final DatabaseManager _dbManager = DatabaseManager();
 
   /// Login user dengan username dan password
-  Future<Map<String, dynamic>> login(String username, String password) async {
+  Future<Map<String, dynamic>> login(
+    String username,
+    String password,
+    String role,
+  ) async {
     try {
       // Validasi input
       if (username.isEmpty || password.isEmpty) {
@@ -26,14 +30,54 @@ class AuthController {
         return {'success': false, 'message': 'Username tidak ditemukan'};
       }
 
+      // Validasi role
+      String expectedRole = role.toLowerCase();
+      if (expectedRole == 'staff') {
+        expectedRole = 'petugas';
+      }
+
+      if (user.role.toLowerCase() != expectedRole) {
+        return {
+          'success': false,
+          'message':
+              'Role tidak sesuai. Pastikan Anda memilih role yang tepat.',
+        };
+      }
+
       // Validasi password
-      final isPasswordValid = PasswordService.verifyPassword(
-        password,
-        user.password,
-      );
+      bool isPasswordValid = false;
+      try {
+        isPasswordValid = PasswordService.verifyPassword(
+          password,
+          user.password,
+        );
+      } catch (e) {
+        // Jika format password di DB membaca plain-text / belum di-hash
+        if (password == user.password) {
+          isPasswordValid = true;
+          // Otomatis meng-upgrade kata sandi di database ke format hash bcrypt
+          try {
+            final hashedPassword = PasswordService.hashPassword(password);
+            final updatedUser = UserModel(
+              idUser: user.idUser,
+              namaLengkap: user.namaLengkap,
+              username: user.username,
+              password: hashedPassword,
+              role: user.role,
+              status: user.status,
+              securityQuestion: user.securityQuestion,
+              securityAnswer: user.securityAnswer,
+              isDefaultPassword: user.isDefaultPassword,
+            );
+            await _dbManager.updateUser(updatedUser);
+          } catch (_) {
+            // Abaikan jika update gagal, user tetap bisa login sesi ini
+          }
+        }
+      }
 
       if (!isPasswordValid) {
-        return {'success': false, 'message': 'Password salah'};
+        return {'success': false, 'message': 'Kata sandi salah'};
       }
 
       // Validasi status akun
@@ -54,10 +98,15 @@ class AuthController {
       );
 
       // Record activity
+      // Capitalize first letter of role for display
+      final roleDisplay = user.role.isEmpty
+          ? ''
+          : '${user.role[0].toUpperCase()}${user.role.substring(1).toLowerCase()}';
+
       await _dbManager.recordActivity(
         user.idUser!,
         'Otorisasi',
-        'Login ke sistem',
+        'Login ke sistem $roleDisplay dashboard',
       );
 
       return {'success': true, 'message': 'Login berhasil', 'user': user};

@@ -4,6 +4,8 @@ import '../../../config/constants.dart';
 import '../../../services/database_helper.dart';
 import '../../../widgets/widgets.dart';
 import '../../../services/pdf_service.dart';
+import '../../../services/csv_service.dart';
+import '../../../services/format_helper.dart';
 
 /// Owner Audit Section - Log Transaksi & Otorisasi
 class OwnerAuditSection extends StatefulWidget {
@@ -73,6 +75,96 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
   }
 
   Future<void> _printActivityLog() async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pilih Format Export'),
+        content: const Text(
+          'Pilih format file untuk mengekspor log aktivitas:',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _exportActivityLogToCSV();
+            },
+            icon: const Icon(Icons.download),
+            label: const Text('CSV'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _exportActivityLogToPDF();
+            },
+            icon: const Icon(Icons.picture_as_pdf),
+            label: const Text('PDF'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _exportActivityLogToCSV() async {
+    try {
+      final logs = _tabController.index == 0 ? _logTransaksi : _logOtorisasi;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.downloading, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Mengunduh ${logs.length} log aktivitas sebagai CSV...',
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.blue[600],
+        ),
+      );
+
+      await CsvService.generateActivityLogCSV(logs: logs);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Berhasil mengunduh ${logs.length} log aktivitas',
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.green[600],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportActivityLogToPDF() async {
     try {
       final logs = _tabController.index == 0 ? _logTransaksi : _logOtorisasi;
       await PdfService.generateActivityLogReport(logs: logs);
@@ -156,7 +248,12 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
       itemBuilder: (context, index) {
         final log = _logTransaksi[index];
         final aktivitas = log[AppConstants.colAktivitas] as String? ?? '';
-        final waktu = log[AppConstants.colWaktu] as String? ?? '';
+        final rawWaktu = log[AppConstants.colWaktu] as String? ?? '';
+        final waktu = rawWaktu.isNotEmpty
+            ? FormatHelper.formatFullDate(
+                DateTime.tryParse(rawWaktu) ?? DateTime.now(),
+              )
+            : '';
         final username = log[AppConstants.colUsername] ?? 'Sistem';
         final role = log[AppConstants.colRole] ?? '-';
 
@@ -182,7 +279,12 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
       itemBuilder: (context, index) {
         final log = _logOtorisasi[index];
         final aktivitas = log[AppConstants.colAktivitas] as String? ?? '';
-        final waktu = log[AppConstants.colWaktu] as String? ?? '';
+        final rawWaktu = log[AppConstants.colWaktu] as String? ?? '';
+        final waktu = rawWaktu.isNotEmpty
+            ? FormatHelper.formatFullDate(
+                DateTime.tryParse(rawWaktu) ?? DateTime.now(),
+              )
+            : '';
         final username = log[AppConstants.colUsername] ?? 'Sistem';
         final role = log[AppConstants.colRole] ?? '-';
 
