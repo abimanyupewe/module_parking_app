@@ -196,6 +196,12 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         'Check-In Kendaraan ${_platnomorController.text} di Area ${area?.namaArea}',
       );
 
+      // Get petugas name dari database
+      final petugas = await _databaseHelper.getUserById(
+        1,
+      ); // TODO: Ambil dari session user
+      final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
+
       // Store data for print receipt BEFORE clearing form
       final platNomorToStore = _platnomorController.text;
       final merkToStore = _merkController.text;
@@ -244,6 +250,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                     warna: warnaToStore,
                     totalBiaya: totalBiaya,
                     tarifPerJam: tarifPerJam,
+                    petugasName: petugasName,
                   );
                 },
                 child: const Text('Cetak Struk'),
@@ -272,6 +279,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
     required String warna,
     required int totalBiaya,
     required int tarifPerJam,
+    required String petugasName,
   }) async {
     try {
       final jenis = _lastJenisKendaraanName ?? 'N/A';
@@ -286,7 +294,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         waktuMasuk: DateTime.now(),
         totalBiaya: totalBiaya,
         tarifPerJam: tarifPerJam,
-        petugas: 'Petugas Parkir',
+        petugas: petugasName,
       );
     } catch (e) {
       if (mounted) {
