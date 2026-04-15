@@ -7,6 +7,7 @@ import '../../../models/kendaraan_model.dart';
 import '../../../services/database_helper.dart';
 import '../../../services/error_handler.dart';
 import '../../../services/pdf_service.dart';
+import '../../../services/format_helper.dart';
 import '../../../widgets/widgets.dart';
 import 'image_picker_widget.dart';
 
@@ -158,6 +159,16 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
 
       final idKendaraan = await _databaseHelper.insertKendaraan(kendaraan);
 
+      // Get tarif per jam dari jenis kendaraan
+      final selectedJenis = _jenisKendaraanList.firstWhere(
+        (j) => j.idJenis == idJenis,
+        orElse: () => JenisKendaraanModel(namaJenis: 'N/A', tarifPerJam: 0),
+      );
+      final tarifPerJam = selectedJenis.tarifPerJam;
+
+      // Calculate total biaya: minimum 1 jam
+      final totalBiaya = tarifPerJam * 1;
+
       // 2. Insert Transaksi ke database
       final transaksi = {
         AppConstants.colKendaraanId: idKendaraan,
@@ -165,6 +176,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         AppConstants.colWaktuMasuk: DateTime.now().toIso8601String(),
         AppConstants.colTransaksiStatus: AppConstants.statusParkir,
         AppConstants.colUserId: 1, // TODO: Ambil dari session user
+        AppConstants.colTotalBiaya: totalBiaya,
         'image_path': _selectedImagePath,
       };
 
@@ -230,6 +242,8 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
                     platNomor: platNomorToStore,
                     merk: merkToStore,
                     warna: warnaToStore,
+                    totalBiaya: totalBiaya,
+                    tarifPerJam: tarifPerJam,
                   );
                 },
                 child: const Text('Cetak Struk'),
@@ -256,13 +270,13 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
     required String platNomor,
     required String merk,
     required String warna,
+    required int totalBiaya,
+    required int tarifPerJam,
   }) async {
     try {
       final jenis = _lastJenisKendaraanName ?? 'N/A';
       final area = _lastAreaName ?? 'N/A';
 
-      // For check-in receipt, we show the entry time
-      // Total biaya is not calculated yet since vehicle is just checking in
       await PdfService.generateCheckInReceipt(
         platNomor: platNomor,
         jenis: jenis,
@@ -270,6 +284,8 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         warna: warna,
         area: area,
         waktuMasuk: DateTime.now(),
+        totalBiaya: totalBiaya,
+        tarifPerJam: tarifPerJam,
         petugas: 'Petugas Parkir',
       );
     } catch (e) {

@@ -144,6 +144,8 @@ class PdfService {
     required String warna,
     required String area,
     required DateTime waktuMasuk,
+    required int totalBiaya,
+    required int tarifPerJam,
     required String petugas,
   }) async {
     final pdf = pw.Document();
@@ -183,12 +185,48 @@ class PdfService {
               pw.Divider(),
               pw.SizedBox(height: 15),
 
+              // Informasi Tarif & Durasi
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  _buildRow('Tarif Per Jam', formatCurrency(tarifPerJam)),
+                  _buildRow('Durasi Parkir', '1 jam'),
+                ],
+              ),
+              pw.SizedBox(height: 15),
+              pw.Divider(),
+              pw.SizedBox(height: 15),
+
               // Informasi Waktu
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   _buildRow('Waktu Masuk', formatDateTime(waktuMasuk)),
                   _buildRow('Tanggal Cetak', formatDateTime(DateTime.now())),
+                ],
+              ),
+              pw.SizedBox(height: 15),
+              pw.Divider(),
+              pw.SizedBox(height: 15),
+
+              // Total Biaya
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    'TOTAL BIAYA:',
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.Text(
+                    formatCurrency(totalBiaya),
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               pw.SizedBox(height: 15),
