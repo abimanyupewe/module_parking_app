@@ -299,7 +299,6 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         waktuMasuk: DateTime.now(),
         totalBiaya: totalBiaya,
         tarifPerJam: tarifPerJam,
-        petugas: petugasName,
       );
     } catch (e) {
       if (mounted) {

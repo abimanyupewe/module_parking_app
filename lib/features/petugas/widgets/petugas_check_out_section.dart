@@ -310,11 +310,6 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
     int totalBiaya,
   ) async {
     try {
-      // Get petugas name
-      final petugas = await _databaseHelper.getUserById(
-        1,
-      ); // TODO: from session
-      final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
       final tarifPerJam = transaction[AppConstants.colTarifPerJam] ?? 0;
 
       await PdfService.generateParkingReceipt(
@@ -327,8 +322,6 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
         waktuKeluar: waktuKeluar,
         tarifPerJam: tarifPerJam,
         totalBiaya: totalBiaya,
-
-        petugas: petugasName,
       );
 
       if (mounted) {

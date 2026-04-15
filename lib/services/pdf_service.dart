@@ -31,7 +31,6 @@ class PdfService {
     required DateTime waktuKeluar,
     required int totalBiaya,
     required int tarifPerJam,
-    required String petugas,
   }) async {
     final pdf = pw.Document();
 
@@ -178,15 +177,6 @@ class PdfService {
               pw.Divider(),
               pw.SizedBox(height: 15),
 
-              // Petugas
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  _buildRow('Petugas', petugas),
-                  _buildRow('Tanggal Cetak', formatDateTime(DateTime.now())),
-                ],
-              ),
-              pw.SizedBox(height: 20),
               pw.Text(
                 'Terima kasih telah mempercayakan kendaraan Anda kepada kami',
                 style: pw.TextStyle(fontSize: 10),
@@ -213,7 +203,6 @@ class PdfService {
     required DateTime waktuMasuk,
     required int totalBiaya,
     required int tarifPerJam,
-    required String petugas,
   }) async {
     final pdf = pw.Document();
 
@@ -321,12 +310,6 @@ class PdfService {
               pw.Divider(),
               pw.SizedBox(height: 15),
 
-              // Petugas
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [_buildRow('Petugas', petugas)],
-              ),
-              pw.SizedBox(height: 20),
               pw.Text(
                 'Simpan struk ini untuk verifikasi saat check-out',
                 style: pw.TextStyle(fontSize: 10),
