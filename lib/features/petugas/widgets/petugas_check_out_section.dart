@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../config/constants.dart';
-import '../../../services/format_helper.dart';
 import '../../../services/pdf_service.dart';
 import '../../../services/database_helper.dart';
 import '../../../core/preferences/app_preferences.dart';
+import 'checkOut/petugasCheckoutDetailDialog.dart';
 import 'checkOut/petugasCheckoutSearchAndList.dart';
+import 'checkOut/petugasCheckoutStateViews.dart';
 
 /// Petugas Check-Out Section - Pencarian dan checkout kendaraan
 class PetugasCheckOutSection extends StatefulWidget {
@@ -85,107 +86,13 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
   }
 
   void _showCheckoutDialog(Map<String, dynamic> transaction) {
-    final waktuMasuk =
-        DateTime.tryParse(transaction[AppConstants.colWaktuMasuk] ?? '') ??
-        DateTime.now();
-    final durasi = DateTime.now().difference(waktuMasuk);
-    final durasiText = '${durasi.inHours}h ${durasi.inMinutes % 60}m';
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Checkout'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildCheckoutDetail(
-              'Plat Nomor',
-              transaction[AppConstants.colPlatNomor],
-            ),
-            const SizedBox(height: 12),
-            _buildCheckoutDetail(
-              'Jenis Kendaraan',
-              transaction[AppConstants.colNamaJenis] ?? 'N/A',
-            ),
-            const SizedBox(height: 12),
-            _buildCheckoutDetail('Merk', transaction[AppConstants.colMerk]),
-            const SizedBox(height: 12),
-            _buildCheckoutDetail('Waktu Masuk', _formatTime(waktuMasuk)),
-            const SizedBox(height: 12),
-            _buildCheckoutDetail('Area', transaction[AppConstants.colNamaArea]),
-            const SizedBox(height: 12),
-            _buildCheckoutDetail('Durasi', durasiText),
-            const SizedBox(height: 16),
-            // Total biaya dengan highlight
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.primary),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Total Biaya',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  Text(
-                    FormatHelper.formatRupiah(
-                      transaction[AppConstants.colTotalBiaya] ?? 0,
-                    ),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _handleCheckout(transaction);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Konfirmasi Checkout'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCheckoutDetail(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 13, color: AppColors.inactive),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary,
-          ),
-        ),
-      ],
+    showPetugasCheckoutDetailDialog(
+      context,
+      transaction: transaction,
+      formatTime: _formatTime,
+      onConfirmCheckout: () {
+        _handleCheckout(transaction);
+      },
     );
   }
 
@@ -354,37 +261,13 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
   Widget build(BuildContext context) {
     // Show loading or error states
     if (_isLoadingData) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            const Text('Memuat data transaksi...'),
-          ],
-        ),
-      );
+      return const PetugasCheckoutLoadingView();
     }
 
     if (_errorMessage != null && _filteredTransactions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, color: AppColors.danger, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              _errorMessage!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.danger),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loadData,
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
+      return PetugasCheckoutErrorView(
+        errorMessage: _errorMessage!,
+        onRetry: _loadData,
       );
     }
 

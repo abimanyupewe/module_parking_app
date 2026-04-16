@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../config/constants.dart';
 import '../../../services/database_helper.dart';
-import '../../../widgets/widgets.dart';
 import '../../../services/pdf_service.dart';
 import '../../../services/csv_service.dart';
-import '../../../services/format_helper.dart';
+import 'audit/ownerAuditHeader.dart';
+import 'audit/ownerAuditLogList.dart';
+import 'audit/ownerAuditTabBar.dart';
 
 /// Owner Audit Section - Log Transaksi & Otorisasi
 class OwnerAuditSection extends StatefulWidget {
-  const OwnerAuditSection({Key? key}) : super(key: key);
+  const OwnerAuditSection({super.key});
 
   @override
   State<OwnerAuditSection> createState() => _OwnerAuditSectionState();
@@ -186,43 +187,9 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Header dengan print button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Audit Log',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              ElevatedButton.icon(
-                onPressed: _printActivityLog,
-                icon: const Icon(Icons.print, size: 18),
-                label: const Text('Print'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          OwnerAuditHeader(onPrintPressed: _printActivityLog),
           const SizedBox(height: 16),
-          // Tab
-          TabBar(
-            controller: _tabController,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.inactive,
-            indicator: UnderlineTabIndicator(
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
-            ),
-            tabs: const [
-              Tab(text: 'Log Transaksi'),
-              Tab(text: 'Log Otorisasi'),
-            ],
-          ),
+          OwnerAuditTabBar(controller: _tabController),
           const SizedBox(height: 16),
           // Content
           Expanded(
@@ -230,75 +197,26 @@ class _OwnerAuditSectionState extends State<OwnerAuditSection>
                 ? const Center(child: CircularProgressIndicator())
                 : TabBarView(
                     controller: _tabController,
-                    children: [_buildTransaksiLog(), _buildOtoriasLog()],
+                    children: [
+                      OwnerAuditLogList(
+                        logs: _logTransaksi,
+                        emptyMessage: 'Tidak ada log transaksi',
+                        subtitlePrefix: 'Petugas',
+                        icon: Icons.login,
+                        iconColor: AppColors.success,
+                      ),
+                      OwnerAuditLogList(
+                        logs: _logOtorisasi,
+                        emptyMessage: 'Tidak ada log otorisasi',
+                        subtitlePrefix: 'Oleh',
+                        icon: Icons.security,
+                        iconColor: AppColors.warning,
+                      ),
+                    ],
                   ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTransaksiLog() {
-    if (_logTransaksi.isEmpty) {
-      return const Center(child: Text('Tidak ada log transaksi'));
-    }
-
-    return ListView.builder(
-      itemCount: _logTransaksi.length,
-      itemBuilder: (context, index) {
-        final log = _logTransaksi[index];
-        final aktivitas = log[AppConstants.colAktivitas] as String? ?? '';
-        final rawWaktu = log[AppConstants.colWaktu] as String? ?? '';
-        final waktu = rawWaktu.isNotEmpty
-            ? FormatHelper.formatFullDate(
-                DateTime.tryParse(rawWaktu) ?? DateTime.now(),
-              )
-            : '';
-        final username = log[AppConstants.colUsername] ?? 'Sistem';
-        final role = log[AppConstants.colRole] ?? '-';
-
-        return CompactLogTimelineTile(
-          title: aktivitas,
-          subtitle: 'Petugas: $username ($role)',
-          timestamp: waktu,
-          icon: Icons.login,
-          iconColor: AppColors.success,
-          isLast: index == _logTransaksi.length - 1,
-        );
-      },
-    );
-  }
-
-  Widget _buildOtoriasLog() {
-    if (_logOtorisasi.isEmpty) {
-      return const Center(child: Text('Tidak ada log otorisasi'));
-    }
-
-    return ListView.builder(
-      itemCount: _logOtorisasi.length,
-      itemBuilder: (context, index) {
-        final log = _logOtorisasi[index];
-        final aktivitas = log[AppConstants.colAktivitas] as String? ?? '';
-        final rawWaktu = log[AppConstants.colWaktu] as String? ?? '';
-        final waktu = rawWaktu.isNotEmpty
-            ? FormatHelper.formatFullDate(
-                DateTime.tryParse(rawWaktu) ?? DateTime.now(),
-              )
-            : '';
-        final username = log[AppConstants.colUsername] ?? 'Sistem';
-        final role = log[AppConstants.colRole] ?? '-';
-
-        final subtitle = 'Oleh: $username ($role)';
-
-        return CompactLogTimelineTile(
-          title: aktivitas,
-          subtitle: subtitle,
-          timestamp: waktu,
-          icon: Icons.security,
-          iconColor: AppColors.warning,
-          isLast: index == _logOtorisasi.length - 1,
-        );
-      },
     );
   }
 }

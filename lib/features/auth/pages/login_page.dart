@@ -6,10 +6,15 @@ import '../../../core/preferences/app_preferences.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_card_container.dart';
 import '../widgets/auth_role_selector.dart';
+import '../widgets/loginCharacterImage.dart';
+import '../widgets/loginFooterLinks.dart';
+import '../widgets/loginInputField.dart';
+import '../widgets/loginMessageBanner.dart';
+import '../widgets/loginSubmitButton.dart';
 
 /// Login Page - Dengan role selector dan layout sesuai referensi
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -25,7 +30,6 @@ class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _showPassword = false;
-  bool _keepSignedIn = false;
 
   final Map<String, String> _roleImageMap = {
     'Owner': ImageAssets.personTablet,
@@ -49,17 +53,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _getCharacterImage() {
     final imagePath =
         _roleImageMap[_selectedRole] ?? ImageAssets.characterPortrait;
-    return SizedBox(
-      width: 200,
-      height: 200,
-      child: Image.asset(
-        imagePath,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(child: Icon(Icons.broken_image, size: 50));
-        },
-      ),
-    );
+    return LoginCharacterImage(imagePath: imagePath);
   }
 
   /// Handle role change
@@ -160,234 +154,64 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Username Field
-                        Text(
-                          'Nama Pengguna',
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
+                        LoginInputField(
+                          label: 'Nama Pengguna',
                           controller: _usernameController,
-                          enabled: !_isLoading,
-                          decoration: InputDecoration(
-                            hintText: 'Masukkan nama pengguna',
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.person_outline,
-                              color: AppColors.inactive,
-                              size: 20,
-                            ),
-                            filled: true,
-                            fillColor: AppColors.secondary,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: AppColors.primary,
-                                width: 1.5,
-                              ),
-                            ),
-                            hintStyle: const TextStyle(
-                              color: AppColors.inactive,
-                              fontSize: 14,
-                            ),
-                          ),
-                          style: const TextStyle(fontSize: 14),
+                          hintText: 'Masukkan nama pengguna',
+                          isLoading: _isLoading,
+                          prefixIcon: Icons.person_outline,
                         ),
                         const SizedBox(height: 24),
 
-                        // Password Field dengan link Forgot Password
-                        Text(
-                          'Kata Sandi',
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
+                        LoginInputField(
+                          label: 'Kata Sandi',
                           controller: _passwordController,
-                          enabled: !_isLoading,
+                          hintText: '••••••••',
+                          isLoading: _isLoading,
+                          prefixIcon: Icons.lock_outline,
                           obscureText: !_showPassword,
-                          decoration: InputDecoration(
-                            hintText: '••••••••',
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.lock_outline,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _showPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
                               color: AppColors.inactive,
                               size: 20,
                             ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _showPassword
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: AppColors.inactive,
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _showPassword = !_showPassword;
-                                });
-                              },
-                            ),
-                            filled: true,
-                            fillColor: AppColors.secondary,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: AppColors.primary,
-                                width: 1.5,
-                              ),
-                            ),
-                            hintStyle: const TextStyle(
-                              color: AppColors.inactive,
-                              fontSize: 14,
-                            ),
+                            onPressed: () {
+                              setState(() {
+                                _showPassword = !_showPassword;
+                              });
+                            },
                           ),
-                          style: const TextStyle(fontSize: 14),
                         ),
 
                         const SizedBox(height: 28),
 
                         // Error Message
                         if (_errorMessage != null)
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: AppColors.danger.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.danger),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  color: AppColors.danger,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    _errorMessage!,
-                                    style: const TextStyle(
-                                      color: AppColors.danger,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          LoginMessageBanner(message: _errorMessage!),
 
                         // Sign In Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: _isLoading ? null : _handleLogin,
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : const Text(
-                                    'Masuk',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                          ),
+                        LoginSubmitButton(
+                          isLoading: _isLoading,
+                          onPressed: _handleLogin,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 28),
 
-                  // Footer - Sign Up Link (Hanya untuk Owner)
-                  if (_selectedRole.toLowerCase() ==
-                      AppConstants.roleOwner.toLowerCase()) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Belum punya akun? ",
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textSecondary),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pushNamed('/register');
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 0),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'Daftar',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Debug Button
-                  TextButton.icon(
-                    onPressed: () {
+                  LoginFooterLinks(
+                    showRegister:
+                        _selectedRole.toLowerCase() ==
+                        AppConstants.roleOwner.toLowerCase(),
+                    onRegisterPressed: () {
+                      Navigator.of(context).pushNamed('/register');
+                    },
+                    onDebugPressed: () {
                       Navigator.of(context).pushNamed('/debug');
                     },
-                    icon: const Icon(Icons.bug_report, size: 16),
-                    label: const Text('Debug', style: TextStyle(fontSize: 12)),
                   ),
                   const SizedBox(height: 32),
                 ],

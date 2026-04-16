@@ -8,6 +8,8 @@ import '../../../services/database_helper.dart';
 import '../../../services/error_handler.dart';
 import '../../../services/pdf_service.dart';
 import 'checkIn/petugasCheckinForm.dart';
+import 'checkIn/petugasCheckinStateViews.dart';
+import 'checkIn/petugasCheckinSuccessDialog.dart';
 
 /// Petugas Check-In Section - Form input kendaraan masuk
 class PetugasCheckInSection extends StatefulWidget {
@@ -231,35 +233,18 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         widget.onCheckInSuccess?.call();
 
         // Show success dialog
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Check-In Berhasil'),
-            content: const Text(
-              'Kendaraan telah berhasil dicatat. '
-              'Silakan cetak karcis untuk diberikan kepada pengendara.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _printCheckInReceipt(
-                    platNomor: platNomorToStore,
-                    merk: merkToStore,
-                    warna: warnaToStore,
-                    totalBiaya: totalBiaya,
-                    tarifPerJam: tarifPerJam,
-                    petugasName: petugasName,
-                  );
-                },
-                child: const Text('Cetak Struk'),
-              ),
-            ],
-          ),
+        showPetugasCheckinSuccessDialog(
+          context,
+          onPrintPressed: () {
+            _printCheckInReceipt(
+              platNomor: platNomorToStore,
+              merk: merkToStore,
+              warna: warnaToStore,
+              totalBiaya: totalBiaya,
+              tarifPerJam: tarifPerJam,
+              petugasName: petugasName,
+            );
+          },
         );
       }
     } catch (e) {
@@ -314,37 +299,13 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
   Widget build(BuildContext context) {
     // Show loading or error states
     if (_isLoadingData) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            const Text('Memuat data...'),
-          ],
-        ),
-      );
+      return const PetugasCheckinLoadingView();
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, color: AppColors.danger, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              _errorMessage!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.danger),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loadData,
-              child: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
+      return PetugasCheckinErrorView(
+        errorMessage: _errorMessage!,
+        onRetry: _loadData,
       );
     }
 
