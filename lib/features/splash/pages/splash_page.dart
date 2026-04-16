@@ -64,8 +64,8 @@ class _SplashPageState extends State<SplashPage> {
                 children: [
                   // Logo / App Name
                   Container(
-                    width: 250,
-                    height: 250,
+                    width: 70,
+                    height: 70,
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       shape: BoxShape.circle,

@@ -49,11 +49,11 @@ class LoginFooterLinks extends StatelessWidget {
           ),
           const SizedBox(height: 16),
         ],
-        TextButton.icon(
-          onPressed: onDebugPressed,
-          icon: const Icon(Icons.bug_report, size: 16),
-          label: const Text('Debug', style: TextStyle(fontSize: 12)),
-        ),
+        // TextButton.icon(
+        //   onPressed: onDebugPressed,
+        //   icon: const Icon(Icons.bug_report, size: 16),
+        //   label: const Text('Debug', style: TextStyle(fontSize: 12)),
+        // ),
       ],
     );
   }
