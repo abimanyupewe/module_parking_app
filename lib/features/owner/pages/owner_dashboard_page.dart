@@ -17,7 +17,7 @@ class OwnerDashboardPage extends StatefulWidget {
 
 class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
   int _selectedIndex = 0;
-  String? _username;
+  String? _displayName;
 
   final List<Widget> _pages = [
     const OwnerHomeSection(),
@@ -29,7 +29,8 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
   @override
   void initState() {
     super.initState();
-    _username = AppPreferences.getUsername();
+    _displayName =
+        AppPreferences.getNamaLengkap() ?? AppPreferences.getUsername();
   }
 
   void _handleLogout() {
@@ -104,7 +105,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                 style: const TextStyle(fontSize: 20, color: AppColors.white),
                 children: [
                   TextSpan(
-                    text: _username ?? 'Owner',
+                    text: _displayName ?? 'Owner',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

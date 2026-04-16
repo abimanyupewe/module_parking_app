@@ -30,6 +30,7 @@ class AppPreferences {
     int? userId,
     String? userRole,
     String? username,
+    String? namaLengkap,
   }) async {
     bool result = await _prefs.setBool('is_logged_in', value);
 
@@ -37,6 +38,9 @@ class AppPreferences {
       await _prefs.setInt('user_id', userId);
       await _prefs.setString('user_role', userRole);
       await _prefs.setString('username', username);
+      if (namaLengkap != null) {
+        await _prefs.setString('nama_lengkap', namaLengkap);
+      }
     }
 
     return result;
@@ -62,17 +66,28 @@ class AppPreferences {
     return _prefs.getString('username');
   }
 
+  /// Get nama lengkap dari session
+  static String? getNamaLengkap() {
+    return _prefs.getString('nama_lengkap');
+  }
+
   /// Get logged in user data
   static Map<String, dynamic>? getLoggedInUser() {
     int? userId = getUserId();
     String? role = getUserRole();
     String? username = getUsername();
+    String? namaLengkap = getNamaLengkap();
 
     if (userId == null || role == null || username == null) {
       return null;
     }
 
-    return {'user_id': userId, 'user_role': role, 'username': username};
+    return {
+      'user_id': userId,
+      'user_role': role,
+      'username': username,
+      'nama_lengkap': namaLengkap,
+    };
   }
 
   /// Clear session (logout)
@@ -81,6 +96,7 @@ class AppPreferences {
     await _prefs.remove('user_id');
     await _prefs.remove('user_role');
     await _prefs.remove('username');
+    await _prefs.remove('nama_lengkap');
     return true;
   }
 

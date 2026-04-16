@@ -5,6 +5,8 @@ import 'package:csv/csv.dart';
 
 /// Service untuk generate dan download CSV reports
 class CsvService {
+  static const _androidPublicDownloadPath = '/storage/emulated/0/Download';
+
   /// Format currency ke Rupiah
   static String formatCurrency(int amount) {
     return NumberFormat.currency(
@@ -41,11 +43,8 @@ class CsvService {
       // Convert to CSV
       final csv = const ListToCsvConverter().convert(data);
 
-      // Get Downloads directory
-      final directory = await getDownloadsDirectory();
-      if (directory == null) {
-        throw Exception('Tidak dapat akses folder Downloads');
-      }
+      // Get writable export directory
+      final directory = await _getWritableExportDirectory();
 
       // Create filename dengan timestamp
       final timestamp = DateFormat(
@@ -78,11 +77,8 @@ class CsvService {
       // Convert to CSV
       final csv = const ListToCsvConverter().convert(data);
 
-      // Get Downloads directory
-      final directory = await getDownloadsDirectory();
-      if (directory == null) {
-        throw Exception('Tidak dapat akses folder Downloads');
-      }
+      // Get writable export directory
+      final directory = await _getWritableExportDirectory();
 
       // Create filename dengan timestamp
       final timestamp = DateFormat(
@@ -113,11 +109,8 @@ class CsvService {
       // Convert to CSV
       final csv = const ListToCsvConverter().convert(data);
 
-      // Get Downloads directory
-      final directory = await getDownloadsDirectory();
-      if (directory == null) {
-        throw Exception('Tidak dapat akses folder Downloads');
-      }
+      // Get writable export directory
+      final directory = await _getWritableExportDirectory();
 
       // Create filename dengan timestamp
       final timestamp = DateFormat(
@@ -264,5 +257,51 @@ class CsvService {
       return DateFormat('dd/MM/yyyy HH:mm', 'id_ID').format(dateTime);
     }
     return '-';
+  }
+
+  static Future<Directory> _getWritableExportDirectory() async {
+    // Android: prefer app-specific Downloads folder
+    if (Platform.isAndroid) {
+      final downloadDirs = await getExternalStorageDirectories(
+        type: StorageDirectory.downloads,
+      );
+      if (downloadDirs != null && downloadDirs.isNotEmpty) {
+        final dir = downloadDirs.first;
+        if (!await dir.exists()) {
+          await dir.create(recursive: true);
+        }
+        return dir;
+      }
+
+      // Fallback public Downloads (may depend on device policy)
+      final publicDownloadDir = Directory(_androidPublicDownloadPath);
+      if (await publicDownloadDir.exists()) {
+        return publicDownloadDir;
+      }
+
+      // Last fallback: app-specific external files dir
+      final externalDir = await getExternalStorageDirectory();
+      if (externalDir != null) {
+        if (!await externalDir.exists()) {
+          await externalDir.create(recursive: true);
+        }
+        return externalDir;
+      }
+    }
+
+    // Desktop/iOS fallback
+    final downloads = await getDownloadsDirectory();
+    if (downloads != null) {
+      if (!await downloads.exists()) {
+        await downloads.create(recursive: true);
+      }
+      return downloads;
+    }
+
+    final docs = await getApplicationDocumentsDirectory();
+    if (!await docs.exists()) {
+      await docs.create(recursive: true);
+    }
+    return docs;
   }
 }

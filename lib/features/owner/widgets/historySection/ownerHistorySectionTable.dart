@@ -88,6 +88,26 @@ class OwnerHistorySectionTable extends StatelessWidget {
           ),
           DataColumn(
             label: Text(
+              'Merk',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          DataColumn(
+            label: Text(
+              'Warna',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          DataColumn(
+            label: Text(
               'Area',
               style: TextStyle(
                 fontSize: 13,
@@ -131,6 +151,8 @@ class OwnerHistorySectionTable extends StatelessWidget {
           final history = data[index];
           final platNomor = history['plat_nomor'] as String? ?? '';
           final namaJenis = history['nama_jenis'] as String? ?? '';
+          final merk = history['merk'] as String? ?? '-';
+          final warna = history['warna'] as String? ?? '-';
           final namaArea = history['nama_area'] as String? ?? '';
           final waktuMasuk = history['waktu_masuk'] as String? ?? '';
           final waktuKeluar = history['waktu_keluar'] as String?;
@@ -188,6 +210,8 @@ class OwnerHistorySectionTable extends StatelessWidget {
                 ),
               ),
               DataCell(Text(namaJenis, style: const TextStyle(fontSize: 12))),
+              DataCell(Text(merk, style: const TextStyle(fontSize: 12))),
+              DataCell(Text(warna, style: const TextStyle(fontSize: 12))),
               DataCell(Text(namaArea, style: const TextStyle(fontSize: 12))),
               DataCell(
                 Text(fmtWaktuMasuk, style: const TextStyle(fontSize: 12)),

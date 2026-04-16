@@ -4,7 +4,6 @@ import '../../../core/preferences/app_preferences.dart';
 import 'profile/ownerPasswordChangeSection.dart';
 import 'profile/ownerProfileHeader.dart';
 import 'profile/ownerProfileInfoSection.dart';
-import 'profile/ownerProfileSettingsSection.dart';
 
 /// Owner Profile Section - User Info dan Settings
 class OwnerProfileSection extends StatefulWidget {
@@ -64,10 +63,6 @@ class _OwnerProfileSectionState extends State<OwnerProfileSection> {
             username: _username ?? '-',
             email: _userEmail ?? '-',
           ),
-          const SizedBox(height: 24),
-
-          // Account Settings
-          OwnerProfileSettingsSection(onShowMessage: _showSnackBar),
           const SizedBox(height: 24),
 
           // Change Password Section

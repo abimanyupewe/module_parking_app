@@ -67,9 +67,21 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
   void _applyAllFilters() {
     _filteredHistory = _allHistory.where((item) {
       final platNomor = item['plat_nomor'] as String? ?? '';
+      final merk = item['merk'] as String? ?? '';
+      final warna = item['warna'] as String? ?? '';
+      final namaJenis = item['nama_jenis'] as String? ?? '';
+      final namaArea = item['nama_area'] as String? ?? '';
 
-      // Filter berdasarkan search query (plat nomor)
-      if (!platNomor.toLowerCase().contains(_searchQuery.toLowerCase())) {
+      // Filter berdasarkan search query
+      final query = _searchQuery.toLowerCase();
+      final isSearchMatch =
+          platNomor.toLowerCase().contains(query) ||
+          merk.toLowerCase().contains(query) ||
+          warna.toLowerCase().contains(query) ||
+          namaJenis.toLowerCase().contains(query) ||
+          namaArea.toLowerCase().contains(query);
+
+      if (!isSearchMatch) {
         return false;
       }
 

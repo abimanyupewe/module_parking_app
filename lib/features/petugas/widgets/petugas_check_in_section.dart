@@ -7,6 +7,7 @@ import '../../../models/kendaraan_model.dart';
 import '../../../services/database_helper.dart';
 import '../../../services/error_handler.dart';
 import '../../../services/pdf_service.dart';
+import '../../../core/preferences/app_preferences.dart';
 import 'checkIn/petugasCheckinForm.dart';
 import 'checkIn/petugasCheckinStateViews.dart';
 import 'checkIn/petugasCheckinSuccessDialog.dart';
@@ -130,6 +131,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
     try {
       final idJenis = int.tryParse(_selectedJenisKendaraanId ?? '0') ?? 0;
       final idArea = int.tryParse(_selectedAreaId ?? '0') ?? 0;
+      final currentUserId = AppPreferences.getUserId() ?? 1;
 
       // Validasi: Cek apakah kendaraan dengan plat nomor yang sama sedang parkir
       final activeTransactionId = await _databaseHelper
@@ -177,7 +179,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
         AppConstants.colAreaId: idArea,
         AppConstants.colWaktuMasuk: DateTime.now().toIso8601String(),
         AppConstants.colTransaksiStatus: AppConstants.statusParkir,
-        AppConstants.colUserId: 1, // TODO: Ambil dari session user
+        AppConstants.colUserId: currentUserId,
         AppConstants.colTotalBiaya: totalBiaya,
         'image_path': _selectedImagePath,
       };
@@ -185,9 +187,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
       await _databaseHelper.insertTransaksi(transaksi);
 
       // 3. Get petugas name dari database
-      final petugas = await _databaseHelper.getUserById(
-        1,
-      ); // TODO: Ambil dari session user
+      final petugas = await _databaseHelper.getUserById(currentUserId);
       final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
 
       // 4. Update kapasitas area parkir
@@ -199,7 +199,7 @@ class _PetugasCheckInSectionState extends State<PetugasCheckInSection> {
 
       // 5. Record activity log with petugas name
       await _databaseHelper.recordActivity(
-        1, // userId (TODO: Ambil dari session user)
+        currentUserId,
         AppConstants.logTransaksi,
         'Check-In Kendaraan ${_platnomorController.text} oleh $petugasName di Area ${area?.namaArea}',
       );
