@@ -1,6 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
-import '../../../widgets/widgets.dart';
+import '../../../services/database_helper.dart';
 import '../../../services/format_helper.dart';
 import '../../../services/pdf_service.dart';
 
@@ -13,126 +14,45 @@ class OwnerHistorySection extends StatefulWidget {
 }
 
 class _OwnerHistorySectionState extends State<OwnerHistorySection> {
+  final _databaseHelper = DatabaseHelper();
   String _searchQuery = '';
-  DateTime? _selectedDate; // null = semua tanggal
+  DateTime? _selectedDate;
 
-  final List<Map<String, dynamic>> _allHistory = [
-    {
-      'plat': 'AB 1234 CD',
-      'jenis': 'Motor',
-      'area': 'Blok A',
-      'masuk': '08:30',
-      'keluar': '10:45',
-      'biaya': 4500,
-      'tanggal': DateTime(2024, 4, 5),
-    },
-    {
-      'plat': 'DE 5678 FG',
-      'jenis': 'Mobil',
-      'area': 'Blok B',
-      'masuk': '09:15',
-      'keluar': '11:30',
-      'biaya': 9000,
-      'tanggal': DateTime(2024, 4, 5),
-    },
-    {
-      'plat': 'HI 9012 JK',
-      'jenis': 'Motor',
-      'area': 'Blok A',
-      'masuk': '10:00',
-      'keluar': '11:15',
-      'biaya': 2500,
-      'tanggal': DateTime(2024, 4, 5),
-    },
-    {
-      'plat': 'JK 3456 LM',
-      'jenis': 'Mobil',
-      'area': 'Blok C',
-      'masuk': '07:45',
-      'keluar': '09:30',
-      'biaya': 7500,
-      'tanggal': DateTime(2024, 4, 6),
-    },
-    {
-      'plat': 'MN 7890 OP',
-      'jenis': 'Motor',
-      'area': 'Blok B',
-      'masuk': '11:00',
-      'keluar': '13:45',
-      'biaya': 6000,
-      'tanggal': DateTime(2024, 4, 6),
-    },
-    {
-      'plat': 'PQ 1111 RS',
-      'jenis': 'Mobil',
-      'area': 'Blok A',
-      'masuk': '14:30',
-      'keluar': '16:15',
-      'biaya': 5500,
-      'tanggal': DateTime(2024, 4, 7),
-    },
-    {
-      'plat': 'ST 2222 UV',
-      'jenis': 'Motor',
-      'area': 'Blok D',
-      'masuk': '08:00',
-      'keluar': '10:20',
-      'biaya': 4000,
-      'tanggal': DateTime(2024, 4, 10),
-    },
-    {
-      'plat': 'VW 3333 XY',
-      'jenis': 'Mobil',
-      'area': 'Blok B',
-      'masuk': '12:15',
-      'keluar': '14:45',
-      'biaya': 8000,
-      'tanggal': DateTime(2024, 4, 10),
-    },
-    {
-      'plat': 'YZ 4444 AB',
-      'jenis': 'Motor',
-      'area': 'Blok C',
-      'masuk': '09:30',
-      'keluar': '11:00',
-      'biaya': 3500,
-      'tanggal': DateTime(2024, 4, 12),
-    },
-    {
-      'plat': 'CD 5555 EF',
-      'jenis': 'Mobil',
-      'area': 'Blok A',
-      'masuk': '15:00',
-      'keluar': '17:30',
-      'biaya': 9500,
-      'tanggal': DateTime(2024, 4, 12),
-    },
-    {
-      'plat': 'EF 6666 GH',
-      'jenis': 'Motor',
-      'area': 'Blok D',
-      'masuk': '08:45',
-      'keluar': '10:15',
-      'biaya': 3000,
-      'tanggal': DateTime(2024, 3, 28),
-    },
-    {
-      'plat': 'GH 7777 IJ',
-      'jenis': 'Mobil',
-      'area': 'Blok C',
-      'masuk': '10:30',
-      'keluar': '13:00',
-      'biaya': 8500,
-      'tanggal': DateTime(2024, 3, 28),
-    },
-  ];
-
-  late List<Map<String, dynamic>> _filteredHistory;
+  List<Map<String, dynamic>> _allHistory = [];
+  List<Map<String, dynamic>> _filteredHistory = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _filteredHistory = _allHistory;
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final transactions = await _databaseHelper.getAllTransactions();
+
+      if (mounted) {
+        setState(() {
+          _allHistory = transactions;
+          _filteredHistory = _allHistory;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
   }
 
   void _filterHistory(String query) {
@@ -144,17 +64,24 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
 
   void _applyAllFilters() {
     _filteredHistory = _allHistory.where((item) {
+      final platNomor = item['plat_nomor'] as String? ?? '';
+
       // Filter berdasarkan search query (plat nomor)
-      if (!item['plat'].toLowerCase().contains(_searchQuery.toLowerCase())) {
+      if (!platNomor.toLowerCase().contains(_searchQuery.toLowerCase())) {
         return false;
       }
 
       // Filter berdasarkan tanggal
       if (_selectedDate != null) {
-        final itemDate = item['tanggal'] as DateTime;
-        if (itemDate.year != _selectedDate!.year ||
-            itemDate.month != _selectedDate!.month ||
-            itemDate.day != _selectedDate!.day) {
+        final waktuMasukStr = item['waktu_masuk'] as String? ?? '';
+        try {
+          final itemDate = DateTime.parse(waktuMasukStr);
+          if (itemDate.year != _selectedDate!.year ||
+              itemDate.month != _selectedDate!.month ||
+              itemDate.day != _selectedDate!.day) {
+            return false;
+          }
+        } catch (e) {
           return false;
         }
       }
@@ -221,10 +148,10 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
 
   @override
   Widget build(BuildContext context) {
-    final totalBiaya = _filteredHistory.fold<int>(
-      0,
-      (sum, item) => sum + (item['biaya'] as int),
-    );
+    final totalBiaya = _filteredHistory.fold<int>(0, (sum, item) {
+      final biaya = item['total_biaya'] as int? ?? 0;
+      return sum + biaya;
+    });
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -365,7 +292,9 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
           const SizedBox(height: 24),
 
           // Data Table
-          if (_filteredHistory.isEmpty)
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_filteredHistory.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 32),
@@ -393,6 +322,16 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                   return AppColors.white;
                 }),
                 columns: const [
+                  DataColumn(
+                    label: Text(
+                      'Foto',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
                   DataColumn(
                     label: Text(
                       'Plat Nomor',
@@ -453,28 +392,61 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                       ),
                     ),
                   ),
-                  DataColumn(
-                    label: Text(
-                      'Tanggal',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
                 ],
                 rows: List.generate(_filteredHistory.length, (index) {
                   final h = _filteredHistory[index];
-                  final tanggal = h['tanggal'] as DateTime;
-                  final tanggalFormatted =
-                      '${tanggal.day}/${tanggal.month}/${tanggal.year}';
+                  final platNomor = h['plat_nomor'] as String? ?? '';
+                  final namaJenis = h['nama_jenis'] as String? ?? '';
+                  final namaArea = h['nama_area'] as String? ?? '';
+                  final waktuMasuk = h['waktu_masuk'] as String? ?? '';
+                  final waktuKeluar = h['waktu_keluar'] as String?;
+                  final totalBiaya = h['total_biaya'] as int? ?? 0;
+                  final imagePath = h['image_path'] as String?;
+
+                  final fmtWaktuMasuk = waktuMasuk.isNotEmpty
+                      ? FormatHelper.formatFullDate(
+                          DateTime.tryParse(waktuMasuk) ?? DateTime.now(),
+                        )
+                      : '-';
+                  final fmtWaktuKeluar =
+                      (waktuKeluar != null && waktuKeluar.isNotEmpty)
+                      ? FormatHelper.formatFullDate(
+                          DateTime.tryParse(waktuKeluar) ?? DateTime.now(),
+                        )
+                      : '-';
 
                   return DataRow(
                     cells: [
                       DataCell(
+                        imagePath != null && imagePath.isNotEmpty
+                            ? Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(4),
+                                  image: DecorationImage(
+                                    image: FileImage(File(imagePath)),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.tertiary,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  size: 20,
+                                  color: AppColors.inactive,
+                                ),
+                              ),
+                      ),
+                      DataCell(
                         Text(
-                          h['plat'],
+                          platNomor,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -483,31 +455,31 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
                         ),
                       ),
                       DataCell(
-                        Text(h['jenis'], style: const TextStyle(fontSize: 12)),
+                        Text(namaJenis, style: const TextStyle(fontSize: 12)),
                       ),
                       DataCell(
-                        Text(h['area'], style: const TextStyle(fontSize: 12)),
-                      ),
-                      DataCell(
-                        Text(h['masuk'], style: const TextStyle(fontSize: 12)),
-                      ),
-                      DataCell(
-                        Text(h['keluar'], style: const TextStyle(fontSize: 12)),
+                        Text(namaArea, style: const TextStyle(fontSize: 12)),
                       ),
                       DataCell(
                         Text(
-                          FormatHelper.formatRupiah(h['biaya']),
+                          fmtWaktuMasuk,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          fmtWaktuKeluar,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          FormatHelper.formatRupiah(totalBiaya),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: AppColors.primary,
                           ),
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          tanggalFormatted,
-                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
                     ],
@@ -517,6 +489,35 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
             ),
         ],
       ),
+    );
+  }
+}
+
+// CustomSearchBar widget import
+class CustomSearchBar extends StatelessWidget {
+  final String hintText;
+  final Function(String) onChanged;
+  final IconData prefixIcon;
+
+  const CustomSearchBar({
+    required this.hintText,
+    required this.onChanged,
+    required this.prefixIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: hintText,
+        prefixIcon: Icon(prefixIcon),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+      ),
+      onChanged: onChanged,
     );
   }
 }

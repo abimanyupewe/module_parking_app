@@ -33,7 +33,7 @@ class OnboardingSlideWidget extends StatelessWidget {
           children: [
             // Large Illustration
             if (image != null)
-              SizedBox(width: double.infinity, height: 340, child: image)
+              SizedBox(width: double.infinity, height: 500, child: image)
             else
               Container(
                 width: 280,

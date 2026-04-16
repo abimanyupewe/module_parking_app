@@ -1,12 +1,18 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../config/constants.dart';
 import '../../../widgets/widgets.dart';
 import '../../../services/format_helper.dart';
 import '../../../services/pdf_service.dart';
+import '../../../services/database_helper.dart';
+import '../../../core/preferences/app_preferences.dart';
 
 /// Petugas Check-Out Section - Pencarian dan checkout kendaraan
 class PetugasCheckOutSection extends StatefulWidget {
-  const PetugasCheckOutSection({Key? key}) : super(key: key);
+  final VoidCallback? onCheckOutSuccess;
+
+  const PetugasCheckOutSection({super.key, this.onCheckOutSuccess});
 
   @override
   State<PetugasCheckOutSection> createState() => _PetugasCheckOutSectionState();
@@ -14,47 +20,47 @@ class PetugasCheckOutSection extends StatefulWidget {
 
 class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
   final _searchController = TextEditingController();
+  final _databaseHelper = DatabaseHelper();
 
-  // Mock data - nanti ganti dengan data dari DB
-  final List<Map<String, dynamic>> _allTransactions = [
-    {
-      'id': 1,
-      'platNomor': 'AB 1234 CD',
-      'jenis': 'Motor',
-      'merk': 'Honda Vario',
-      'waktuMasuk': '08:30',
-      'area': 'Blok A',
-      'durasi': '2 jam',
-      'biaya': 4000,
-    },
-    {
-      'id': 2,
-      'platNomor': 'DE 5678 FG',
-      'jenis': 'Mobil',
-      'merk': 'Toyota Avanza',
-      'waktuMasuk': '09:15',
-      'area': 'Blok B',
-      'durasi': '1.5 jam',
-      'biaya': 9000,
-    },
-    {
-      'id': 3,
-      'platNomor': 'HI 9012 JK',
-      'jenis': 'Motor',
-      'merk': 'Yamaha Nmax',
-      'waktuMasuk': '10:00',
-      'area': 'Blok A',
-      'durasi': '1 jam',
-      'biaya': 2000,
-    },
-  ];
-
-  late List<Map<String, dynamic>> _filteredTransactions;
+  List<Map<String, dynamic>> _allTransactions = [];
+  List<Map<String, dynamic>> _filteredTransactions = [];
+  bool _isLoadingData = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _filteredTransactions = _allTransactions;
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      setState(() {
+        _isLoadingData = true;
+        _errorMessage = null;
+      });
+
+      final transactions = await _databaseHelper.getActiveTransactions();
+
+      if (mounted) {
+        setState(() {
+          _allTransactions = transactions;
+          _filteredTransactions = transactions;
+          _isLoadingData = false;
+
+          if (_allTransactions.isEmpty) {
+            _errorMessage = 'Tidak ada kendaraan yang sedang parkir';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error loading data: $e';
+          _isLoadingData = false;
+        });
+      }
+    }
   }
 
   @override
@@ -70,8 +76,9 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
       } else {
         _filteredTransactions = _allTransactions
             .where(
-              (tx) =>
-                  tx['platNomor'].toLowerCase().contains(query.toLowerCase()),
+              (tx) => tx[AppConstants.colPlatNomor].toLowerCase().contains(
+                query.toLowerCase(),
+              ),
             )
             .toList();
       }
@@ -79,6 +86,12 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
   }
 
   void _showCheckoutDialog(Map<String, dynamic> transaction) {
+    final waktuMasuk =
+        DateTime.tryParse(transaction[AppConstants.colWaktuMasuk] ?? '') ??
+        DateTime.now();
+    final durasi = DateTime.now().difference(waktuMasuk);
+    final durasiText = '${durasi.inHours}h ${durasi.inMinutes % 60}m';
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -87,17 +100,23 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCheckoutDetail('Plat Nomor', transaction['platNomor']),
+            _buildCheckoutDetail(
+              'Plat Nomor',
+              transaction[AppConstants.colPlatNomor],
+            ),
             const SizedBox(height: 12),
-            _buildCheckoutDetail('Jenis Kendaraan', transaction['jenis']),
+            _buildCheckoutDetail(
+              'Jenis Kendaraan',
+              transaction[AppConstants.colNamaJenis] ?? 'N/A',
+            ),
             const SizedBox(height: 12),
-            _buildCheckoutDetail('Merk', transaction['merk']),
+            _buildCheckoutDetail('Merk', transaction[AppConstants.colMerk]),
             const SizedBox(height: 12),
-            _buildCheckoutDetail('Waktu Masuk', transaction['waktuMasuk']),
+            _buildCheckoutDetail('Waktu Masuk', _formatTime(waktuMasuk)),
             const SizedBox(height: 12),
-            _buildCheckoutDetail('Area', transaction['area']),
+            _buildCheckoutDetail('Area', transaction[AppConstants.colNamaArea]),
             const SizedBox(height: 12),
-            _buildCheckoutDetail('Durasi', transaction['durasi']),
+            _buildCheckoutDetail('Durasi', durasiText),
             const SizedBox(height: 16),
             // Total biaya dengan highlight
             Container(
@@ -119,7 +138,9 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
                     ),
                   ),
                   Text(
-                    FormatHelper.formatRupiah(transaction['biaya']),
+                    FormatHelper.formatRupiah(
+                      transaction[AppConstants.colTotalBiaya] ?? 0,
+                    ),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -169,86 +190,205 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
     );
   }
 
-  void _handleCheckout(Map<String, dynamic> transaction) {
-    // Show dialog untuk konfirmasi print struk
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Checkout Berhasil'),
-        content: Text(
-          'Kendaraan ${transaction['platNomor']} telah checkout.\n\nApakah Anda ingin mencetak struk?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _finishCheckout(transaction);
-            },
-            child: const Text('Tidak'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _printReceipt(transaction);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Print Struk'),
-          ),
-        ],
-      ),
-    );
+  String _formatTime(DateTime dateTime) {
+    return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
-  void _finishCheckout(Map<String, dynamic> transaction) {
+  void _handleCheckout(Map<String, dynamic> transaction) async {
+    try {
+      final transaksiId = transaction[AppConstants.colTransaksiId];
+      final waktuMasuk =
+          DateTime.tryParse(transaction[AppConstants.colWaktuMasuk] ?? '') ??
+          DateTime.now();
+      final waktuKeluar = DateTime.now();
+
+      // Calculate total biaya based on actual duration
+      final duration = waktuKeluar.difference(waktuMasuk);
+      final jam = duration.inHours;
+      final menit = duration.inMinutes % 60;
+      final tarifPerJam = transaction[AppConstants.colTarifPerJam] ?? 0;
+
+      // Hitung durasi dalam jam (minimum 1 jam)
+      final durasiJam = jam + (menit > 0 ? 1 : 0);
+      final durasiJam2 = durasiJam > 0 ? durasiJam : 1;
+      final totalBiaya = tarifPerJam * durasiJam2;
+
+      // Update transaksi di database
+      await _databaseHelper.updateTransaksi(transaksiId, {
+        AppConstants.colWaktuKeluar: waktuKeluar.toIso8601String(),
+        AppConstants.colTransaksiStatus: AppConstants.statusSelesai,
+        AppConstants.colTotalBiaya: totalBiaya,
+      });
+
+      // Update area capacity
+      final areaId = transaction[AppConstants.colAreaId];
+      final area = await _databaseHelper.getAreaParkirById(areaId);
+      if (area != null) {
+        final updatedArea = area.copyWith(terisi: area.terisi - 1);
+        await _databaseHelper.updateAreaParkir(updatedArea);
+      }
+
+      // Get petugas name dari database
+      final currentUserId = AppPreferences.getUserId() ?? 1;
+      final petugas = await _databaseHelper.getUserById(currentUserId);
+      final petugasName = petugas?.namaLengkap ?? 'Petugas Parkir';
+
+      // Record activity log with petugas name
+      await _databaseHelper.recordActivity(
+        currentUserId, // userId dari session user
+        AppConstants.logTransaksi,
+        'Check-Out Kendaraan ${transaction[AppConstants.colPlatNomor]} oleh $petugasName dari Area ${area?.namaArea}',
+      );
+
+      if (mounted) {
+        // Show success dialog dengan pilihan print
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Checkout Berhasil'),
+            content: Text(
+              'Kendaraan ${transaction[AppConstants.colPlatNomor]} telah checkout.\n\nApakah Anda ingin mencetak struk?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _finishCheckout(
+                    transaction,
+                    waktuMasuk,
+                    waktuKeluar,
+                    totalBiaya,
+                  );
+                },
+                child: const Text('Tidak'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _printReceipt(
+                    transaction,
+                    waktuMasuk,
+                    waktuKeluar,
+                    totalBiaya,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                ),
+                child: const Text('Print Struk'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error checkout: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
+  void _finishCheckout(
+    Map<String, dynamic> transaction,
+    DateTime waktuMasuk,
+    DateTime waktuKeluar,
+    int totalBiaya,
+  ) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Checkout berhasil untuk ${transaction['platNomor']}'),
+        content: Text(
+          'Checkout berhasil untuk ${transaction[AppConstants.colPlatNomor]}',
+        ),
         backgroundColor: AppColors.success,
       ),
     );
 
-    // Hapus dari list
-    setState(() {
-      _filteredTransactions.removeWhere((tx) => tx['id'] == transaction['id']);
-      _allTransactions.removeWhere((tx) => tx['id'] == transaction['id']);
-    });
+    // Refresh data untuk remove kendaraan yang sudah check-out
+    _loadData();
+
+    // Call callback to refresh area info
+    widget.onCheckOutSuccess?.call();
   }
 
-  void _printReceipt(Map<String, dynamic> transaction) async {
+  void _printReceipt(
+    Map<String, dynamic> transaction,
+    DateTime waktuMasuk,
+    DateTime waktuKeluar,
+    int totalBiaya,
+  ) async {
     try {
-      // Format data untuk PDF
-      final waktuMasuk = DateTime.now().subtract(
-        const Duration(hours: 2),
-      ); // Mock waktu masuk 2 jam lalu
-      final waktuKeluar = DateTime.now();
+      final tarifPerJam = transaction[AppConstants.colTarifPerJam] ?? 0;
 
       await PdfService.generateParkingReceipt(
-        platNomor: transaction['platNomor'],
-        jenis: transaction['jenis'],
-        merk: transaction['merk'],
-        warna: transaction['warna'] ?? 'Tidak ada',
-        area: transaction['area'],
+        platNomor: transaction[AppConstants.colPlatNomor],
+        jenis: transaction[AppConstants.colNamaJenis] ?? 'N/A',
+        merk: transaction[AppConstants.colMerk],
+        warna: transaction[AppConstants.colWarna] ?? 'Tidak ada',
+        area: transaction[AppConstants.colNamaArea],
         waktuMasuk: waktuMasuk,
         waktuKeluar: waktuKeluar,
-        totalBiaya: transaction['biaya'],
-        petugas: 'Petugas Parkir',
+        tarifPerJam: tarifPerJam,
+        totalBiaya: totalBiaya,
       );
 
       if (mounted) {
-        _finishCheckout(transaction);
+        _finishCheckout(transaction, waktuMasuk, waktuKeluar, totalBiaya);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error cetak struk: $e'),
-          backgroundColor: AppColors.danger,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error cetak struk: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show loading or error states
+    if (_isLoadingData) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            const Text('Memuat data transaksi...'),
+          ],
+        ),
+      );
+    }
+
+    if (_errorMessage != null && _filteredTransactions.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: AppColors.danger, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.danger),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -299,6 +439,13 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
                 itemCount: _filteredTransactions.length,
                 itemBuilder: (context, index) {
                   final tx = _filteredTransactions[index];
+                  final waktuMasuk =
+                      DateTime.tryParse(tx[AppConstants.colWaktuMasuk] ?? '') ??
+                      DateTime.now();
+                  final durasi = DateTime.now().difference(waktuMasuk);
+                  final durasiText =
+                      '${durasi.inHours}h ${durasi.inMinutes % 60}m';
+
                   return GestureDetector(
                     onTap: () => _showCheckoutDialog(tx),
                     child: Container(
@@ -324,31 +471,65 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
                         children: [
                           // Plat nomor & jenis
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    tx['platNomor'],
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                      letterSpacing: 2,
+                              // Thumbnail Foto Kendaraan
+                              if (tx['image_path'] != null &&
+                                  tx['image_path'].toString().isNotEmpty)
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    image: DecorationImage(
+                                      image: FileImage(File(tx['image_path'])),
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    tx['merk'],
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.inactive,
-                                    ),
+                                )
+                              else
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.tertiary,
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                ],
+                                  child: const Icon(
+                                    Icons.directions_car,
+                                    color: AppColors.inactive,
+                                    size: 24,
+                                  ),
+                                ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      tx[AppConstants.colPlatNomor],
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primary,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      tx[AppConstants.colMerk],
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.inactive,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              StatusBadge(status: tx['jenis'], fontSize: 11),
+                              StatusBadge(
+                                status: tx[AppConstants.colNamaJenis] ?? 'N/A',
+                                fontSize: 11,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -357,14 +538,14 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Masuk: ${tx['waktuMasuk']}',
+                                'Masuk: ${_formatTime(waktuMasuk)}',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.inactive,
                                 ),
                               ),
                               Text(
-                                'Area: ${tx['area']}',
+                                'Area: ${tx[AppConstants.colNamaArea]}',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.inactive,
@@ -378,7 +559,7 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Durasi: ${tx['durasi']}',
+                                'Durasi: $durasiText',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -397,7 +578,9 @@ class _PetugasCheckOutSectionState extends State<PetugasCheckOutSection> {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  FormatHelper.formatRupiah(tx['biaya']),
+                                  FormatHelper.formatRupiah(
+                                    tx[AppConstants.colTotalBiaya] ?? 0,
+                                  ),
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,

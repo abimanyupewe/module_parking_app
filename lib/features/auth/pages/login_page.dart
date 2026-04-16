@@ -87,6 +87,7 @@ class _LoginPageState extends State<LoginPage> {
     final result = await _authController.login(
       _usernameController.text,
       _passwordController.text,
+      _selectedRole,
     );
 
     if (!mounted) return;
@@ -97,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success']) {
       final user = result['user'];
-      final role = user.role;
+      final role = user.role.toString().toLowerCase();
 
       if (mounted) {
         switch (role) {
@@ -210,37 +211,13 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 24),
 
                         // Password Field dengan link Forgot Password
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Kata Sandi',
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                // TODO: Handle forgot password
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(0, 0),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        Text(
+                          'Kata Sandi',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
                               ),
-                              child: Text(
-                                'Forgot Password?',
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                    ),
-                              ),
-                            ),
-                          ],
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -296,38 +273,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           style: const TextStyle(fontSize: 14),
                         ),
-                        const SizedBox(height: 20),
 
-                        // Keep me signed in checkbox
-                        Row(
-                          children: [
-                            SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: Checkbox(
-                                value: _keepSignedIn,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _keepSignedIn = value ?? false;
-                                  });
-                                },
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                activeColor: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Ingat saya',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                            ),
-                          ],
-                        ),
                         const SizedBox(height: 28),
 
                         // Error Message
@@ -401,37 +347,39 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 28),
 
-                  // Footer - Sign Up Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pushNamed('/register');
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 0),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Daftar',
+                  // Footer - Sign Up Link (Hanya untuk Owner)
+                  if (_selectedRole.toLowerCase() ==
+                      AppConstants.roleOwner.toLowerCase()) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Belum punya akun? ",
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pushNamed('/register');
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Daftar',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Debug Button
                   TextButton.icon(

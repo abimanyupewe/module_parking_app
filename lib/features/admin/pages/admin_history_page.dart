@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import '../../../config/colors.dart';
-import '../../../models/kendaraan_model.dart';
-import '../../../models/transaksi_model.dart';
-import 'package:intl/intl.dart';
+import '../../../services/format_helper.dart';
+import '../../../services/database_helper.dart';
+import '../../../services/csv_service.dart';
+import '../../../services/pdf_service.dart';
 
 /// Admin History Page - Menampilkan riwayat kendaraan dengan filter dan search
 class AdminHistoryPage extends StatefulWidget {
@@ -13,25 +15,22 @@ class AdminHistoryPage extends StatefulWidget {
 }
 
 class _AdminHistoryPageState extends State<AdminHistoryPage> {
-  late List<KendaraanModel> _allVehicles = [];
-  late List<TransaksiModel> _allTransaksi = [];
+  final _databaseHelper = DatabaseHelper();
+  late List<Map<String, dynamic>> _allData = [];
   late List<Map<String, dynamic>> _filteredData = [];
+  late List<String> _categories = ['Semua'];
   bool _isLoading = false;
   String _searchQuery = '';
   String _selectedCategory = 'Semua';
-  DateTime? _startDate;
-  DateTime? _endDate;
-
-  final List<String> _categories = ['Semua', 'Motor', 'Mobil', 'Bus'];
 
   @override
   void initState() {
     super.initState();
-    _loadVehicles();
+    _loadData();
   }
 
-  /// Load vehicle data
-  Future<void> _loadVehicles() async {
+  /// Load transaction data from database
+  Future<void> _loadData() async {
     if (_isLoading) return;
 
     if (mounted) {
@@ -41,18 +40,18 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
     }
 
     try {
-      // Simulasi loading delay
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Get all transactions from database
+      final transactions = await _databaseHelper.getAllTransactions();
 
-      // Generate mock data
-      final vehicles = _generateMockVehicles();
-      final transaksi = _generateMockTransaksi();
+      // Get all jenis kendaraan for categories
+      final jenisData = await _databaseHelper.getAllJenisKendaraan();
+      final jenisNames = jenisData.map((j) => j.namaJenis).toList();
 
       if (mounted) {
         setState(() {
-          _allVehicles = vehicles;
-          _allTransaksi = transaksi;
-          _filteredData = _combinedData();
+          _allData = transactions;
+          _categories = ['Semua', ...jenisNames];
+          _filteredData = _filterAndSearchData(_allData);
           _isLoading = false;
         });
       }
@@ -68,83 +67,6 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
     }
   }
 
-  /// Generate mock vehicle data
-  List<KendaraanModel> _generateMockVehicles() {
-    final vehicles = <KendaraanModel>[];
-    final merk = [
-      'Honda Vario',
-      'Toyota Avanza',
-      'Yamaha Nmax',
-      'Daihatsu Xenia',
-      'Suzuki Carry',
-    ];
-
-    for (int i = 0; i < 15; i++) {
-      final jenisIdx = i % 3;
-      vehicles.add(
-        KendaraanModel(
-          idKendaraan: i + 1,
-          platNomor: 'AB ${1000 + i} CD',
-          idJenis: jenisIdx,
-          merk: merk[i % merk.length],
-          warna: 'Hitam',
-        ),
-      );
-    }
-
-    return vehicles;
-  }
-
-  /// Generate mock transaksi data
-  List<TransaksiModel> _generateMockTransaksi() {
-    final transaksi = <TransaksiModel>[];
-    final now = DateTime.now();
-
-    for (int i = 0; i < 15; i++) {
-      final waktuMasuk = now.subtract(Duration(hours: 24 - i));
-      final waktuKeluar = i < 10
-          ? waktuMasuk.add(Duration(hours: 2 + i))
-          : null;
-
-      transaksi.add(
-        TransaksiModel(
-          idTransaksi: i + 1,
-          idKendaraan: i + 1,
-          idArea: (i % 3) + 1,
-          waktuMasuk: waktuMasuk,
-          waktuKeluar: waktuKeluar,
-          status: waktuKeluar != null ? 'Selesai' : 'Parkir',
-          totalBiaya: waktuKeluar != null ? (10000 + (i * 5000)) : null,
-          idUser: 1,
-        ),
-      );
-    }
-
-    return transaksi;
-  }
-
-  /// Combine vehicle and transaksi data
-  List<Map<String, dynamic>> _combinedData() {
-    final combined = <Map<String, dynamic>>[];
-
-    for (final transaksi in _allTransaksi) {
-      final vehicle = _allVehicles.firstWhere(
-        (v) => v.idKendaraan == transaksi.idKendaraan,
-        orElse: () => KendaraanModel(
-          idKendaraan: 0,
-          platNomor: 'N/A',
-          idJenis: 0,
-          merk: 'N/A',
-          warna: 'N/A',
-        ),
-      );
-
-      combined.add({'vehicle': vehicle, 'transaksi': transaksi});
-    }
-
-    return _filterAndSearchData(combined);
-  }
-
   /// Filter and search combined data
   List<Map<String, dynamic>> _filterAndSearchData(
     List<Map<String, dynamic>> data,
@@ -152,65 +74,152 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
     final query = _searchQuery.toLowerCase();
 
     return data.where((item) {
-      final vehicle = item['vehicle'] as KendaraanModel;
-      final transaksi = item['transaksi'] as TransaksiModel;
+      final platNomor = item['plat_nomor'] as String? ?? '';
+      final merk = item['merk'] as String? ?? '';
+      final namaJenis = item['nama_jenis'] as String? ?? '';
 
       // Filter by category
       final categoryMatch =
-          _selectedCategory == 'Semua' ||
-          _getJenisKendaraan(vehicle.idJenis) == _selectedCategory;
+          _selectedCategory == 'Semua' || namaJenis == _selectedCategory;
 
       // Filter by search query
       final searchMatch =
           query.isEmpty ||
-          vehicle.platNomor.toLowerCase().contains(query) ||
-          vehicle.merk.toLowerCase().contains(query);
+          platNomor.toLowerCase().contains(query) ||
+          merk.toLowerCase().contains(query);
 
       return categoryMatch && searchMatch;
     }).toList();
   }
 
-  /// Get jenis kendaraan string
-  String _getJenisKendaraan(int idJenis) {
-    switch (idJenis) {
-      case 0:
-        return 'Motor';
-      case 1:
-        return 'Mobil';
-      case 2:
-        return 'Bus';
-      default:
-        return 'Lainnya';
-    }
-  }
-
   /// Filter dan search vehicles
   void _applyFiltersAndSearch() {
     setState(() {
-      _filteredData = _combinedData();
+      _filteredData = _filterAndSearchData(_allData);
     });
   }
 
-  /// Export to PDF
+  /// Export to PDF or CSV
   void _exportToPDF() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Mengekspor ${_filteredData.length} data kendaraan ke PDF...',
-              ),
-            ),
-          ],
-        ),
-        duration: const Duration(seconds: 2),
-        backgroundColor: Colors.green[600],
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pilih Format Export'),
+        content: const Text('Pilih format file untuk mengekspor data:'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _exportToCSV();
+            },
+            icon: const Icon(Icons.download),
+            label: const Text('CSV'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _exportToPDFFormat();
+            },
+            icon: const Icon(Icons.picture_as_pdf),
+            label: const Text('PDF'),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          ),
+        ],
       ),
     );
-    // TODO: Implement actual PDF export using pdf package
+  }
+
+  /// Export filtered data to CSV
+  Future<void> _exportToCSV() async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.downloading, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Mengunduh ${_filteredData.length} data kendaraan sebagai CSV...',
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.blue[600],
+        ),
+      );
+
+      await CsvService.generateTransactionCSV(transactions: _filteredData);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Berhasil mengunduh ${_filteredData.length} data kendaraan',
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.green[600],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    }
+  }
+
+  /// Export filtered data to PDF
+  Future<void> _exportToPDFFormat() async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.print, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Mengekspor ${_filteredData.length} data kendaraan ke PDF...',
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.orange[600],
+        ),
+      );
+
+      await PdfService.generateParkedVehiclesReport(vehicles: _filteredData);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -325,7 +334,7 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                       }).toList(),
                     ),
                   ),
-                
+
                   const SizedBox(height: 16),
 
                   // Data Table
@@ -346,6 +355,12 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                               DataColumn(
                                 label: Text(
                                   'No',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Foto',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               ),
@@ -384,13 +399,62 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                               index,
                             ) {
                               final item = _filteredData[index];
-                              final vehicle = item['vehicle'] as KendaraanModel;
-                              final transaksi =
-                                  item['transaksi'] as TransaksiModel;
+                              final platNomor =
+                                  item['plat_nomor'] as String? ?? '';
+                              final namaJenis =
+                                  item['nama_jenis'] as String? ?? '';
+                              final merk = item['merk'] as String? ?? '';
+                              final waktuMasuk =
+                                  item['waktu_masuk'] as String? ?? '';
+                              final waktuKeluar =
+                                  item['waktu_keluar'] as String?;
+                              final imagePath = item['image_path'] as String?;
 
                               return DataRow(
                                 cells: [
                                   DataCell(Text('${index + 1}')),
+                                  DataCell(
+                                    imagePath != null && imagePath.isNotEmpty
+                                        ? Container(
+                                            margin: const EdgeInsets.symmetric(
+                                              vertical: 4,
+                                            ),
+                                            width: 50,
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: Colors.grey.shade300,
+                                              ),
+                                              image: DecorationImage(
+                                                image: FileImage(
+                                                  File(imagePath),
+                                                ),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          )
+                                        : Container(
+                                            margin: const EdgeInsets.symmetric(
+                                              vertical: 4,
+                                            ),
+                                            width: 50,
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade200,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: Colors.grey.shade300,
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.directions_car,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                  ),
                                   DataCell(
                                     Container(
                                       padding: const EdgeInsets.symmetric(
@@ -402,7 +466,7 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
-                                        vehicle.platNomor,
+                                        platNomor,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 12,
@@ -410,32 +474,36 @@ class _AdminHistoryPageState extends State<AdminHistoryPage> {
                                       ),
                                     ),
                                   ),
-                                  DataCell(
-                                    Text(_getJenisKendaraan(vehicle.idJenis)),
-                                  ),
-                                  DataCell(Text(vehicle.merk)),
+                                  DataCell(Text(namaJenis)),
+                                  DataCell(Text(merk)),
                                   DataCell(
                                     Text(
-                                      DateFormat(
-                                        'dd/MM/yyyy HH:mm',
-                                      ).format(transaksi.waktuMasuk),
+                                      waktuMasuk.isNotEmpty
+                                          ? FormatHelper.formatFullDate(
+                                              DateTime.parse(waktuMasuk),
+                                            )
+                                          : '-',
                                       style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
                                   DataCell(
                                     Text(
-                                      transaksi.waktuKeluar != null
-                                          ? DateFormat(
-                                              'dd/MM/yyyy HH:mm',
-                                            ).format(transaksi.waktuKeluar!)
+                                      waktuKeluar != null &&
+                                              waktuKeluar.isNotEmpty
+                                          ? FormatHelper.formatFullDate(
+                                              DateTime.parse(waktuKeluar),
+                                            )
                                           : '-',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: transaksi.waktuKeluar == null
+                                        color:
+                                            waktuKeluar == null ||
+                                                waktuKeluar.isEmpty
                                             ? Colors.orange
                                             : Colors.green,
                                         fontWeight:
-                                            transaksi.waktuKeluar == null
+                                            waktuKeluar == null ||
+                                                waktuKeluar.isEmpty
                                             ? FontWeight.w600
                                             : FontWeight.normal,
                                       ),

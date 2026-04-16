@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../config/constants.dart';
+import '../../../services/database_helper.dart';
+import '../../../services/error_handler.dart';
+import '../../../models/user_model.dart';
 import '../../../widgets/widgets.dart';
+import '../../../services/password_service.dart';
 
 /// Owner SDM Section - Manajemen SDM (penambahan, monitoring, edit, hapus)
 class OwnerSdmSection extends StatefulWidget {
@@ -11,72 +16,73 @@ class OwnerSdmSection extends StatefulWidget {
 }
 
 class _OwnerSdmSectionState extends State<OwnerSdmSection> {
+  final _databaseHelper = DatabaseHelper();
   String _searchQuery = '';
-  String? _selectedRole; // null = semua role
+  String? _selectedRole;
+
+  List<UserModel> _allSdm = [];
+  List<UserModel> _filteredSdm = [];
+  bool _isLoading = true;
 
   final List<String> _roles = ['Petugas', 'Admin'];
-
-  final List<Map<String, dynamic>> _allSdm = [
-    {
-      'id': 1,
-      'nama': 'Budi Santoso',
-      'role': 'Petugas',
-      'status': 'aktif',
-      'bergabung': '2024-01-15',
-      'username': 'budi_santoso',
-    },
-    {
-      'id': 2,
-      'nama': 'Ani Wijaya',
-      'role': 'Petugas',
-      'status': 'aktif',
-      'bergabung': '2024-02-20',
-      'username': 'ani_wijaya',
-    },
-    {
-      'id': 3,
-      'nama': 'Roni Pratama',
-      'role': 'Admin',
-      'status': 'aktif',
-      'bergabung': '2024-01-10',
-      'username': 'roni_pratama',
-    },
-    {
-      'id': 4,
-      'nama': 'Siti Nurhaliza',
-      'role': 'Petugas',
-      'status': 'aktif',
-      'bergabung': '2024-03-05',
-      'username': 'siti_nurhaliza',
-    },
-    {
-      'id': 5,
-      'nama': 'Ahmad Rifki',
-      'role': 'Admin',
-      'status': 'aktif',
-      'bergabung': '2024-01-20',
-      'username': 'ahmad_rifki',
-    },
-  ];
-
-  late List<Map<String, dynamic>> _filteredSdm;
 
   @override
   void initState() {
     super.initState();
-    _filteredSdm = _allSdm;
+    _loadSDM();
+  }
+
+  Future<void> _loadSDM() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Get all users and filter by Petugas and Admin roles
+      final allUsers = await _databaseHelper.getAllUsers();
+      final filteredUsers = allUsers
+          .where(
+            (user) =>
+                user.role.toLowerCase() ==
+                    AppConstants.rolePetugas.toLowerCase() ||
+                user.role.toLowerCase() ==
+                    AppConstants.roleAdmin.toLowerCase() ||
+                user.role == 'Petugas' ||
+                user.role == 'Admin',
+          )
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          _allSdm = filteredUsers;
+          _filteredSdm = _allSdm;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading SDM: $e')));
+      }
+    }
   }
 
   void _applyFilters() {
     _filteredSdm = _allSdm.where((item) {
       // Filter berdasarkan search query (nama)
-      if (!item['nama'].toLowerCase().contains(_searchQuery.toLowerCase())) {
+      if (!item.namaLengkap.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      )) {
         return false;
       }
 
       // Filter berdasarkan role
       if (_selectedRole != null) {
-        if (item['role'] != _selectedRole) {
+        if (item.role.toLowerCase() != _selectedRole!.toLowerCase()) {
           return false;
         }
       }
@@ -156,12 +162,12 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                 _buildStatCard('Total SDM', '${_allSdm.length}', Icons.people),
                 _buildStatCard(
                   'Aktif',
-                  '${_allSdm.where((s) => s['status'] == 'aktif').length}',
+                  '${_allSdm.where((s) => s.status == AppConstants.statusAktif).length}',
                   Icons.check_circle,
                 ),
                 _buildStatCard(
                   'Admin',
-                  '${_allSdm.where((s) => s['role'] == 'Admin').length}',
+                  '${_allSdm.where((s) => s.role.toLowerCase() == AppConstants.roleAdmin.toLowerCase()).length}',
                   Icons.admin_panel_settings,
                 ),
               ],
@@ -173,7 +179,7 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
           Row(
             children: [
               Expanded(
-                flex: 2,
+                flex: 1,
                 child: CustomSearchBar(
                   hintText: 'Cari nama SDM...',
                   onChanged: _onSearchChanged,
@@ -191,13 +197,13 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                     isExpanded: true,
                     underline: const SizedBox(),
                     value: _selectedRole,
-                    hint: const Text('Semua Role'),
+                    hint: const Text('Semua'),
                     items: [
                       const DropdownMenuItem<String?>(
                         value: null,
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text('Semua Role'),
+                          child: Text('Semua'),
                         ),
                       ),
                       ..._roles.map((role) {
@@ -233,7 +239,9 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
           const SizedBox(height: 16),
 
           // Data Table
-          if (_filteredSdm.isEmpty)
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_filteredSdm.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 32),
@@ -303,16 +311,6 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                   ),
                   DataColumn(
                     label: Text(
-                      'Bergabung',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
                       'Aksi',
                       style: TextStyle(
                         fontSize: 13,
@@ -328,7 +326,7 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                     cells: [
                       DataCell(
                         Text(
-                          sdm['nama'],
+                          sdm.namaLengkap,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -338,22 +336,14 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                       ),
                       DataCell(
                         Text(
-                          sdm['username'],
+                          sdm.username,
                           style: const TextStyle(fontSize: 12),
                         ),
                       ),
                       DataCell(
-                        Text(sdm['role'], style: const TextStyle(fontSize: 12)),
+                        Text(sdm.role, style: const TextStyle(fontSize: 12)),
                       ),
-                      DataCell(
-                        StatusBadge(status: sdm['status'], fontSize: 11),
-                      ),
-                      DataCell(
-                        Text(
-                          sdm['bergabung'],
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
+                      DataCell(StatusBadge(status: sdm.status, fontSize: 11)),
                       DataCell(
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -377,7 +367,35 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                             SizedBox(
                               height: 32,
                               child: OutlinedButton(
-                                onPressed: () => _removeSDM(sdm['id']),
+                                onPressed: () => _toggleSdmStatus(sdm),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor:
+                                      sdm.status == AppConstants.statusAktif
+                                      ? AppColors.warning
+                                      : AppColors.success,
+                                  side: BorderSide(
+                                    color:
+                                        sdm.status == AppConstants.statusAktif
+                                        ? AppColors.warning
+                                        : AppColors.success,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                ),
+                                child: Text(
+                                  sdm.status == AppConstants.statusAktif
+                                      ? 'Nonaktifkan'
+                                      : 'Aktifkan',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              height: 32,
+                              child: OutlinedButton(
+                                onPressed: () => _removeSDM(sdm),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.danger,
                                   side: const BorderSide(
@@ -516,8 +534,7 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
               child: const Text('Batal'),
             ),
             ElevatedButton(
-              onPressed: () {
-                // Validation
+              onPressed: () async {
                 if (namaController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Nama tidak boleh kosong')),
@@ -547,31 +564,57 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                   return;
                 }
 
-                // Add SDM
-                setState(() {
-                  _allSdm.add({
-                    'id':
-                        (_allSdm.isNotEmpty ? _allSdm.last['id'] as int : 0) +
-                        1,
-                    'nama': namaController.text,
-                    'username': usernameController.text,
-                    'role': selectedRole,
-                    'status': 'aktif',
-                    'bergabung': DateTime.now().toString().split(
-                      ' ',
-                    )[0], // Format: YYYY-MM-DD
-                  });
-                  _applyFilters();
-                });
+                try {
+                  // Check apakah username sudah terdaftar
+                  final isDuplicate = await _databaseHelper.isDuplicateUsername(
+                    usernameController.text,
+                  );
+                  if (isDuplicate) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Username \'${usernameController.text}\' sudah terdaftar. Silakan gunakan username lain.',
+                          ),
+                        ),
+                      );
+                    }
+                    return;
+                  }
 
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'SDM ${namaController.text} berhasil ditambahkan',
-                    ),
-                  ),
-                );
+                  final hashedPassword = PasswordService.hashPassword(
+                    passwordController.text,
+                  );
+
+                  final user = UserModel(
+                    namaLengkap: namaController.text,
+                    username: usernameController.text,
+                    password: hashedPassword,
+                    role: selectedRole!.toLowerCase(),
+                    status: AppConstants.statusAktif,
+                  );
+
+                  await _databaseHelper.insertUser(user);
+
+                  if (mounted) {
+                    Navigator.pop(context);
+                    await _loadSDM();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'SDM ${namaController.text} berhasil ditambahkan',
+                        ),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    final errorMsg = ErrorHandler.transformError(e);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(errorMsg)));
+                  }
+                }
               },
               child: const Text('Tambah'),
             ),
@@ -581,11 +624,11 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
     );
   }
 
-  void _showEditDialog(Map<String, dynamic> staff) {
-    final namaController = TextEditingController(text: staff['nama']);
-    final usernameController = TextEditingController(text: staff['username']);
+  void _showEditDialog(UserModel staff) {
+    final namaController = TextEditingController(text: staff.namaLengkap);
+    final usernameController = TextEditingController(text: staff.username);
     final passwordController = TextEditingController();
-    String? selectedRole = staff['role'];
+    String? selectedRole = staff.role;
 
     showDialog(
       context: context,
@@ -665,8 +708,7 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
               child: const Text('Batal'),
             ),
             ElevatedButton(
-              onPressed: () {
-                // Validation
+              onPressed: () async {
                 if (namaController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Nama tidak boleh kosong')),
@@ -682,28 +724,42 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
                   return;
                 }
 
-                // Update SDM
-                setState(() {
-                  final index = _allSdm.indexWhere(
-                    (s) => s['id'] == staff['id'],
-                  );
-                  if (index != -1) {
-                    _allSdm[index]['nama'] = namaController.text;
-                    _allSdm[index]['username'] = usernameController.text;
-                    _allSdm[index]['role'] = selectedRole;
-                    // Password tidak disimpan di sini (biasanya di backend)
-                    _applyFilters();
-                  }
-                });
+                try {
+                  final String computedPassword =
+                      passwordController.text.isNotEmpty
+                      ? PasswordService.hashPassword(passwordController.text)
+                      : staff.password;
 
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'SDM ${namaController.text} berhasil diperbarui',
-                    ),
-                  ),
-                );
+                  final updatedUser = staff.copyWith(
+                    namaLengkap: namaController.text,
+                    username: usernameController.text,
+                    password: computedPassword,
+                    role: selectedRole != null
+                        ? selectedRole!.toLowerCase()
+                        : staff.role,
+                  );
+
+                  await _databaseHelper.updateUser(updatedUser);
+
+                  if (mounted) {
+                    Navigator.pop(context);
+                    await _loadSDM();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'SDM ${namaController.text} berhasil diperbarui',
+                        ),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    final errorMsg = ErrorHandler.transformError(e);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(errorMsg)));
+                  }
+                }
               },
               child: const Text('Perbarui'),
             ),
@@ -713,30 +769,99 @@ class _OwnerSdmSectionState extends State<OwnerSdmSection> {
     );
   }
 
-  void _removeSDM(int sdmId) {
-    final sdm = _allSdm.firstWhere((s) => s['id'] == sdmId);
+  void _toggleSdmStatus(UserModel sdm) {
+    final isAktif = sdm.status == AppConstants.statusAktif;
+    final action = isAktif ? 'dinonaktifkan' : 'diaktifkan';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isAktif ? 'Nonaktifkan SDM' : 'Aktifkan SDM'),
+        content: Text(
+          isAktif
+              ? 'Apakah Anda yakin ingin menonaktifkan ${sdm.namaLengkap}? SDM tidak akan bisa login ke sistem.'
+              : 'Apakah Anda yakin ingin mengaktifkan kembali ${sdm.namaLengkap}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                final updatedUser = sdm.copyWith(
+                  status: isAktif
+                      ? AppConstants.statusNonaktif
+                      : AppConstants.statusAktif,
+                );
+
+                await _databaseHelper.updateUser(updatedUser);
+
+                if (mounted) {
+                  await _loadSDM();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('SDM ${sdm.namaLengkap} berhasil $action'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  final errorMsg = ErrorHandler.transformError(e);
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(errorMsg)));
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isAktif ? AppColors.danger : AppColors.success,
+            ),
+            child: Text(isAktif ? 'Nonaktifkan' : 'Aktifkan'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _removeSDM(UserModel sdm) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Hapus SDM'),
-        content: Text('Anda yakin ingin menghapus ${sdm['nama']}?'),
+        content: Text('Anda yakin ingin menghapus ${sdm.namaLengkap}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                _allSdm.removeWhere((s) => s['id'] == sdmId);
-                _applyFilters();
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('SDM ${sdm['nama']} berhasil dihapus')),
-              );
+            onPressed: () async {
+              try {
+                await _databaseHelper.deleteUser(sdm.idUser ?? 0);
+
+                if (mounted) {
+                  Navigator.pop(context);
+                  await _loadSDM();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('SDM ${sdm.namaLengkap} berhasil dihapus'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  final errorMsg = ErrorHandler.transformError(e);
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(errorMsg)));
+                }
+              }
             },
-            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Hapus'),
           ),
         ],
       ),

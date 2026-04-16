@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
+import '../../../config/constants.dart';
+import '../../../services/format_helper.dart';
+import '../../../services/database_helper.dart';
 import '../../../widgets/widgets.dart';
 
 /// Admin Audit Section - Log aktivitas (Read-Only)
@@ -11,37 +14,68 @@ class AdminAuditSection extends StatefulWidget {
 }
 
 class _AdminAuditSectionState extends State<AdminAuditSection> {
-  final List<Map<String, dynamic>> _logs = [
-    {
-      'id': 1,
-      'username': 'budi_s',
-      'aktivitas': 'Check-In Kendaraan',
-      'kategori': 'Transaksi',
-      'waktu': '10:45',
-      'detail': 'Plat: AB 1234 CD',
-    },
-    {
-      'id': 2,
-      'username': 'ani_w',
-      'aktivitas': 'Check-Out Kendaraan',
-      'kategori': 'Transaksi',
-      'waktu': '10:30',
-      'detail': 'Plat: DE 5678 FG',
-    },
-    {
-      'id': 3,
-      'username': 'admin_user',
-      'aktivitas': 'Disable Petugas',
-      'kategori': 'Otorisasi',
-      'waktu': '09:15',
-      'detail': 'Username: roni_p',
-    },
-  ];
-
+  final _databaseHelper = DatabaseHelper();
+  List<Map<String, dynamic>> _logs = [];
+  bool _isLoading = true;
   int _selectedFilter = 0;
 
   @override
+  void initState() {
+    super.initState();
+    _loadLogs();
+  }
+
+  Future<void> _loadLogs() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final logs = await _databaseHelper.getActivityLogs(limit: 100);
+
+      if (mounted) {
+        setState(() {
+          _logs = logs;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  List<Map<String, dynamic>> _getFilteredLogs() {
+    if (_selectedFilter == 0) return _logs;
+    if (_selectedFilter == 1) {
+      return _logs
+          .where(
+            (log) =>
+                log[AppConstants.colKategoriLog] == AppConstants.logTransaksi,
+          )
+          .toList();
+    }
+    if (_selectedFilter == 2) {
+      return _logs
+          .where(
+            (log) =>
+                log[AppConstants.colKategoriLog] == AppConstants.logOtorisasi,
+          )
+          .toList();
+    }
+    return _logs;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final filteredLogs = _getFilteredLogs();
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -72,34 +106,58 @@ class _AdminAuditSectionState extends State<AdminAuditSection> {
             ),
             const SizedBox(height: 24),
 
-            // List using LogTimelineTile
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _logs.length,
-              itemBuilder: (context, index) {
-                final log = _logs[index];
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: index != _logs.length - 1 ? 16 : 0,
-                  ),
-                  child: LogTimelineTile(
-                    title: log['aktivitas'],
-                    subtitle: 'Oleh: ${log['username']}',
-                    timestamp: log['waktu'],
-                    category: log['kategori'],
-                    icon: log['kategori'] == 'Transaksi'
-                        ? Icons.car_rental
-                        : Icons.security,
-                    iconColor: log['kategori'] == 'Transaksi'
-                        ? AppColors.info
-                        : AppColors.warning,
-                    isLast: index == _logs.length - 1,
-                    onTap: () => _showLogDetail(log),
-                  ),
-                );
-              },
-            ),
+            // Loading state
+            if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (filteredLogs.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Text('Tidak ada log aktivitas'),
+                ),
+              )
+            else
+              // List using LogTimelineTile
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filteredLogs.length,
+                itemBuilder: (context, index) {
+                  final log = filteredLogs[index];
+                  final kategori =
+                      log[AppConstants.colKategoriLog] as String? ?? '';
+                  final aktivitas =
+                      log[AppConstants.colAktivitas] as String? ?? '';
+                  final rawWaktu = log[AppConstants.colWaktu] as String? ?? '';
+                  final waktu = rawWaktu.isNotEmpty
+                      ? FormatHelper.formatFullDate(
+                          DateTime.tryParse(rawWaktu) ?? DateTime.now(),
+                        )
+                      : '';
+                  final username = log[AppConstants.colUsername] ?? 'Sistem';
+                  final role = log[AppConstants.colRole] ?? '-';
+
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index != filteredLogs.length - 1 ? 16 : 0,
+                    ),
+                    child: LogTimelineTile(
+                      title: aktivitas,
+                      subtitle: 'Oleh: $username ($role)',
+                      timestamp: waktu,
+                      category: kategori,
+                      icon: kategori == AppConstants.logTransaksi
+                          ? Icons.car_rental
+                          : Icons.security,
+                      iconColor: kategori == AppConstants.logTransaksi
+                          ? AppColors.info
+                          : AppColors.warning,
+                      isLast: index == filteredLogs.length - 1,
+                      onTap: () => _showLogDetail(log),
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -136,6 +194,13 @@ class _AdminAuditSectionState extends State<AdminAuditSection> {
   }
 
   void _showLogDetail(Map<String, dynamic> log) {
+    final rawWaktu = log[AppConstants.colWaktu] as String? ?? '';
+    final waktu = rawWaktu.isNotEmpty
+        ? FormatHelper.formatFullDate(
+            DateTime.tryParse(rawWaktu) ?? DateTime.now(),
+          )
+        : '';
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -144,15 +209,22 @@ class _AdminAuditSectionState extends State<AdminAuditSection> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildLogDetailRow('Aktivitas', log['aktivitas']),
+            _buildLogDetailRow(
+              'Aktivitas',
+              log[AppConstants.colAktivitas] as String? ?? '',
+            ),
             const SizedBox(height: 12),
-            _buildLogDetailRow('Petugas', log['username']),
+            _buildLogDetailRow(
+              'Oleh',
+              '${log[AppConstants.colUsername] ?? 'Sistem'} (${log[AppConstants.colRole] ?? '-'})',
+            ),
             const SizedBox(height: 12),
-            _buildLogDetailRow('Kategori', log['kategori']),
+            _buildLogDetailRow(
+              'Kategori',
+              log[AppConstants.colKategoriLog] as String? ?? '',
+            ),
             const SizedBox(height: 12),
-            _buildLogDetailRow('Waktu', log['waktu']),
-            const SizedBox(height: 12),
-            _buildLogDetailRow('Detail', log['detail']),
+            _buildLogDetailRow('Waktu', waktu),
             const SizedBox(height: 16),
             // Note
             Container(
