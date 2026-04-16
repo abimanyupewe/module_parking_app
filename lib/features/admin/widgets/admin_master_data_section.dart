@@ -5,10 +5,13 @@ import '../../../services/error_handler.dart';
 import '../../../models/jenis_kendaraan_model.dart';
 import '../../../models/area_parkir_model.dart';
 import '../../../widgets/widgets.dart';
+import 'masterData/adminMasterDataTabs.dart';
+import 'masterData/adminKategoriListPanel.dart';
+import 'masterData/adminAreaListPanel.dart';
 
 /// Admin Master Data Section - CRUD Kategori & Area
 class AdminMasterDataSection extends StatefulWidget {
-  const AdminMasterDataSection({Key? key}) : super(key: key);
+  const AdminMasterDataSection({super.key});
 
   @override
   State<AdminMasterDataSection> createState() => _AdminMasterDataSectionState();
@@ -67,66 +70,9 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Tab buttons
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedTabIndex = 0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _selectedTabIndex == 0
-                          ? AppColors.primary
-                          : AppColors.tertiary,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        bottomLeft: Radius.circular(8),
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Kategori',
-                        style: TextStyle(
-                          color: _selectedTabIndex == 0
-                              ? AppColors.white
-                              : AppColors.inactive,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedTabIndex = 1),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _selectedTabIndex == 1
-                          ? AppColors.primary
-                          : AppColors.tertiary,
-                      borderRadius: const BorderRadius.only(
-                        topRight: Radius.circular(8),
-                        bottomRight: Radius.circular(8),
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Area',
-                        style: TextStyle(
-                          color: _selectedTabIndex == 1
-                              ? AppColors.white
-                              : AppColors.inactive,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          AdminMasterDataTabs(
+            selectedTabIndex: _selectedTabIndex,
+            onSelectTab: (tab) => setState(() => _selectedTabIndex = tab),
           ),
           const SizedBox(height: 16),
           // Content
@@ -141,188 +87,25 @@ class _AdminMasterDataSectionState extends State<AdminMasterDataSection> {
   }
 
   Widget _buildKategoriList() {
-    if (_isLoadingKategori) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_errorMessage != null) {
-      return Center(
-        child: Text(
-          'Error: $_errorMessage',
-          style: const TextStyle(color: AppColors.danger),
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        // Add button
-        PrimaryButton(
-          label: 'Tambah Kategori',
-          onPressed: () => _showKategoriDialog(null),
-          width: double.infinity,
-          icon: const Icon(Icons.add),
-        ),
-        const SizedBox(height: 16),
-        // List
-        Expanded(
-          child: _kategori.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Tidak ada kategori',
-                    style: TextStyle(color: AppColors.inactive),
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: _kategori.length,
-                  itemBuilder: (context, index) {
-                    final kat = _kategori[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.tertiary),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  kat.namaJenis,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Rp ${kat.tarifPerJam}/jam',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.inactive,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          PopupMenuButton(
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                child: const Text('Edit'),
-                                onTap: () => _showKategoriDialog(kat),
-                              ),
-                              PopupMenuItem(
-                                child: const Text('Hapus'),
-                                onTap: () => _deleteKategori(kat.idJenis ?? 0),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
+    return AdminKategoriListPanel(
+      isLoading: _isLoadingKategori,
+      errorMessage: _errorMessage,
+      kategori: _kategori,
+      onAdd: () => _showKategoriDialog(null),
+      onEdit: _showKategoriDialog,
+      onDelete: _deleteKategori,
     );
   }
 
   Widget _buildAreaList() {
-    if (_isLoadingArea) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_errorMessage != null) {
-      return Center(
-        child: Text(
-          'Error: $_errorMessage',
-          style: const TextStyle(color: AppColors.danger),
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        // Add button
-        PrimaryButton(
-          label: 'Tambah Area',
-          onPressed: () => _showAreaDialog(null),
-          width: double.infinity,
-          icon: const Icon(Icons.add),
-        ),
-        const SizedBox(height: 16),
-        // List
-        Expanded(
-          child: _area.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Tidak ada area',
-                    style: TextStyle(color: AppColors.inactive),
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: _area.length,
-                  itemBuilder: (context, index) {
-                    final ar = _area[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.tertiary),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  ar.namaArea,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${_getKategoriNama(ar.idJenis)} • Kapasitas: ${ar.kapasitas}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.inactive,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          PopupMenuButton(
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                child: const Text('Edit'),
-                                onTap: () => _showAreaDialog(ar),
-                              ),
-                              PopupMenuItem(
-                                child: const Text('Hapus'),
-                                onTap: () => _deleteArea(ar.idArea ?? 0),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
+    return AdminAreaListPanel(
+      isLoading: _isLoadingArea,
+      errorMessage: _errorMessage,
+      area: _area,
+      getKategoriNama: _getKategoriNama,
+      onAdd: () => _showAreaDialog(null),
+      onEdit: _showAreaDialog,
+      onDelete: _deleteArea,
     );
   }
 
