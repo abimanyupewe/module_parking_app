@@ -51,47 +51,6 @@ class _AdminOverviewSectionState extends State<AdminOverviewSection> {
   }
 
   @override
-  State<AdminOverviewSection> createState() => _AdminOverviewSectionState();
-}
-
-class _AdminOverviewSectionState extends State<AdminOverviewSection> {
-  final _databaseHelper = DatabaseHelper();
-
-  late Future<int> _totalAreaFuture;
-  late Future<int> _totalKendaraanFuture;
-  late Future<List<AreaParkirModel>> _areaListFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  void _loadData() {
-    _totalAreaFuture = _getTotalArea();
-    _totalKendaraanFuture = _getTotalKendaraan();
-    _areaListFuture = _databaseHelper.getAllAreaParkir();
-  }
-
-  Future<int> _getTotalArea() async {
-    try {
-      final areas = await _databaseHelper.getAllAreaParkir();
-      return areas.length;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  Future<int> _getTotalKendaraan() async {
-    try {
-      final kendaraan = await _databaseHelper.getAllKendaraan();
-      return kendaraan.length;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
