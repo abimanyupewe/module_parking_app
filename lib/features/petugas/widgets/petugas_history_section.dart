@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../../config/colors.dart';
-import '../../../config/constants.dart';
 import '../../../services/format_helper.dart';
 import '../../../services/database_helper.dart';
+import 'history/petugasHistoryTabContent.dart';
 
 /// Petugas History Section - Riwayat transaksi
 class PetugasHistorySection extends StatefulWidget {
@@ -24,7 +24,7 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
   String? _errorMessage;
 
   // Pagination
-  int _itemsPerPage = 10;
+  final int _itemsPerPage = 10;
   int _currentPageCompleted = 0;
   int _currentPageOngoing = 0;
 
@@ -87,234 +87,41 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
   }
 
   Widget _buildTabContent(List<Map<String, dynamic>> data, bool isCompleted) {
-    final displayData = data;
-    final totalBiaya = displayData.fold<int>(
-      0,
-      (sum, item) => sum + (item[AppConstants.colTotalBiaya] as int? ?? 0),
-    );
-
-    // Calculate pagination
-    final totalPages = (displayData.length / _itemsPerPage).ceil();
     final currentPage = isCompleted
         ? _currentPageCompleted
         : _currentPageOngoing;
-    final startIndex = currentPage * _itemsPerPage;
-    final endIndex = (startIndex + _itemsPerPage).clamp(0, displayData.length);
-    final paginatedData = displayData.sublist(startIndex, endIndex);
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Summary
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildSummaryItem('Total Transaksi', '${displayData.length}'),
-                _buildSummaryItem(
-                  'Total Pendapatan',
-                  FormatHelper.formatRupiah(totalBiaya),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+    final totalPages = (data.length / _itemsPerPage).ceil();
 
-            // Table
-            if (displayData.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 32),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.inbox_outlined,
-                        size: 64,
-                        color: AppColors.inactive,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        isCompleted
-                            ? 'Tidak ada transaksi selesai untuk periode ini'
-                            : 'Tidak ada kendaraan sedang parkir',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.inactive,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columnSpacing: 16,
-                  dataRowMinHeight: 56,
-                  dataRowMaxHeight: 56,
-                  headingRowHeight: 48,
-                  showCheckboxColumn: false,
-                  columns: [
-                    const DataColumn(label: Text('Foto')),
-                    const DataColumn(label: Text('Plat Nomor')),
-                    const DataColumn(label: Text('Jenis')),
-                    const DataColumn(label: Text('Masuk')),
-                    if (isCompleted) const DataColumn(label: Text('Keluar')),
-                    const DataColumn(label: Text('Durasi')),
-                    const DataColumn(label: Text('Biaya'), numeric: true),
-                  ],
-                  rows: paginatedData.map((history) {
-                    final waktuMasuk = DateTime.tryParse(
-                      history[AppConstants.colWaktuMasuk] ?? '',
-                    );
-                    final waktuKeluar = DateTime.tryParse(
-                      history[AppConstants.colWaktuKeluar] ?? '',
-                    );
-
-                    String durasiText = 'N/A';
-                    if (isCompleted &&
-                        waktuMasuk != null &&
-                        waktuKeluar != null) {
-                      final durasi = waktuKeluar.difference(waktuMasuk);
-                      durasiText = durasi.inHours > 0
-                          ? '${durasi.inHours}h ${durasi.inMinutes % 60}m'
-                          : '${durasi.inMinutes}m';
-                    } else if (!isCompleted && waktuMasuk != null) {
-                      // Real-time durasi for ongoing transactions
-                      final durasi = DateTime.now().difference(waktuMasuk);
-                      durasiText = durasi.inHours > 0
-                          ? '${durasi.inHours}h ${durasi.inMinutes % 60}m'
-                          : '${durasi.inMinutes}m';
-                    }
-
-                    final String? imagePath = history['image_path'] as String?;
-
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          imagePath != null && imagePath.isNotEmpty
-                              ? Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(4),
-                                    image: DecorationImage(
-                                      image: FileImage(File(imagePath)),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                )
-                              : Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.tertiary,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: const Icon(
-                                    Icons.broken_image,
-                                    size: 20,
-                                    color: AppColors.inactive,
-                                  ),
-                                ),
-                        ),
-                        DataCell(
-                          Text(
-                            history[AppConstants.colPlatNomor],
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        DataCell(
-                          Text(history[AppConstants.colNamaJenis] ?? 'N/A'),
-                        ),
-                        DataCell(
-                          Text(
-                            _formatDateTime(
-                              history[AppConstants.colWaktuMasuk],
-                            ),
-                          ),
-                        ),
-                        if (isCompleted)
-                          DataCell(
-                            Text(
-                              _formatDateTime(
-                                history[AppConstants.colWaktuKeluar],
-                              ),
-                            ),
-                          ),
-                        DataCell(Text(durasiText)),
-                        DataCell(
-                          Text(
-                            FormatHelper.formatRupiah(
-                              history[AppConstants.colTotalBiaya] ?? 0,
-                            ),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            const SizedBox(height: 24),
-
-            // Pagination Controls - Simple
-            if (displayData.isNotEmpty)
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextButton(
-                      onPressed: currentPage > 0
-                          ? () {
-                              setState(() {
-                                if (isCompleted) {
-                                  _currentPageCompleted--;
-                                } else {
-                                  _currentPageOngoing--;
-                                }
-                              });
-                            }
-                          : null,
-                      child: const Text('← Sebelumnya'),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        '${currentPage + 1}/${totalPages > 0 ? totalPages : 1}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.inactive,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: currentPage < totalPages - 1
-                          ? () {
-                              setState(() {
-                                if (isCompleted) {
-                                  _currentPageCompleted++;
-                                } else {
-                                  _currentPageOngoing++;
-                                }
-                              });
-                            }
-                          : null,
-                      child: const Text('Berikutnya →'),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
+    return PetugasHistoryTabContent(
+      data: data,
+      isCompleted: isCompleted,
+      itemsPerPage: _itemsPerPage,
+      currentPage: currentPage,
+      onPrevious: currentPage > 0
+          ? () {
+              setState(() {
+                if (isCompleted) {
+                  _currentPageCompleted--;
+                } else {
+                  _currentPageOngoing--;
+                }
+              });
+            }
+          : null,
+      onNext: currentPage < totalPages - 1
+          ? () {
+              setState(() {
+                if (isCompleted) {
+                  _currentPageCompleted++;
+                } else {
+                  _currentPageOngoing++;
+                }
+              });
+            }
+          : null,
+      formatDateTime: _formatDateTime,
+      formatDuration: _formatDuration,
     );
   }
 
@@ -401,26 +208,26 @@ class _PetugasHistorySectionState extends State<PetugasHistorySection>
     );
   }
 
-  Widget _buildSummaryItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: AppColors.inactive),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
+  String _formatDuration({
+    required bool isCompleted,
+    required DateTime? waktuMasuk,
+    required DateTime? waktuKeluar,
+  }) {
+    if (isCompleted && waktuMasuk != null && waktuKeluar != null) {
+      final durasi = waktuKeluar.difference(waktuMasuk);
+      return durasi.inHours > 0
+          ? '${durasi.inHours}h ${durasi.inMinutes % 60}m'
+          : '${durasi.inMinutes}m';
+    }
+
+    if (!isCompleted && waktuMasuk != null) {
+      final durasi = DateTime.now().difference(waktuMasuk);
+      return durasi.inHours > 0
+          ? '${durasi.inHours}h ${durasi.inMinutes % 60}m'
+          : '${durasi.inMinutes}m';
+    }
+
+    return 'N/A';
   }
 
   String _formatDateTime(String? dateTimeStr) {

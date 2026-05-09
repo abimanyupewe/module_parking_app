@@ -95,6 +95,7 @@ class AuthController {
         userId: user.idUser,
         userRole: user.role,
         username: user.username,
+        namaLengkap: user.namaLengkap,
       );
 
       // Record activity

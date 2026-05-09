@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
-import '../../../config/image_assets.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_card_container.dart';
+import '../widgets/registerCharacterImage.dart';
+import '../widgets/registerInputField.dart';
+import '../widgets/registerMessageBanner.dart';
+import '../widgets/registerSubmitButton.dart';
+import '../widgets/registerFooterLink.dart';
 
 /// Registration Page - Khusus untuk Owner
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -30,21 +34,6 @@ class _RegisterPageState extends State<RegisterPage> {
   void initState() {
     super.initState();
     _authController = AuthController();
-  }
-
-  /// Get character image untuk owner
-  Widget _getCharacterImage() {
-    return SizedBox(
-      width: 200,
-      height: 200,
-      child: Image.asset(
-        ImageAssets.characterPortrait,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(child: Icon(Icons.broken_image, size: 50));
-        },
-      ),
-    );
   }
 
   /// Handle registration
@@ -135,7 +124,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 24),
 
               // Character Image - untuk owner
-              _getCharacterImage(),
+              const RegisterCharacterImage(),
               const SizedBox(height: 40),
 
               // Auth Card Container dengan form
@@ -143,362 +132,136 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nama Lengkap Field
                     Text(
-                      'Nama Lengkap',
+                      'Role Akun',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    TextField(
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: const [
+                          Icon(
+                            Icons.lock_outline,
+                            color: AppColors.inactive,
+                            size: 20,
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Owner (tetap)',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    RegisterInputField(
+                      label: 'Nama Lengkap',
                       controller: _namaLengkapController,
-                      enabled: !_isLoading,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan nama lengkap Anda',
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.person_outline,
-                          color: AppColors.inactive,
-                          size: 20,
-                        ),
-                        filled: true,
-                        fillColor: AppColors.secondary,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
-                            width: 1.5,
-                          ),
-                        ),
-                        hintStyle: const TextStyle(
-                          color: AppColors.inactive,
-                          fontSize: 14,
-                        ),
-                      ),
-                      style: const TextStyle(fontSize: 14),
+                      hintText: 'Masukkan nama lengkap Anda',
+                      isLoading: _isLoading,
+                      prefixIcon: Icons.person_outline,
                     ),
                     const SizedBox(height: 20),
 
-                    // Username Field
-                    Text(
-                      'Nama Pengguna',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
+                    RegisterInputField(
+                      label: 'Nama Pengguna',
                       controller: _usernameController,
-                      enabled: !_isLoading,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan nama pengguna',
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.person_outline,
-                          color: AppColors.inactive,
-                          size: 20,
-                        ),
-                        filled: true,
-                        fillColor: AppColors.secondary,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
-                            width: 1.5,
-                          ),
-                        ),
-                        hintStyle: const TextStyle(
-                          color: AppColors.inactive,
-                          fontSize: 14,
-                        ),
-                      ),
-                      style: const TextStyle(fontSize: 14),
+                      hintText: 'Masukkan nama pengguna',
+                      isLoading: _isLoading,
+                      prefixIcon: Icons.person_outline,
                     ),
                     const SizedBox(height: 20),
 
-                    // Password Field
-                    Text(
-                      'Kata Sandi',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
+                    RegisterInputField(
+                      label: 'Kata Sandi',
                       controller: _passwordController,
-                      enabled: !_isLoading,
+                      hintText: '••••••••',
+                      isLoading: _isLoading,
+                      prefixIcon: Icons.lock_outline,
                       obscureText: !_showPassword,
-                      decoration: InputDecoration(
-                        hintText: '••••••••',
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.lock_outline,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _showPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: AppColors.inactive,
                           size: 20,
                         ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _showPassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                            color: AppColors.inactive,
-                            size: 20,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _showPassword = !_showPassword;
-                            });
-                          },
-                        ),
-                        filled: true,
-                        fillColor: AppColors.secondary,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
-                            width: 1.5,
-                          ),
-                        ),
-                        hintStyle: const TextStyle(
-                          color: AppColors.inactive,
-                          fontSize: 14,
-                        ),
+                        onPressed: () {
+                          setState(() {
+                            _showPassword = !_showPassword;
+                          });
+                        },
                       ),
-                      style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 20),
 
-                    // Confirm Password Field
-                    Text(
-                      'Konfirmasi Kata Sandi',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
+                    RegisterInputField(
+                      label: 'Konfirmasi Kata Sandi',
                       controller: _confirmPasswordController,
-                      enabled: !_isLoading,
+                      hintText: '••••••••',
+                      isLoading: _isLoading,
+                      prefixIcon: Icons.lock_outline,
                       obscureText: !_showConfirmPassword,
-                      decoration: InputDecoration(
-                        hintText: '••••••••',
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.lock_outline,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _showConfirmPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: AppColors.inactive,
                           size: 20,
                         ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _showConfirmPassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                            color: AppColors.inactive,
-                            size: 20,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _showConfirmPassword = !_showConfirmPassword;
-                            });
-                          },
-                        ),
-                        filled: true,
-                        fillColor: AppColors.secondary,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.primary,
-                            width: 1.5,
-                          ),
-                        ),
-                        hintStyle: const TextStyle(
-                          color: AppColors.inactive,
-                          fontSize: 14,
-                        ),
+                        onPressed: () {
+                          setState(() {
+                            _showConfirmPassword = !_showConfirmPassword;
+                          });
+                        },
                       ),
-                      style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 28),
 
-                    // Error Message
                     if (_errorMessage != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.danger.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.danger),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              color: AppColors.danger,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _errorMessage!,
-                                style: const TextStyle(
-                                  color: AppColors.danger,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      RegisterMessageBanner(
+                        message: _errorMessage!,
+                        isError: true,
                       ),
 
-                    // Success Message
                     if (_successMessage != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.success),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.check_circle,
-                              color: AppColors.success,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _successMessage!,
-                                style: const TextStyle(
-                                  color: AppColors.success,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      RegisterMessageBanner(
+                        message: _successMessage!,
+                        isError: false,
                       ),
 
-                    // Sign Up Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          elevation: 0,
-                        ),
-                        onPressed: _isLoading ? null : _handleRegister,
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            : const Text(
-                                'Daftar',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                      ),
+                    RegisterSubmitButton(
+                      isLoading: _isLoading,
+                      onPressed: _handleRegister,
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 28),
 
-              // Footer - Sign In Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Sudah punya akun? ',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed('/login');
-                    },
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(0, 0),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      'Masuk',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
+              RegisterFooterLink(
+                onLoginPressed: () {
+                  Navigator.of(context).pushNamed('/login');
+                },
               ),
               const SizedBox(height: 32),
             ],

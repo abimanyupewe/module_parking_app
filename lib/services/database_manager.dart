@@ -11,7 +11,7 @@ import 'web_database_helper.dart';
 class DatabaseManager {
   static final DatabaseManager _instance = DatabaseManager._internal();
 
-  late dynamic _database;
+  late Object _database;
   bool _isWeb = false;
 
   factory DatabaseManager() {
@@ -20,13 +20,16 @@ class DatabaseManager {
 
   DatabaseManager._internal();
 
+  DatabaseHelper get _nativeDb => _database as DatabaseHelper;
+  WebDatabaseHelper get _webDb => _database as WebDatabaseHelper;
+
   /// Initialize database sesuai platform
   Future<void> initialize() async {
     _isWeb = kIsWeb;
 
     if (kIsWeb) {
       _database = WebDatabaseHelper();
-      await _database.initialize();
+      await _webDb.initialize();
     } else {
       _database = DatabaseHelper();
     }
@@ -36,27 +39,37 @@ class DatabaseManager {
 
   // User operations
   Future<int> insertUser(UserModel user) async {
-    return await _database.insertUser(user);
+    return _isWeb
+        ? await _webDb.insertUser(user)
+        : await _nativeDb.insertUser(user);
   }
 
   Future<UserModel?> getUserByUsername(String username) async {
-    return await _database.getUserByUsername(username);
+    return _isWeb
+        ? await _webDb.getUserByUsername(username)
+        : await _nativeDb.getUserByUsername(username);
   }
 
   Future<UserModel?> getUserById(int id) async {
-    return await _database.getUserById(id);
+    return _isWeb
+        ? await _webDb.getUserById(id)
+        : await _nativeDb.getUserById(id);
   }
 
   Future<List<UserModel>> getAllUsers() async {
-    return await _database.getAllUsers();
+    return _isWeb ? await _webDb.getAllUsers() : await _nativeDb.getAllUsers();
   }
 
   Future<int> updateUser(UserModel user) async {
-    return await _database.updateUser(user);
+    return _isWeb
+        ? await _webDb.updateUser(user)
+        : await _nativeDb.updateUser(user);
   }
 
   Future<int> deleteUser(int id) async {
-    return await _database.deleteUser(id);
+    return _isWeb
+        ? await _webDb.deleteUser(id)
+        : await _nativeDb.deleteUser(id);
   }
 
   // Activity log operations
@@ -65,7 +78,9 @@ class DatabaseManager {
     String kategori,
     String aktivitas,
   ) async {
-    return await _database.recordActivity(userId, kategori, aktivitas);
+    return _isWeb
+        ? await _webDb.recordActivity(userId, kategori, aktivitas)
+        : await _nativeDb.recordActivity(userId, kategori, aktivitas);
   }
 
   Future<List<Map<String, dynamic>>> getActivityLogs({
@@ -73,33 +88,47 @@ class DatabaseManager {
     String? kategori,
     int limit = 100,
   }) async {
-    return await _database.getActivityLogs(
-      userId: userId,
-      kategori: kategori,
-      limit: limit,
-    );
+    return _isWeb
+        ? await _webDb.getActivityLogs(
+            userId: userId,
+            kategori: kategori,
+            limit: limit,
+          )
+        : await _nativeDb.getActivityLogs(
+            userId: userId,
+            kategori: kategori,
+            limit: limit,
+          );
   }
 
   // Transaksi operations
   Future<int> insertTransaksi(Map<String, dynamic> data) async {
-    return await _database.insertTransaksi(data);
+    return _isWeb
+        ? await _webDb.insertTransaksi(data)
+        : await _nativeDb.insertTransaksi(data);
   }
 
   Future<List<Map<String, dynamic>>> getActiveTransactions() async {
-    return await _database.getActiveTransactions();
+    return _isWeb
+        ? await _webDb.getActiveTransactions()
+        : await _nativeDb.getActiveTransactions();
   }
 
   Future<List<Map<String, dynamic>>> getAllTransactions({
     int limit = 100,
   }) async {
-    return await _database.getAllTransactions(limit: limit);
+    return _isWeb
+        ? await _webDb.getAllTransactions(limit: limit)
+        : await _nativeDb.getAllTransactions(limit: limit);
   }
 
   Future<int> updateTransaksi(
     int transaksiId,
     Map<String, dynamic> data,
   ) async {
-    return await _database.updateTransaksi(transaksiId, data);
+    return _isWeb
+        ? await _webDb.updateTransaksi(transaksiId, data)
+        : await _nativeDb.updateTransaksi(transaksiId, data);
   }
 
   // Utility
@@ -108,6 +137,6 @@ class DatabaseManager {
     if (_isWeb) {
       return 'Browser SharedPreferences (no file path)';
     }
-    return await (_database as DatabaseHelper).getDatabasePath();
+    return await _nativeDb.getDatabasePath();
   }
 }

@@ -17,7 +17,7 @@ class OwnerDashboardPage extends StatefulWidget {
 
 class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
   int _selectedIndex = 0;
-  String? _username;
+  String? _displayName;
 
   final List<Widget> _pages = [
     const OwnerHomeSection(),
@@ -26,12 +26,11 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
     const OwnerSdmSection(),
   ];
 
-  final List<String> _pageNames = ['Overview', 'Audit Log', 'History', 'SDM'];
-
   @override
   void initState() {
     super.initState();
-    _username = AppPreferences.getUsername();
+    _displayName =
+        AppPreferences.getNamaLengkap() ?? AppPreferences.getUsername();
   }
 
   void _handleLogout() {
@@ -66,13 +65,15 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
   }
 
   String _getGreeting() {
-    final hour = DateTime.now().hour;
+    final hour = DateTime.now().toUtc().add(const Duration(hours: 7)).hour;
     if (hour < 12) {
       return 'Pagi';
     } else if (hour < 17) {
       return 'Siang';
-    } else {
+    } else if (hour < 19) {
       return 'Sore';
+    } else {
+      return 'Malam';
     }
   }
 
@@ -104,7 +105,7 @@ class _OwnerDashboardPageState extends State<OwnerDashboardPage> {
                 style: const TextStyle(fontSize: 20, color: AppColors.white),
                 children: [
                   TextSpan(
-                    text: _username ?? 'Owner',
+                    text: _displayName ?? 'Owner',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

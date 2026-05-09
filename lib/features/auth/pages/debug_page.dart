@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../services/database_helper.dart';
 import '../../../models/user_model.dart';
+import '../widgets/debugActionButton.dart';
+import '../widgets/debugActionSection.dart';
+import '../widgets/debugLogPanel.dart';
 
 /// Debug Page untuk Testing Database Operations
 class DebugPage extends StatefulWidget {
-  const DebugPage({Key? key}) : super(key: key);
+  const DebugPage({super.key});
 
   @override
   State<DebugPage> createState() => _DebugPageState();
@@ -206,24 +209,7 @@ class _DebugPageState extends State<DebugPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Debug Output
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.black,
-              ),
-              child: Text(
-                _debugOutput,
-                style: const TextStyle(
-                  fontFamily: 'Courier',
-                  fontSize: 11,
-                  color: Color(0xFF00FF00),
-                ),
-              ),
-            ),
+            DebugLogPanel(output: _debugOutput),
 
             // Test Buttons
             Padding(
@@ -231,108 +217,84 @@ class _DebugPageState extends State<DebugPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 16, bottom: 8),
-                    child: Text(
-                      'Test Operations',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                  DebugActionSection(
+                    title: 'Test Operations',
+                    titleColor: AppColors.primary,
+                    children: [
+                      DebugActionButton(
+                        label: 'Test Insert User',
+                        onPressed: _testInsertUser,
                       ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: _testInsertUser,
-                    child: const Text('Test Insert User'),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _testGetAllUsers,
-                    child: const Text('Get All Users'),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () => _testGetUserByUsername('owner'),
-                    child: const Text('Get User: owner'),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _clearLog,
-                    child: const Text('Clear Log'),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(top: 24, bottom: 8),
-                    child: Text(
-                      'Clear Data Options',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.danger,
+                      const SizedBox(height: 8),
+                      DebugActionButton(
+                        label: 'Get All Users',
+                        onPressed: _testGetAllUsers,
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      DebugActionButton(
+                        label: 'Get User: owner',
+                        onPressed: () => _testGetUserByUsername('owner'),
+                      ),
+                      const SizedBox(height: 8),
+                      DebugActionButton(
+                        label: 'Clear Log',
+                        onPressed: _clearLog,
+                      ),
+                    ],
                   ),
-                  ElevatedButton.icon(
-                    onPressed: _clearActivityLogs,
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Clear Activity Logs'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.warning,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: _clearKendaraan,
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Clear Vehicles'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.warning,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: _clearTransaksi,
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Clear Transactions'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.warning,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: _clearUsers,
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Clear Users (Keep Master Data)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.warning,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: _clearAllData,
-                    icon: const Icon(Icons.delete_sweep),
-                    label: const Text('Clear ALL Data'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.danger,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: _resetDatabase,
-                    icon: const Icon(Icons.restore),
-                    label: const Text('Reset Database (Drop & Recreate)'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.danger,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton.icon(
-                    onPressed: _deleteDatabaseFile,
-                    icon: const Icon(Icons.delete_forever),
-                    label: const Text('Delete Database File'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF8B0000),
-                    ),
+                  DebugActionSection(
+                    title: 'Clear Data Options',
+                    titleColor: AppColors.danger,
+                    children: [
+                      DebugActionButton(
+                        label: 'Clear Activity Logs',
+                        onPressed: _clearActivityLogs,
+                        icon: Icons.delete_outline,
+                        backgroundColor: AppColors.warning,
+                      ),
+                      const SizedBox(height: 8),
+                      DebugActionButton(
+                        label: 'Clear Vehicles',
+                        onPressed: _clearKendaraan,
+                        icon: Icons.delete_outline,
+                        backgroundColor: AppColors.warning,
+                      ),
+                      const SizedBox(height: 8),
+                      DebugActionButton(
+                        label: 'Clear Transactions',
+                        onPressed: _clearTransaksi,
+                        icon: Icons.delete_outline,
+                        backgroundColor: AppColors.warning,
+                      ),
+                      const SizedBox(height: 8),
+                      DebugActionButton(
+                        label: 'Clear Users (Keep Master Data)',
+                        onPressed: _clearUsers,
+                        icon: Icons.delete_outline,
+                        backgroundColor: AppColors.warning,
+                      ),
+                      const SizedBox(height: 8),
+                      DebugActionButton(
+                        label: 'Clear ALL Data',
+                        onPressed: _clearAllData,
+                        icon: Icons.delete_sweep,
+                        backgroundColor: AppColors.danger,
+                      ),
+                      const SizedBox(height: 8),
+                      DebugActionButton(
+                        label: 'Reset Database (Drop & Recreate)',
+                        onPressed: _resetDatabase,
+                        icon: Icons.restore,
+                        backgroundColor: AppColors.danger,
+                      ),
+                      const SizedBox(height: 8),
+                      DebugActionButton(
+                        label: 'Delete Database File',
+                        onPressed: _deleteDatabaseFile,
+                        icon: Icons.delete_forever,
+                        backgroundColor: const Color(0xFF8B0000),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                 ],

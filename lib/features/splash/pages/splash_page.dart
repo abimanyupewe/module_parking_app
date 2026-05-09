@@ -33,10 +33,10 @@ class _SplashPageState extends State<SplashPage> {
       // dan SharedPreferences untuk web
       final dbManager = DatabaseManager();
       await dbManager.initialize();
-      final dbPath = await dbManager.getDatabasePath();
+      await dbManager.getDatabasePath();
 
       // 3. Verify default data
-      final users = await dbManager.getAllUsers();
+      await dbManager.getAllUsers();
 
       // 4. Continue with splash flow
       if (mounted) {
@@ -54,50 +54,55 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(
+      body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo / App Name
-            Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  'P',
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    color: AppColors.background,
-                    fontWeight: FontWeight.bold,
+            const Spacer(),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo / App Name
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        'P',
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(
+                              color: AppColors.background,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 40),
+                  // App Name
+                  Text(
+                    'Manajemen Parkir',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 40),
-            // App Name
-            Text(
-              'Manajemen Parkir',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Text(
+                'v1.0.0',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.inactive),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            // Version
-            Text(
-              'v1.0.0',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.inactive),
-            ),
-            const SizedBox(height: 40),
-            // Loading Indicator
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation(AppColors.primary),
             ),
           ],
         ),
