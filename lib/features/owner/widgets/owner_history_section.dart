@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../config/colors.dart';
 import '../../../services/database_helper.dart';
@@ -199,6 +200,35 @@ class _OwnerHistorySectionState extends State<OwnerHistorySection> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// CustomSearchBar widget import
+class CustomSearchBar extends StatelessWidget {
+  final String hintText;
+  final Function(String) onChanged;
+  final IconData prefixIcon;
+
+  const CustomSearchBar({
+    required this.hintText,
+    required this.onChanged,
+    required this.prefixIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: hintText,
+        prefixIcon: Icon(prefixIcon),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+      ),
+      onChanged: onChanged,
     );
   }
 }
