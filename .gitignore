@@ -12,6 +12,12 @@
 .swiftpm/
 migrate_working_dir/
 
+# Database files (SQLite)
+# Located in: /data/ folder
+*.db
+*.db-shm
+*.db-wal
+
 # IntelliJ related
 *.iml
 *.ipr
